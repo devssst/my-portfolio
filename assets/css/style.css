@@ -1,0 +1,196 @@
+/* MAIN */
+body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-image: url('../images/background.jpg');
+    background-size: cover;
+}
+
+/* FLOATING BACKGROUND */
+.base-card {
+    background-color: rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+    gap: 0;
+}
+
+/* TOP HEADER WHERE LOGO, NAME, AND GITHUB BUTTON RESIDES */
+.header {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    grid-area: 1 / 1 / 2 / 17;
+    padding-left: 72px;
+    padding-right: 56px;
+    align-items: center;
+    backdrop-filter: blur(6px) saturate(180%);
+    -webkit-backdrop-filter: blur(6px) saturate(180%);
+    background-color: rgba(17, 25, 40, 0.75);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.445);
+}
+
+/* RIGHT SIDE OF HEADER: LABEL + GITHUB */
+.header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+.mode-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.35);
+    letter-spacing: 0.08em;
+    margin-right: 16px;
+    user-select: none;
+}
+
+.gh {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.375);
+    padding: 2px 16px;
+    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+}
+
+.gh:hover {
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.nn {
+    color: #ffffff;
+    font-size: 14px;
+    margin-left: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.header img {
+    height: 23px;
+    cursor: pointer;
+}
+
+/* VISITOR MODE */
+.welcome {
+    grid-area: 2 / 2 / 12 / 16;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.welcome.hidden {
+    display: none;
+}
+
+.welcome h1 {
+    color: rgb(255, 255, 255);
+    font-size: 100px;
+    font-weight: 900;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.welcome p {
+    color: #ffffffab;
+    font-weight: 400;
+    margin: 0;
+}
+
+.welcome button {
+    border-radius: 12px;
+    height: 48px;
+    min-width: 128px;
+    padding: 0 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #ffffff;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 0 4px 2px rgba(255, 255, 255, 0.2);
+    transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.welcome button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.8),
+        transparent
+    );
+}
+
+.welcome button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.8),
+        transparent,
+        rgba(255, 255, 255, 0.3)
+    );
+}
+
+.welcome button:hover {
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow:
+        0 8px 32px rgba(149, 0, 248, 0.74),
+        inset 0 1px 0 rgba(77, 5, 59, 0.5),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 0 4px 2px rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.welcome button:active {
+    transform: translateY(0px);
+    box-shadow: 0 8px 32px rgb(145, 4, 163), inset 0 1px 0 rgba(194, 29, 153, 0.658);
+}
+
+.welcome button:focus-visible {
+    outline: 2px solid rgba(149, 0, 248, 0.8);
+    outline-offset: 3px;
+}
+
+.welcome i {
+    margin-left: 6px;
+}
+
+/* DEVELOPER MODE */
+.dev-login {
+    display: none;
+    grid-area: 2 / 2 / 12 / 16;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+.dev-login.visible {
+    display: flex;
+}

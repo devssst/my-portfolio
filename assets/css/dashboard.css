@@ -1,0 +1,9 @@
+/* dashboard.css */
+/* Styles for pages/dashboard.html */
+
+body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-image: url('../images/background.jpg');
+    background-size: cover;
+}
