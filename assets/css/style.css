@@ -223,7 +223,8 @@ body {
 }
 
 input[type="email"],
-input[type="password"] {
+input[type="password"],
+.p-wrapper input[type="text"] {
     width: 100%;
     box-sizing: border-box;
     height: 40px;
@@ -240,13 +241,15 @@ input[type="password"] {
 }
 
 input[type="email"]::placeholder,
-input[type="password"]::placeholder {
+input[type="password"]::placeholder,
+.p-wrapper input[type="text"]::placeholder {
     color: rgba(255, 255, 255, 0.25);
     font-size: 13px;
 }
 
 input[type="email"]:focus,
-input[type="password"]:focus {
+input[type="password"]:focus,
+.p-wrapper input[type="text"]:focus {
     border-color: rgba(160, 80, 255, 0.7);
     background: rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 0 3px rgba(149, 0, 248, 0.15);
