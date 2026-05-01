@@ -66,15 +66,17 @@ body::before {
 
 .dash-logo {
     height: 22px;
+    cursor: pointer;
 }
 
 .dash-brand {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 800;
     color: #fff;
     white-space: nowrap;
     cursor: pointer;
     text-decoration: none;
+    margin-top: -3px;
 }
 
 /* CENTER NAVIGATION */
