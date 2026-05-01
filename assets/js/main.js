@@ -1,5 +1,11 @@
-// VISIT BUTTON
+const backBtn = document.getElementById("backToVST")
 const vstBtn = document.getElementById("vst");
+const logo = document.getElementById("logo");
+const modeLabel = document.getElementById("mode-label");
+const visitorSection = document.getElementById("visitor-section");
+const devSection = document.getElementById("dev-section");
+
+// VISIT BUTTON
 if (vstBtn) {
     vstBtn.addEventListener("click", () => {
         window.location.href = "pages/dashboard.html";
@@ -7,11 +13,6 @@ if (vstBtn) {
 }
 
 // DEVELOPER-VISITOR MODE TOGGLE
-const logo = document.getElementById("logo");
-const modeLabel = document.getElementById("mode-label");
-const visitorSection = document.getElementById("visitor-section");
-const devSection = document.getElementById("dev-section");
-
 let isDevMode = false;
 
 if (logo && modeLabel && visitorSection && devSection) {
@@ -27,5 +28,14 @@ if (logo && modeLabel && visitorSection && devSection) {
             devSection.classList.remove("visible");
             modeLabel.textContent = "VISITOR";
         }
+    });
+}
+
+// BACK BUTTON
+if (backBtn && visitorSection && modeLabel && devSection) {
+    backBtn.addEventListener("click", () => {
+        visitorSection.classList.remove("hidden");
+        devSection.classList.remove("visible");
+        modeLabel.textContent = "VISITOR";
     });
 }

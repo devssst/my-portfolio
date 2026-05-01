@@ -10,7 +10,8 @@
     <meta name="description" content="Dev Portfolio of Vien Calderon" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
     <link rel="stylesheet" href="assets/css/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -22,7 +23,8 @@
             <a href="index.html" class="nn"><span>Developer VIEN</span></a>
             <div class="header-right">
                 <span id="mode-label" class="mode-label">VISITOR</span>
-                <a href="https://github.com/devssst/my-portfolio" class="gh" title="Source Code"><i class="fa-brands fa-github"></i></a>
+                <a href="https://github.com/devssst/my-portfolio" class="gh" title="Source Code"><i
+                        class="fa-brands fa-github"></i></a>
             </div>
         </div>
 
@@ -32,9 +34,41 @@
             <p>This site is a website developer portfolio for an aspiring developer, Vien Calderon!</p>
             <button id="vst">Visit Page <i class="fa-solid fa-arrow-right"></i></button>
         </div>
-        
+
         <!-- WELCOME: DEVELOPER MODE -->
-        <div class="dev-login" id="dev-section">Nothing yet! Placeholder!</div>
+        <div class="dev-login" id="dev-section">
+            <div class="login-card" id="loginCard">
+                <h1>Restricted Login</h1>
+                <p>This is DEVELOPER-ONLY login form. You can't login nor sign-up your email unless, given a persmission to do so.</p>
+                <form id="loginForm">
+                    <div class="input-groups">
+                        <label for="email">EMAIL</label>
+                        <input type="email" id="email" placeholder="youremail@domain.com.ph" required>
+                        <label for="password">PASSWORD</label>
+                        <div class="p-wrapper">
+                            <input type="password" id="password" placeholder="●●●●●●●●●●" required>
+                            <span id="togglePassword" class="toggle-text">SHOW</span>
+                        </div>
+                    </div>
+                    <button type="submit">LOGIN</button>
+                    <div class="divider">OR</div>
+
+                    <div class="social-login">
+                        <div class="social-btn" id="socialBtn">
+                            <img src="assets/images/google.png" alt="Google Logo">
+                            <img src="assets/images/microsoft.png" alt="Microsoft Logo">
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <span class="footer-text">Can't remember email or password?</span>
+                        <a href="#" class="forgot-link" id="forgot-btn">FORGOT</a>
+                    </div>
+                    <div class="footer1" id="btMain">
+                        <a href="#" id="backToVST">BACK TO VISITOR MODE</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script src="assets/js/main.js"></script>
