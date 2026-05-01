@@ -40,13 +40,13 @@
             <div class="login-card" id="loginCard">
                 <h1>Restricted Login</h1>
                 <p>This is DEVELOPER-ONLY login form. You can't login nor sign-up your email unless, given a persmission to do so.</p>
-                <form id="loginForm">
+                <form id="loginForm" novalidate>
                     <div class="input-groups">
                         <label for="email">EMAIL</label>
-                        <input type="email" id="email" placeholder="youremail@domain.com.ph" required>
+                        <input type="email" id="email" placeholder="youremail@domain.com.ph">
                         <label for="password">PASSWORD</label>
                         <div class="p-wrapper">
-                            <input type="password" id="password" placeholder="●●●●●●●●●●" required>
+                            <input type="password" id="password" placeholder="●●●●●●●●●●">
                             <span id="togglePassword" class="toggle-text">SHOW</span>
                         </div>
                     </div>

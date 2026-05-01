@@ -6,6 +6,15 @@ const visitorSection = document.getElementById("visitor-section");
 const devSection = document.getElementById("dev-section");
 const togglePassword = document.getElementById("togglePassword");
 const passwordInput = document.getElementById('password');
+const emailInput = document.getElementById('email');
+const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+
+// HARDCODED CREDENTIALS (dev/testing only — replace with Firebase later)
+const HARDCODED_EMAIL = "viencalderon15@gmail.com";
+const HARDCODED_PASSWORD = "gerald32145fw";
+
+// EMAIL FORMAT CHECK
+const EMAIL_VALIDATOR = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // VISIT BUTTON
 if (vstBtn) {
@@ -49,3 +58,93 @@ togglePassword.addEventListener('click', function () {
     passwordInput.setAttribute('type', type);
     this.textContent = type === 'password' ? 'SHOW' : 'HIDE';
 });
+
+// ERROR HELPERS
+let btnResetTimer = null;
+
+function triggerInputError(input) {
+    const shakeTarget = input.closest('.p-wrapper') || input;
+
+    input.classList.remove('input-error');
+    shakeTarget.classList.remove('shake');
+    void shakeTarget.offsetWidth;
+
+    input.classList.add('input-error');
+    shakeTarget.classList.add('shake');
+
+    shakeTarget.addEventListener('animationend', () => {
+        shakeTarget.classList.remove('shake');
+    }, { once: true });
+
+    input.addEventListener('animationend', () => {
+        input.classList.remove('input-error');
+    }, { once: true });
+}
+
+function triggerBtnError(message) {
+    if (btnResetTimer) clearTimeout(btnResetTimer);
+    loginBtn.classList.remove('btn-error', 'btn-success');
+    void loginBtn.offsetWidth;
+    loginBtn.classList.add('btn-error');
+    loginBtn.textContent = message;
+
+    btnResetTimer = setTimeout(() => {
+        loginBtn.classList.remove('btn-error');
+        loginBtn.textContent = 'LOGIN';
+    }, 2500);
+}
+
+function triggerBtnSuccess() {
+    if (btnResetTimer) clearTimeout(btnResetTimer);
+    loginBtn.classList.remove('btn-error');
+    loginBtn.classList.add('btn-success');
+    loginBtn.textContent = 'WELCOME BACK, VIEN!';
+    loginBtn.disabled = true;
+
+    setTimeout(() => {
+        window.location.href = "pages/dashboard.html";
+    }, 1200);
+}
+
+// LOGIN FORM VALIDATION
+const loginForm = document.getElementById('loginForm');
+if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!email) {
+            triggerInputError(emailInput);
+            triggerBtnError('ENTER YOUR EMAIL');
+            return;
+        }
+
+        if (!EMAIL_VALIDATOR.test(email)) {
+            triggerInputError(emailInput);
+            triggerBtnError('INVALID EMAIL');
+            return;
+        }
+
+        if (!password) {
+            triggerInputError(passwordInput);
+            triggerBtnError('ENTER YOUR PASSWORD');
+            return;
+        }
+
+        if (email !== HARDCODED_EMAIL) {
+            triggerInputError(emailInput);
+            triggerBtnError('NOT AUTHORIZED EMAIL');
+            return;
+        }
+
+        if (password !== HARDCODED_PASSWORD) {
+            triggerInputError(passwordInput);
+            triggerBtnError('WRONG PASSWORD');
+            return;
+        }
+
+        triggerBtnSuccess();
+    });
+}
