@@ -1,9 +1,3 @@
-// ============================================================
-// dashboard.js — Developer VIEN Portfolio Dashboard
-// ============================================================
-
-// ── DATA ────────────────────────────────────────────────────
-
 const TIMELINE_DATA = [
     {
         year: 2026,
@@ -39,7 +33,7 @@ const PROJECTS_DATA = [
                 name: "SLIMS",
                 desc: "School Library Inventory Management System for Dalubhasaang Politekniko ng Lungsod ng Baliwag.",
                 tags: ["HTML", "CSS", "JS"],
-                live: null,
+                live: "https://devssst.github.io/btech-slims",
                 source: "https://github.com/devssst/slims"
             }
         ]
@@ -85,8 +79,6 @@ function switchSection(id) {
     navLinks.forEach(link => {
         link.classList.toggle('active', link.dataset.section === id);
     });
-
-    // Show header whenever section switches
     showHeader();
 }
 

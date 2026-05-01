@@ -1,7 +1,3 @@
-/* ============================================================
-   dashboard.css — Developer VIEN Portfolio Dashboard
-   ============================================================ */
-
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -37,9 +33,7 @@ body::before {
     pointer-events: none;
 }
 
-/* ============================================================
-   HEADER
-   ============================================================ */
+/* HEADER */
 .dash-header {
     position: fixed;
     top: 0;
@@ -62,7 +56,7 @@ body::before {
     transform: translateY(-100%);
 }
 
-/* LEFT — logo + brand */
+/* LEFT LOGO + BRAND */
 .dash-header-left {
     display: flex;
     align-items: center;
@@ -83,7 +77,7 @@ body::before {
     text-decoration: none;
 }
 
-/* CENTER — nav */
+/* CENTER NAVIGATION */
 .dash-nav {
     display: flex;
     align-items: center;
@@ -113,7 +107,7 @@ body::before {
     background: rgba(168, 85, 247, 0.18);
 }
 
-/* RIGHT — mode badge */
+/* RIGHT MODE BADGE */
 .dash-header-right {
     flex-shrink: 0;
 }
@@ -136,9 +130,8 @@ body::before {
     color: rgba(200, 160, 255, 0.9);
 }
 
-/* ============================================================
-   CONTENT WRAPPER
-   ============================================================ */
+
+/* WRAPPER */
 .dash-content {
     position: fixed;
     top: var(--header-h);
@@ -148,9 +141,6 @@ body::before {
     z-index: 1;
 }
 
-/* ============================================================
-   SECTIONS — tab-like with fade
-   ============================================================ */
 .dash-section {
     position: absolute;
     inset: 0;
@@ -160,8 +150,6 @@ body::before {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.35s ease;
-
-    /* custom scrollbar */
     scrollbar-width: thin;
     scrollbar-color: rgba(168, 85, 247, 0.3) transparent;
 }
@@ -184,9 +172,6 @@ body::before {
     pointer-events: all;
 }
 
-/* ============================================================
-   SHARED SECTION STRUCTURE
-   ============================================================ */
 .section-inner {
     max-width: 860px;
     margin: 0 auto;
@@ -213,9 +198,7 @@ body::before {
     line-height: 1;
 }
 
-/* ============================================================
-   HERO SECTION
-   ============================================================ */
+/* HERO */
 #section-home {
     display: flex;
     align-items: center;
@@ -311,9 +294,7 @@ body::before {
     font-size: 11px;
 }
 
-/* ============================================================
-   ABOUT SECTION
-   ============================================================ */
+/* ABOUT */
 .about-content {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -327,9 +308,7 @@ body::before {
     line-height: 1.8;
 }
 
-/* ============================================================
-   TIMELINE SECTION
-   ============================================================ */
+/* TIMELINE */
 .timeline {
     position: relative;
     padding-left: 24px;
@@ -424,7 +403,7 @@ body::before {
     font-weight: 500;
     color: rgba(168, 85, 247, 0.65);
     margin-top: 2px;
-    display: none; /* shown on hover via JS or CSS */
+    display: none;
 }
 
 .timeline-entry:hover .timeline-entry-date {
@@ -438,9 +417,7 @@ body::before {
     line-height: 1.5;
 }
 
-/* ============================================================
-   PROJECTS SECTION
-   ============================================================ */
+/* PROJECTS */
 .projects-year-group {
     margin-bottom: 36px;
 }
@@ -546,9 +523,7 @@ body::before {
     border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* ============================================================
-   REACH ME SECTION
-   ============================================================ */
+/* REACH ME */
 .reach-content {
     max-width: 600px;
 }
