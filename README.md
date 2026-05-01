@@ -153,8 +153,8 @@ my-portfolio/
 - [ ] Store auth state in `sessionStorage`
 
 ### Phase 2 — Dashboard Shell
-- [ ] Sticky header matching `index.html` style — show "ADMIN" badge if `?mode=admin`
-- [ ] HTML skeleton with section anchors: `#hero`, `#about`, `#timeline`, `#projects`, `#reach`
+- [x] Sticky header matching `index.html` style — show "ADMIN" badge if `?mode=admin`
+- [x] HTML skeleton with section anchors: `#hero`, `#about`, `#timeline`, `#projects`, `#reach`
 - [ ] Smooth scroll navigation links in header
 - [ ] Full-page scrolling layout, dark overlay, consistent padding
 - [ ] Read `?mode=admin` param in `dashboard.js` and set global `isAdmin` flag

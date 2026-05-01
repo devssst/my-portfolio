@@ -84,10 +84,13 @@ body {
     justify-content: center;
     align-items: center;
     gap: 12px;
+    opacity: 1;
+    transition: opacity 0.35s ease;
 }
 
 .welcome.hidden {
-    display: none;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .welcome h1 {
@@ -143,15 +146,16 @@ body {
 
 /* DEVELOPER MODE */
 .dev-login {
-    display: none;
     grid-area: 2 / 2 / 12 / 16;
+    display: flex;
     justify-content: center;
     align-items: center;
     color: white;
+    pointer-events: none;
 }
 
 .dev-login.visible {
-    display: flex;
+    pointer-events: all;
 }
 
 /* LOGIN CARD */
@@ -170,6 +174,12 @@ body {
         inset 0 1px 0 rgba(255, 255, 255, 0.15);
     padding: 36px 32px 28px;
     box-sizing: border-box;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+}
+
+.dev-login.visible .login-card {
+    opacity: 1;
 }
 
 .login-card h1 {
@@ -297,7 +307,6 @@ input[type="password"]:focus,
     letter-spacing: 0.08em;
     cursor: pointer;
     transition: opacity 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 20px rgba(149, 0, 248, 0.4);
     margin-bottom: 0;
 }
 

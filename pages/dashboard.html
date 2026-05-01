@@ -3,20 +3,142 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Developer VIEN</title>
     <meta name="author" content="Developer VIEN">
     <link rel="icon" type="image/png" href="../assets/images/logo.png">
-    <meta name="description" content="Dev Portfolio of Vien Calderon"/>
+    <meta name="description" content="Dev Portfolio of Vien Calderon" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
-    <link rel="stylesheet" href="../assets/css/dashboard.css"/>
+    <link rel="stylesheet" href="../assets/css/dashboard.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
-    <h1>Nothing Yet! Placeholder!</h1>
+
+    <!-- HEADER -->
+    <header class="dash-header" id="dashHeader">
+        <div class="dash-header-left">
+            <img src="../assets/images/logo.png" alt="Developer VIEN Logo" class="dash-logo">
+            <a href="../pages/dashboard.html" class="dash-brand"><span>Developer VIEN</span></a>
+        </div>
+
+        <nav class="dash-nav" id="dashNav">
+            <a href="#" class="nav-link active" data-section="home">HOME</a>
+            <a href="#" class="nav-link" data-section="about">ABOUT</a>
+            <a href="#" class="nav-link" data-section="timeline">TIMELINE</a>
+            <a href="#" class="nav-link" data-section="projects">PROJECTS</a>
+            <a href="#" class="nav-link" data-section="reach">REACH ME</a>
+        </nav>
+
+        <div class="dash-header-right">
+            <span class="mode-badge" id="modeBadge">VISITOR</span>
+        </div>
+    </header>
+
+    <!-- CONTENT WRAPPER -->
+    <div class="dash-content" id="dashContent">
+
+        <!-- HOME / HERO -->
+        <section class="dash-section active" id="section-home">
+            <div class="hero-inner">
+                <div class="hero-avatar-wrap">
+                    <img src="../assets/images/picture.jpeg" alt="Vien Calderon" class="hero-avatar">
+                    <div class="hero-avatar-glow"></div>
+                </div>
+                <div class="hero-text">
+                    <div class="hero-eyebrow">DEVELOPER · STUDENT · TINKERER</div>
+                    <h1 class="hero-name">Vien Fritzgerald V. Calderon</h1>
+                    <p class="hero-bio">
+                        An aspiring BSIT developer from Dalubhasaang Politekniko ng Lungsod ng Baliwag.
+                        I build web systems, tinker with Android ROMs, and find patterns in everything.
+                    </p>
+                    <div class="hero-meta">
+                        <span class="hero-meta-item"><i class="fa-solid fa-cake-candles"></i> 19 years old</span>
+                        <span class="hero-meta-item"><i class="fa-solid fa-location-dot"></i> Philippines</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT -->
+        <section class="dash-section" id="section-about">
+            <div class="section-inner">
+                <div class="section-heading">
+                    <span class="section-tag">02 / ABOUT</span>
+                    <h2>About Me</h2>
+                </div>
+                <div class="about-content">
+                    <p class="about-bio">Placeholder — edit this in admin mode.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TIMELINE -->
+        <section class="dash-section" id="section-timeline">
+            <div class="section-inner">
+                <div class="section-heading">
+                    <span class="section-tag">03 / TIMELINE</span>
+                    <h2>Timeline</h2>
+                </div>
+                <div class="timeline" id="timelineRoot">
+                    <!-- Rendered by dashboard.js -->
+                </div>
+            </div>
+        </section>
+
+        <!-- PROJECTS -->
+        <section class="dash-section" id="section-projects">
+            <div class="section-inner">
+                <div class="section-heading">
+                    <span class="section-tag">04 / PROJECTS</span>
+                    <h2>Projects</h2>
+                </div>
+                <div class="projects-root" id="projectsRoot">
+                    <!-- Rendered by dashboard.js -->
+                </div>
+            </div>
+        </section>
+
+        <!-- REACH ME -->
+        <section class="dash-section" id="section-reach">
+            <div class="section-inner">
+                <div class="section-heading">
+                    <span class="section-tag">05 / REACH ME</span>
+                    <h2>Reach Me</h2>
+                </div>
+                <div class="reach-content">
+                    <p class="reach-sub">Have a project, question, or just want to say hi? Send me a message.</p>
+                    <form class="reach-form" id="reachForm">
+                        <div class="reach-row">
+                            <div class="reach-field">
+                                <label for="r-name">NAME</label>
+                                <input type="text" id="r-name" placeholder="Your name">
+                            </div>
+                            <div class="reach-field">
+                                <label for="r-email">EMAIL</label>
+                                <input type="email" id="r-email" placeholder="your@email.com">
+                            </div>
+                        </div>
+                        <div class="reach-field">
+                            <label for="r-subject">SUBJECT</label>
+                            <input type="text" id="r-subject" placeholder="What's this about?">
+                        </div>
+                        <div class="reach-field">
+                            <label for="r-message">MESSAGE</label>
+                            <textarea id="r-message" placeholder="Write your message here..." rows="5"></textarea>
+                        </div>
+                        <button type="submit" class="reach-btn">
+                            Send Message <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+    </div><!-- end .dash-content -->
+
     <script src="../assets/js/dashboard.js"></script>
 </body>
 
