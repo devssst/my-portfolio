@@ -91,7 +91,7 @@ function triggerBtnError(message) {
     btnResetTimer = setTimeout(() => {
         loginBtn.classList.remove('btn-error');
         loginBtn.textContent = 'LOGIN';
-    }, 2500);
+    }, 1000);
 }
 
 function triggerBtnSuccess() {
@@ -101,9 +101,14 @@ function triggerBtnSuccess() {
     loginBtn.textContent = 'WELCOME BACK, VIEN!';
     loginBtn.disabled = true;
 
+    btnResetTimer = setTimeout(() => {
+        loginBtn.classList.remove('btn-success');
+        loginBtn.textContent = 'LOGIN';
+    }, 1000);
+
     setTimeout(() => {
         window.location.href = "pages/dashboard.html";
-    }, 1200);
+    }, 1500);
 }
 
 // LOGIN FORM VALIDATION
