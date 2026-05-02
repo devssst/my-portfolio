@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
     <link rel="stylesheet" href="../assets/css/dashboard.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
 <body>
@@ -29,11 +29,28 @@
             <a href="#" class="nav-link" data-section="about">ABOUT</a>
             <a href="#" class="nav-link" data-section="timeline">TIMELINE</a>
             <a href="#" class="nav-link" data-section="projects">PROJECTS</a>
+            <a href="#" class="nav-link" data-section="certificates">CERTIFICATES</a>
             <a href="#" class="nav-link" data-section="reach">REACH ME</a>
         </nav>
 
         <div class="dash-header-right">
-            <span class="mode-badge" id="modeBadge">VISITOR</span>
+            <div class="badge-wrap" id="badgeWrap">
+                <span class="mode-badge" id="modeBadge">
+                    VISITOR <i class="fa-solid fa-chevron-down badge-chevron"></i>
+                </span>
+                <div class="badge-dropdown" id="badgeDropdown">
+                    <button class="badge-menu-item" id="menuFaq">
+                        <i class="fa-solid fa-circle-question"></i> FAQ
+                    </button>
+                    <button class="badge-menu-item admin-only" id="menuEdit">
+                        <i class="fa-solid fa-pen-to-square"></i> EDIT
+                    </button>
+                    <div class="badge-menu-divider"></div>
+                    <button class="badge-menu-item leave" id="menuLeave">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> LEAVE
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -42,24 +59,56 @@
 
         <!-- HOME / HERO -->
         <section class="dash-section active" id="section-home">
-            <div class="hero-inner">
+
+            <!-- PART 1: HERO -->
+            <div class="hero-inner" id="heroInner">
                 <div class="hero-avatar-wrap">
                     <img src="../assets/images/picture.jpeg" alt="Vien Calderon" class="hero-avatar">
                     <div class="hero-avatar-glow"></div>
                 </div>
                 <div class="hero-text">
                     <div class="hero-eyebrow">DEVELOPER · STUDENT · TINKERER</div>
-                    <h1 class="hero-name">Vien Fritzgerald V. Calderon</h1>
+                    <h1 class="hero-name">
+                        <span class="hero-name-hi">Hi!</span>
+                        <span class="hero-name-im"> I'm </span>
+                        <span class="hero-name-accent">Vien Fritzgerald V. Calderon</span>
+                    </h1>
+                    <p class="hero-nickname">but you can call me <span class="hero-nickname-vien">VIEN.</span></p>
                     <p class="hero-bio">
-                        An aspiring BSIT developer from Dalubhasaang Politekniko ng Lungsod ng Baliwag.
-                        I build web systems, tinker with Android ROMs, and find patterns in everything.
+                        I'm a BSIT student who spends way too much time breaking and fixing things —
+                        whether that's building web systems from scratch, flashing custom Android ROMs,
+                        or going down a rabbit hole of sci-fi lore at 2AM. I like knowing how things
+                        work under the hood, and I like building things that actually feel good to use.
+                        If there's a pattern to find, I'll find it.
                     </p>
-                    <div class="hero-meta">
-                        <span class="hero-meta-item"><i class="fa-solid fa-cake-candles"></i> 19 years old</span>
-                        <span class="hero-meta-item"><i class="fa-solid fa-location-dot"></i> Philippines</span>
+                    <div class="hero-socials">
+                        <a href="https://www.facebook.com/vnsan15" target="_blank" class="social-btn-icon" title="Facebook">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        <a href="https://t.me/vnsannn" target="_blank" class="social-btn-icon" title="Telegram">
+                            <i class="fa-brands fa-telegram"></i>
+                        </a>
+                        <a href="https://github.com/devssst" target="_blank" class="social-btn-icon" title="GitHub">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                        <a href="https://x.com/vnsannn" target="_blank" class="social-btn-icon" title="Twitter / X">
+                            <i class="fa-brands fa-x-twitter"></i>
+                        </a>
+                        <a href="#" target="_blank" class="social-btn-icon" title="Discord">
+                            <i class="fa-brands fa-discord"></i>
+                        </a>
                     </div>
                 </div>
             </div>
+
+            <!-- PART 2: CV / RESUME CARDS -->
+            <div class="home-docs" id="homeDocs">
+                <div class="home-docs-label">MY DOCUMENTS</div>
+                <div class="home-docs-grid" id="homeDocsGrid">
+                    <!-- Rendered by dashboard.js -->
+                </div>
+            </div>
+
         </section>
 
         <!-- ABOUT -->
@@ -99,11 +148,25 @@
             </div>
         </section>
 
+        <!-- CERTIFICATES -->
+        <section class="dash-section" id="section-certificates">
+            <div class="section-inner">
+                <div class="section-heading">
+                    <span class="section-tag">05 / CERTIFICATES</span>
+                    <h2>Certificates</h2>
+                </div>
+                <div class="coming-soon">
+                    <i class="fa-solid fa-certificate coming-soon-icon"></i>
+                    <p>Coming soon.</p>
+                </div>
+            </div>
+        </section>
+
         <!-- REACH ME -->
         <section class="dash-section" id="section-reach">
             <div class="section-inner">
                 <div class="section-heading">
-                    <span class="section-tag">05 / REACH ME</span>
+                    <span class="section-tag">06 / REACH ME</span>
                     <h2>Reach Me</h2>
                 </div>
                 <div class="reach-content">
@@ -135,6 +198,30 @@
             </div>
         </section>
 
+    </div>
+
+    <!-- FAQ OVERLAY -->
+    <div class="faq-overlay" id="faqOverlay">
+        <div class="faq-card" id="faqCard">
+            <button class="faq-close" id="faqClose"><i class="fa-solid fa-xmark"></i></button>
+            <h3>FAQ</h3>
+            <div class="faq-item">
+                <div class="faq-q">Who made this portfolio?</div>
+                <div class="faq-a">This portfolio was built by Vien Fritzgerald V. Calderon, a BSIT student at Dalubhasaang Politekniko ng Lungsod ng Baliwag.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">What is DEVELOPER mode?</div>
+                <div class="faq-a">Developer mode grants admin access to Vien only. It allows editing of portfolio content directly on the dashboard.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">How do I contact Vien?</div>
+                <div class="faq-a">Head to the REACH ME section and send a message through the contact form.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Is this site open source?</div>
+                <div class="faq-a">The source code is visible on GitHub for portfolio evaluation only. It is proprietary — not licensed for reuse.</div>
+            </div>
+        </div>
     </div>
 
     <script src="../assets/js/dashboard.js"></script>

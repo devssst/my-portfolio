@@ -125,7 +125,7 @@ function triggerBtnSuccess() {
   }, 1000);
 
   setTimeout(() => {
-    window.location.href = "pages/dashboard.html";
+    window.location.href = "pages/dashboard.html?mode=admin";
   }, 1500);
 }
 

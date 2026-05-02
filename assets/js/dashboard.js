@@ -1,3 +1,5 @@
+// ── DATA ─────────────────────────────────────────────────────
+
 const TIMELINE_DATA = [
     {
         year: 2026,
@@ -40,6 +42,28 @@ const PROJECTS_DATA = [
     }
 ];
 
+// Fallback doc data — replaced by data/list.json when available
+const DOC_DATA_FALLBACK = {
+    cv: [
+        {
+            title: "Curriculum Vitae",
+            type: "CV",
+            uploaded: "2026-05-01",
+            file: "data/files/cv.pdf",
+            preview: null
+        }
+    ],
+    resume: [
+        {
+            title: "Resume",
+            type: "Resume",
+            uploaded: "2026-05-01",
+            file: "data/files/resume.pdf",
+            preview: null
+        }
+    ]
+};
+
 // ── INIT ─────────────────────────────────────────────────────
 
 const params   = new URLSearchParams(window.location.search);
@@ -51,15 +75,18 @@ const content  = document.getElementById('dashContent');
 const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.dash-section');
 
-// Set mode badge
+// Fix: use innerHTML so the chevron <i> tag is preserved
 if (badge) {
-    badge.textContent = isAdmin ? 'ADMIN' : 'VISITOR';
+    badge.innerHTML = `${isAdmin ? 'ADMIN' : 'VISITOR'} <i class="fa-solid fa-chevron-down badge-chevron"></i>`;
     if (isAdmin) badge.classList.add('admin');
 }
 
-// ── SECTION SWITCHING ─────────────────────────────────────────
+// ── SECTION ORDER — Feature 2 ─────────────────────────────────
 
+const SECTION_ORDER = ['home', 'about', 'timeline', 'projects', 'certificates', 'reach'];
 let currentSection = 'home';
+
+// ── SECTION SWITCHING ─────────────────────────────────────────
 
 function switchSection(id) {
     if (id === currentSection) return;
@@ -91,7 +118,6 @@ navLinks.forEach(link => {
 
 // ── HEADER HIDE/SHOW ON SECTION SCROLL ───────────────────────
 
-let lastScrollY   = 0;
 let headerVisible = true;
 let ticking       = false;
 
@@ -109,26 +135,99 @@ function showHeader() {
     }
 }
 
-// Attach scroll listeners to each section
+// Per-section lastScrollY — fixes the shared state bug
+const sectionScrollY   = new Map();
+const scrollbarTimers  = new Map();
+
 sections.forEach(section => {
+    sectionScrollY.set(section, 0);
+
     section.addEventListener('scroll', () => {
+        const scrollY = section.scrollTop;
+        const lastY   = sectionScrollY.get(section);
+
+        // Scrollbar fade-in / fade-out — Feature 2
+        section.classList.add('scrolling');
+        clearTimeout(scrollbarTimers.get(section));
+        scrollbarTimers.set(section, setTimeout(() => {
+            section.classList.remove('scrolling');
+        }, 1500));
+
+        // Header hide / show
         if (!ticking) {
             window.requestAnimationFrame(() => {
-                const scrollY = section.scrollTop;
-
-                if (scrollY > lastScrollY && scrollY > 60) {
+                if (scrollY > lastY && scrollY > 60) {
                     hideHeader();
-                } else if (scrollY < lastScrollY) {
+                } else if (scrollY < lastY) {
                     showHeader();
                 }
-
-                lastScrollY = scrollY;
+                sectionScrollY.set(section, scrollY);
                 ticking = false;
             });
             ticking = true;
         }
     });
 });
+
+// ── SECTION-HIJACK SCROLL — Feature 2 ────────────────────────
+
+let hijackCooldown = false;
+
+function getAdjacentSection(dir) {
+    const idx  = SECTION_ORDER.indexOf(currentSection);
+    const next = idx + dir;
+    if (next < 0 || next >= SECTION_ORDER.length) return null;
+    return SECTION_ORDER[next];
+}
+
+function tryHijack(dir) {
+    if (hijackCooldown) return;
+    const target = getAdjacentSection(dir);
+    if (!target) return;
+    hijackCooldown = true;
+    switchSection(target);
+    setTimeout(() => { hijackCooldown = false; }, 300);
+}
+
+// Wheel — hijack only at scroll boundaries
+document.addEventListener('wheel', (e) => {
+    const activeSection = document.getElementById('section-' + currentSection);
+    if (!activeSection) return;
+
+    const atBottom = activeSection.scrollHeight - activeSection.scrollTop - activeSection.clientHeight <= 5;
+    const atTop    = activeSection.scrollTop <= 0;
+
+    if (e.deltaY > 0 && atBottom) {
+        tryHijack(1);
+    } else if (e.deltaY < 0 && atTop) {
+        tryHijack(-1);
+    }
+}, { passive: true });
+
+// Touch — hijack only at scroll boundaries
+let touchStartY = 0;
+
+document.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+    if (hijackCooldown) return;
+    const deltaY = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(deltaY) < 30) return;
+
+    const activeSection = document.getElementById('section-' + currentSection);
+    if (!activeSection) return;
+
+    const atBottom = activeSection.scrollHeight - activeSection.scrollTop - activeSection.clientHeight <= 5;
+    const atTop    = activeSection.scrollTop <= 0;
+
+    if (deltaY > 0 && atBottom) {
+        tryHijack(1);
+    } else if (deltaY < 0 && atTop) {
+        tryHijack(-1);
+    }
+}, { passive: true });
 
 // ── RENDER TIMELINE ───────────────────────────────────────────
 
@@ -219,6 +318,99 @@ function renderProjects() {
     });
 }
 
+// ── RENDER DOC CARD — Feature 3 ───────────────────────────────
+
+function renderDocCard(data) {
+    const card = document.createElement('div');
+    card.className = 'doc-card';
+
+    const hasPreview = data.preview && data.preview !== '';
+    const previewHTML = hasPreview
+        ? `<img src="../${data.preview}" alt="${data.title} preview">`
+        : `<i class="fa-regular fa-file-pdf doc-card-placeholder-icon"></i>`;
+
+    const dateStr = data.uploaded
+        ? new Date(data.uploaded).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : 'Date unknown';
+
+    const filePath = data.file ? `../${data.file}` : '#';
+
+    card.innerHTML = `
+        <div class="doc-card-preview">${previewHTML}</div>
+        <div class="doc-card-body">
+            <div class="doc-card-type">${(data.type || 'DOCUMENT').toUpperCase()}</div>
+            <div class="doc-card-title">${data.title}</div>
+            <div class="doc-card-date">${dateStr}</div>
+        </div>
+        <div class="doc-card-expand">
+            <div class="doc-card-actions">
+                <a href="${filePath}" target="_blank" class="doc-card-btn view">
+                    <i class="fa-solid fa-eye"></i> VIEW
+                </a>
+                <a href="${filePath}" download class="doc-card-btn download">
+                    <i class="fa-solid fa-download"></i> SAVE
+                </a>
+            </div>
+        </div>
+    `;
+
+    // Click to toggle action buttons — only this card, independently
+    card.addEventListener('click', (e) => {
+        if (e.target.closest('.doc-card-actions')) return; // let button links fire normally
+        card.classList.toggle('expanded');
+    });
+
+    return card;
+}
+
+// ── RENDER DOCS (HOME SECTION) — Feature 3 ───────────────────
+
+async function renderDocs() {
+    const grid = document.getElementById('homeDocsGrid');
+    if (!grid) return;
+
+    let docData = null;
+
+    // 1. Check localStorage first
+    try {
+        const stored = localStorage.getItem('portfolio_docs');
+        if (stored) docData = JSON.parse(stored);
+    } catch { /* ignore */ }
+
+    // 2. Try fetching data/list.json from the repo
+    if (!docData) {
+        try {
+            const res = await fetch('../data/list.json');
+            if (res.ok) {
+                const json = await res.json();
+                docData = {
+                    cv:     json.cv     || [],
+                    resume: json.resume || []
+                };
+            }
+        } catch { /* file doesn't exist yet — use fallback */ }
+    }
+
+    // 3. Fall back to hardcoded placeholder
+    if (!docData) {
+        docData = DOC_DATA_FALLBACK;
+    }
+
+    grid.innerHTML = '';
+
+    const allDocs = [
+        ...docData.cv.map(d => ({ ...d, type: 'CV' })),
+        ...docData.resume.map(d => ({ ...d, type: 'Resume' }))
+    ];
+
+    if (allDocs.length === 0) {
+        grid.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,0.2);">No documents yet.</span>';
+        return;
+    }
+
+    allDocs.forEach(doc => grid.appendChild(renderDocCard(doc)));
+}
+
 // ── LOCAL STORAGE HELPER ──────────────────────────────────────
 
 function loadFromStorage(key, fallback) {
@@ -236,7 +428,6 @@ const reachForm = document.getElementById('reachForm');
 if (reachForm) {
     reachForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        // TODO: wire EmailJS in Phase 3
         const btn = reachForm.querySelector('.reach-btn');
         btn.textContent = 'Sent!';
         btn.style.background = 'linear-gradient(135deg, #0f7a3a, #22c55e)';
@@ -252,3 +443,72 @@ if (reachForm) {
 
 renderTimeline();
 renderProjects();
+renderDocs();
+
+// ── BADGE DROPDOWN — Feature 1 ────────────────────────────────
+
+const badgeWrap     = document.getElementById('badgeWrap');
+const badgeDropdown = document.getElementById('badgeDropdown');
+const menuFaq       = document.getElementById('menuFaq');
+const menuEdit      = document.getElementById('menuEdit');
+const menuLeave     = document.getElementById('menuLeave');
+const faqOverlay    = document.getElementById('faqOverlay');
+const faqClose      = document.getElementById('faqClose');
+
+// Show EDIT button for admin
+if (isAdmin && menuEdit) {
+    menuEdit.classList.add('visible');
+}
+
+// Toggle dropdown
+if (badgeWrap) {
+    badgeWrap.querySelector('.mode-badge').addEventListener('click', (e) => {
+        e.stopPropagation();
+        badgeWrap.classList.toggle('open');
+    });
+}
+
+// Close on outside click
+document.addEventListener('click', (e) => {
+    if (badgeWrap && !badgeWrap.contains(e.target)) {
+        badgeWrap.classList.remove('open');
+    }
+    // Collapse any expanded doc card when clicking outside it
+    if (!e.target.closest('.doc-card')) {
+        document.querySelectorAll('.doc-card.expanded').forEach(c => c.classList.remove('expanded'));
+    }
+});
+
+// FAQ
+if (menuFaq) {
+    menuFaq.addEventListener('click', () => {
+        badgeWrap.classList.remove('open');
+        faqOverlay.classList.add('open');
+    });
+}
+
+if (faqClose) {
+    faqClose.addEventListener('click', () => faqOverlay.classList.remove('open'));
+}
+
+if (faqOverlay) {
+    faqOverlay.addEventListener('click', (e) => {
+        if (e.target === faqOverlay) faqOverlay.classList.remove('open');
+    });
+}
+
+// EDIT — placeholder until Feature 9 (admin edit mode)
+if (menuEdit) {
+    menuEdit.addEventListener('click', () => {
+        badgeWrap.classList.remove('open');
+        // TODO: trigger edit mode in Feature 9
+        console.log('Edit mode triggered');
+    });
+}
+
+// LEAVE
+if (menuLeave) {
+    menuLeave.addEventListener('click', () => {
+        window.location.href = '../index.html';
+    });
+}
