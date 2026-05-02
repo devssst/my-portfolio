@@ -310,7 +310,7 @@ body::before {
 }
 
 .hero-nickname {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.5);
     margin-top: -6px;
@@ -320,6 +320,7 @@ body::before {
 .hero-nickname-vien {
     color: rgba(192, 132, 252, 1);
     font-weight: 800;
+    font-size: 16px;
     text-shadow: 0 0 20px rgba(168,85,247,0.55), 0 1px 8px rgba(0,0,0,0.5);
     font-family: Arial, Helvetica, sans-serif;
 }
