@@ -1,5 +1,5 @@
 # 🧑‍💻 Developer VIEN — Portfolio
-### 🔰 Phase 1 — Welcome Page & Auth (In Progress)
+### 🔰 Phase 3 — Dashboard Sections (In Progress)
 ![Portfolio Background](assets/images/banner.png)
 
 A personal developer portfolio for **Vien Fritzgerald V. Calderon**, built entirely with vanilla HTML, CSS, and JavaScript — no frameworks, no backend. Features a dark glassmorphism aesthetic, dual-mode welcome page (Visitor & Developer), and a fully editable admin dashboard.
@@ -23,11 +23,12 @@ This portfolio is designed to present Vien's developer life, projects, and backg
 - Developer Mode: restricted login form with email/password fields, Google and Microsoft OAuth buttons, SHOW/HIDE password toggle, and animated error/success feedback
 
 ### 📊 Dashboard
-- **Hero Section**: Personal info, nickname, and a brief developer summary
-- **About Me**: Educational background, skills, and additional info
-- **Timeline**: Developer life milestones sorted by year — hover to reveal exact dates
+- **Home**: Hero section with profile photo, nickname, and developer summary
+- **WHO AM I?**: Age (live-calculated, updates every second), educational background, skills, and additional info
+- **TIMESTAMPS**: Developer life milestones rendered from a JS data array, sorted by year
 - **Projects**: All projects sorted yearly, each with a Live link and GitHub source button
-- **Reach Me**: Contact form (name, email, subject, message) powered by EmailJS — no backend required
+- **Certificates**: Structure in place — rendering not yet implemented
+- **SEND ME YOUR DM**: Contact form (name, email, subject, message) — EmailJS integration pending
 
 ### 🔐 Authentication
 - Google Sign-In via Firebase Authentication (OAuth — no backend needed)
@@ -35,10 +36,10 @@ This portfolio is designed to present Vien's developer life, projects, and backg
 - Admin redirect to dashboard with `?mode=admin` query param
 - Session stored in `sessionStorage`
 
-### ✏️ Admin Edit Mode
-- Edit button revealed on About Me, Timeline, and Projects sections when logged in as admin
-- About Me: `contenteditable` inline editing
-- Timeline: add and remove entries with date, title, and description
+### ✏️ Admin Edit Mode *(Phase 4 — Planned)*
+- Edit button revealed on WHO AM I?, TIMESTAMPS, and Projects sections when logged in as admin
+- WHO AM I?: `contenteditable` inline editing
+- TIMESTAMPS: add and remove entries with date, title, and description
 - Projects: add and remove project cards (name, description, tech tags, live URL, GitHub URL)
 - All changes persisted via `localStorage`
 
@@ -47,10 +48,11 @@ This portfolio is designed to present Vien's developer life, projects, and backg
 ## 🛠️ Technology Stack
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Styling**: Custom CSS — glassmorphism, CSS Grid, CSS Variables
+- **Styling**: Custom CSS — glassmorphism (body-level backdrop-filter), CSS Grid, CSS Variables
 - **Auth**: Firebase Authentication (Google OAuth)
 - **Contact**: EmailJS (free tier, no backend)
-- **Persistence**: localStorage (admin edits)
+- **PDF Preview**: PDF.js (v3.11.174) — canvas-based first-page thumbnail rendering
+- **Persistence**: localStorage (admin edits, profile card state)
 - **Font**: Plus Jakarta Sans
 - **Icons**: Font Awesome 6
 
@@ -76,11 +78,11 @@ my-portfolio/
 │   │
 │   ├── 📂 js/
 │   │   ├── main.js             # Welcome page logic, mode toggle, login form
-│   │   └── dashboard.js        # Dashboard rendering, admin edit mode
+│   │   └── dashboard.js        # Dashboard rendering, navigation, admin edit mode
 │   │
 │   └── 📂 images/
 │       ├── logo.png            # Red V logo (favicon + header)
-│       ├── background.png      # python code background
+│       ├── background.png      # Python code background
 │       ├── picture.jpeg        # Developer profile picture
 │       ├── google.png          # Google OAuth icon
 │       ├── banner.png          # README.md preview
@@ -88,7 +90,8 @@ my-portfolio/
 │
 ├── 📂 data/
 │   └── 📂 files/
-│       └── resume.pdf          # sample resume for the website
+│       ├── list.json           # CV/Resume metadata (filename, label, etc.)
+│       └── resume.pdf          # Sample resume for the website
 │
 ├── 📂 pages/
 │   └── dashboard.html          # Main portfolio dashboard
@@ -124,21 +127,25 @@ my-portfolio/
 
 ### Color Palette
 - **Background**: Lavender anime art (`background.png`)
-- **Overlay**: `rgba(0, 0, 0, 0.25)` dark tint
-- **Header**: `rgba(17, 25, 40, 0.75)` blurred dark glass
-- **Card**: `rgba(15, 10, 30, 0.55)` glassmorphism
+- **Overlay**: Single `body::before` with `rgba(0, 0, 0, 0.75)` + `backdrop-filter: blur(6px)` applied once globally
+- **Header**: `rgba(17, 25, 40, 0.75)` with its own `backdrop-filter: blur(8px) saturate(180%)`
+- **Cards**: `rgba(255, 255, 255, 0.001–0.01)` — extremely subtle white tint, defined by borders
 - **Accent Purple**: `#a855f7` / `#7c22e8` / `#c026d3`
 - **Logo**: Red `#FF2200` V on black
 - **Text Primary**: `#ffffff`
 - **Text Muted**: `rgba(255, 255, 255, 0.35–0.65)`
 
+> **Note:** Per-card `backdrop-filter` is currently disabled (commented out) due to performance issues. Glassmorphism is achieved via the single global `body::before` blur instead.
+
 ### UI Highlights
 - CSS Grid 16-column × 12-row layout
-- Glassmorphism cards with `backdrop-filter: blur()`
+- Section-based navigation: 6 sections (`home`, `about`, `timeline`, `projects`, `certificates`, `reach`)
+- Keyboard navigation (↑↓ arrow keys) and wheel hijacking between sections
+- Profile card smooth slide-out animation with synchronized content shift
+- Purple scrollbar that auto-appears on scroll, fades after 1.5s of inactivity
 - Purple gradient buttons with hover lift and glow
 - Shake animation on login errors
 - Green/red button state transitions on success/failure
-- `IntersectionObserver` scroll animations (Phase 5)
 
 ---
 
@@ -159,30 +166,30 @@ my-portfolio/
 
 ### Phase 2 — Dashboard Shell
 - [x] Sticky header matching `index.html` style — show "ADMIN" badge if `?mode=admin`
-- [x] HTML skeleton with section anchors: `#hero`, `#about`, `#timeline`, `#projects`, `#reach`
-- [x] Smooth scroll navigation links in header
+- [x] HTML skeleton with 6 section anchors: `home`, `about`, `timeline`, `projects`, `certificates`, `reach`
+- [x] Section navigation via header nav links, ↑↓ arrow keys, and mouse wheel hijacking
 - [x] Full-page scrolling layout, dark overlay, consistent padding
 - [x] Read `?mode=admin` param in `dashboard.js` and set global `isAdmin` flag
 
 ### Phase 3 — Dashboard Sections
-- [x] **Hero** — profile photo, nickname, tagline, GitHub link
-- [x] **About Me** — education card (BSIT, DPLBaliuag), skills tags, bio paragraph; data from JS array
-- [ ] **Timeline** — vertical timeline with year markers; hover reveals exact date; rendered from JS array
-- [ ] **Projects** — card grid sorted by year; name, description, tech tags, Live + GitHub buttons; rendered from JS array
-- [ ] **Certificates** - certification cards sorted by who gives it
-- [ ] **Reach Me** — EmailJS contact form (name, email, subject, message); test with developer's email
+- [x] **Home** — profile photo, nickname, tagline, GitHub link
+- [x] **WHO AM I?** — live age counter (updates every second), education card, skills tags; profile card collapse animation; data from JS array
+- [x] **TIMESTAMPS** — year-grouped timeline rendered from `TIMELINE_DATA` JS array; `.timeline-item` cards with title, date, description
+- [x] **Projects** — year-grouped card grid rendered from `PROJECTS_DATA` JS array; tech tag pills, Live demo + GitHub source buttons, hover lift & glow
+- [x] **CV / Resume** — document cards with PDF.js first-page canvas thumbnail, click to expand, download button; metadata from `data/files/list.json`
+- [ ] **Certificates** — HTML structure exists, rendering function not yet implemented
+- [ ] **SEND ME YOUR DM** — HTML structure exists, EmailJS integration pending
 
 ### Phase 4 — Admin Edit Mode
-- [ ] Show edit pencil buttons on About, Timeline, and Projects when `isAdmin` is true
-- [ ] About Me: `contenteditable` inline editing; Save writes to `localStorage`
-- [ ] Timeline: inline "Add entry" form (date, title, description) + delete icon per entry
+- [ ] Show edit pencil buttons on WHO AM I?, TIMESTAMPS, and Projects when `isAdmin` is true
+- [ ] WHO AM I?: `contenteditable` inline editing; Save writes to `localStorage`
+- [ ] TIMESTAMPS: inline "Add entry" form (date, title, description) + delete icon per entry
 - [ ] Projects: "Add project" modal (name, desc, tech, live URL, GitHub URL) + remove button per card
 - [ ] On page load, check `localStorage` first — override default JS arrays if data exists
 
 ### Phase 5 — Polish & Deploy
 - [ ] Mobile responsiveness — test at 375px, fix header, hero, timeline, project grid
 - [ ] Scroll-triggered entrance animations via `IntersectionObserver`
-- [ ] Downloadable CV/resume link in Hero (PDF stored in `assets/files/`)
 - [ ] Deploy to GitHub Pages (repo: `devssst/my-portfolio`)
 - [ ] Update Firebase authorized domains to include GitHub Pages URL
 
@@ -190,7 +197,39 @@ my-portfolio/
 
 ## 📋 Update Logs
 
-### Phase 1 — Welcome Page & Auth (In Progress, May 2026)
+### Phase 3 — Dashboard Sections (In Progress, May 2026)
+**Completed:**
+- Section navigation system with 6 sections; supports header nav clicks, ↑↓ arrow keys, and wheel hijacking with 300ms cooldown
+- TIMESTAMPS rendered dynamically from `TIMELINE_DATA` array; grouped by year
+- Projects rendered dynamically from `PROJECTS_DATA` array; tech tag pills, live + source buttons
+- CV/Resume document cards with PDF.js canvas thumbnails (first page, scaled to 220px width); click to expand, download button; loads from `data/files/list.json` → localStorage → fallback array
+- Profile card collapse: smooth `translateX` slide-out + synchronized negative `margin-right`; state persisted to `localStorage`
+- Live age counter (`calcAge()`) updating every second in the WHO AM I? section
+- Purple scrollbar auto-show on scroll, auto-hide after 1.5s via per-element timeout map
+- Mode badge (ADMIN / VISITOR) driven by `?mode=admin` query parameter
+
+**Design decisions:**
+- Glassmorphism moved from per-card `backdrop-filter` to a single `body::before` overlay for performance
+- Card backgrounds set to `rgba(255, 255, 255, 0.001–0.01)` — near-invisible tint, borders provide definition
+- Section names finalized: **WHO AM I?**, **TIMESTAMPS**, **SEND ME YOUR DM** (vs. original About Me / Timeline / Reach Me)
+- Header scroll-hide disabled — header stays fixed at all times (`hideHeader` / `showHeader` functions exist but listener is commented out)
+
+**Cleanup needed:**
+- Empty `<p class="hero-bio">` tag and unused `.hero-bio`, `.hero-bio-wai`, `.hero-bio-q` CSS classes
+- `.dash-header.hidden` CSS class defined but unused (kept for potential future use)
+
+---
+
+### Phase 2 — Dashboard Shell (Completed, May 2026)
+**Completed:**
+- Dashboard HTML skeleton (`pages/dashboard.html`) with all 6 section anchors
+- Sticky header with ADMIN/VISITOR badge
+- `dashboard.js`: `isAdmin` flag, `switchSection()`, `loadFromStorage()` localStorage wrapper
+- `section-fade-in` CSS animation on section switch (0.3s)
+
+---
+
+### Phase 1 — Welcome Page & Auth (Completed, May 2026)
 **Completed:**
 - Dual-mode welcome page (Visitor / Developer toggle via logo double-click)
 - Login card UI with glassmorphism styling — email, password, SHOW/HIDE toggle
