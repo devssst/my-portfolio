@@ -80,10 +80,15 @@ my-portfolio/
 │   │
 │   └── 📂 images/
 │       ├── logo.png            # Red V logo (favicon + header)
-│       ├── background.jpg      # Lavender anime background
+│       ├── background.png      # Lavender anime background
 │       ├── picture.jpeg        # Developer profile picture
 │       ├── google.png          # Google OAuth icon
+│       ├── banner.png          # README.md preview
 │       └── microsoft.png       # Microsoft OAuth icon
+│
+├── 📂 data/
+│   └── 📂 files/
+│       └── resume.pdf          # sample resume for the website
 │
 ├── 📂 pages/
 │   └── dashboard.html          # Main portfolio dashboard
