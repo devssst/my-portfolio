@@ -62,11 +62,11 @@
 
             <!-- PART 1: HERO -->
             <div class="hero-inner" id="heroInner">
-                <div class="hero-avatar-wrap">
-                    <img src="../assets/images/picture.jpeg" alt="Vien Calderon" class="hero-avatar">
+                <div class="hero-avatar-wrap" id="heroAvatarWrap">
+                    <img src="../assets/images/picture.jpeg" alt="Vien Calderon" class="hero-avatar" id="heroAvatar">
                     <div class="hero-avatar-glow"></div>
                 </div>
-                <div class="hero-text">
+                <div class="hero-text" id="heroText">
                     <div class="hero-eyebrow">DEVELOPER · STUDENT · TINKERER</div>
                     <h1 class="hero-name">
                         <span class="hero-name-hi">Hi!</span>
@@ -81,7 +81,7 @@
                         work under the hood, and I like building things that actually feel good to use.
                         If there's a pattern to find, I'll find it.
                     </p>
-                    <div class="hero-socials">
+                    <div class="hero-socials" id="heroSocials">
                         <a href="https://www.facebook.com/vnsan15" target="_blank" class="social-btn-icon" title="Facebook">
                             <i class="fa-brands fa-facebook-f"></i>
                         </a>
@@ -113,37 +113,158 @@
 
         <!-- ABOUT -->
         <section class="dash-section" id="section-about">
-            <div class="section-inner">
-                <div class="section-heading">
-                    <span class="section-tag">02 / ABOUT</span>
-                    <h2>About Me</h2>
+            <!-- LEFT PROFILE CARD -->
+            <div class="profile-card" id="profileCard">
+                <button class="profile-card-collapse" id="profileCardCollapse" title="Collapse">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <img src="../assets/images/picture.jpeg" alt="Vien Calderon" class="profile-card-avatar">
+                <div class="profile-card-name">Vien Fritzgerald V. Calderon</div>
+                <div class="profile-card-eyebrow">DEVELOPER · STUDENT · TINKERER</div>
+                <div class="profile-card-socials">
+                    <a href="https://www.facebook.com/vnsan15" target="_blank" class="social-btn-icon" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="https://t.me/vnsannn" target="_blank" class="social-btn-icon" title="Telegram"><i class="fa-brands fa-telegram"></i></a>
+                    <a href="https://github.com/devssst" target="_blank" class="social-btn-icon" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="https://x.com/vnsannn" target="_blank" class="social-btn-icon" title="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" target="_blank" class="social-btn-icon" title="Discord"><i class="fa-brands fa-discord"></i></a>
                 </div>
-                <div class="about-content">
-                    <p class="about-bio">Placeholder — edit this in admin mode.</p>
+            </div>
+
+            <!-- FLOATING EXPAND BUTTON (shown when card is collapsed) -->
+            <button class="profile-card-expand-btn" id="profileCardExpandBtn" title="Show profile">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+
+            <!-- RIGHT CONTENT -->
+            <div class="section-with-profile" id="aboutContent">
+                <div class="section-inner">
+                    <div class="section-heading">
+                        <span class="section-tag">02 / ABOUT</span>
+                        <h2>About Me</h2>
+                    </div>
+
+                    <!-- BIO PARAGRAPH -->
+                    <div class="about-block">
+                        <p class="about-bio" id="aboutBio">
+                            I'm Vien Fritzgerald V. Calderon, a BSIT student with a genuine obsession for understanding
+                            how things work. I build web systems, tinker with Android ROMs, and get lost in sci-fi
+                            rabbit holes at 2AM. I care about building things that feel good to use, not just things
+                            that technically function. I find patterns, and I follow them.
+                        </p>
+                    </div>
+
+                    <!-- REAL-TIME AGE -->
+                    <div class="about-block">
+                        <div class="about-block-label">AGE</div>
+                        <div class="about-age" id="aboutAge">Calculating...</div>
+                    </div>
+
+                    <!-- EDUCATION -->
+                    <div class="about-block">
+                        <div class="about-block-label">EDUCATION</div>
+                        <div class="about-edu-card">
+                            <div class="about-edu-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                            <div class="about-edu-text">
+                                <div class="about-edu-degree">Bachelor of Science in Information Technology</div>
+                                <div class="about-edu-school">Dalubhasaang Politekniko ng Lungsod ng Baliwag</div>
+                                <div class="about-edu-detail">1st Year · Section 1I · 2025 — present</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STAT CARDS -->
+                    <div class="about-block">
+                        <div class="about-block-label">STATS</div>
+                        <div class="about-stats-grid" id="aboutStatsGrid">
+                            <div class="about-stat-card">
+                                <div class="about-stat-value" id="statProjects">—</div>
+                                <div class="about-stat-label">Projects</div>
+                            </div>
+                            <div class="about-stat-card">
+                                <div class="about-stat-value" id="statCerts">—</div>
+                                <div class="about-stat-label">Certificates</div>
+                            </div>
+                            <div class="about-stat-card">
+                                <div class="about-stat-value" id="statYears">—</div>
+                                <div class="about-stat-label">Yrs Experience</div>
+                            </div>
+                            <div class="about-stat-card">
+                                <div class="about-stat-value" id="statLangs">—</div>
+                                <div class="about-stat-label">Languages</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </section>
 
         <!-- TIMELINE -->
         <section class="dash-section" id="section-timeline">
-            <div class="section-inner">
-                <div class="section-heading">
-                    <span class="section-tag">03 / TIMELINE</span>
-                    <h2>Timeline</h2>
+            <!-- LEFT PROFILE CARD (cloned by JS) -->
+            <div class="profile-card profile-card-clone" id="profileCardTimeline">
+                <button class="profile-card-collapse profile-card-collapse-clone" title="Collapse">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <img src="../assets/images/picture.jpeg" alt="Vien Calderon" class="profile-card-avatar">
+                <div class="profile-card-name">Vien Fritzgerald V. Calderon</div>
+                <div class="profile-card-eyebrow">DEVELOPER · STUDENT · TINKERER</div>
+                <div class="profile-card-socials">
+                    <a href="https://www.facebook.com/vnsan15" target="_blank" class="social-btn-icon" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="https://t.me/vnsannn" target="_blank" class="social-btn-icon" title="Telegram"><i class="fa-brands fa-telegram"></i></a>
+                    <a href="https://github.com/devssst" target="_blank" class="social-btn-icon" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="https://x.com/vnsannn" target="_blank" class="social-btn-icon" title="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" target="_blank" class="social-btn-icon" title="Discord"><i class="fa-brands fa-discord"></i></a>
                 </div>
-                <div class="timeline" id="timelineRoot">
+            </div>
+            <button class="profile-card-expand-btn profile-card-expand-btn-clone" id="profileCardExpandBtnTimeline" title="Show profile">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+
+            <!-- RIGHT CONTENT -->
+            <div class="section-with-profile" id="timelineContent">
+                <div class="section-inner">
+                    <div class="section-heading">
+                        <span class="section-tag">03 / TIMELINE</span>
+                        <h2>Timeline</h2>
+                    </div>
+                    <div class="timeline" id="timelineRoot">
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- PROJECTS -->
         <section class="dash-section" id="section-projects">
-            <div class="section-inner">
-                <div class="section-heading">
-                    <span class="section-tag">04 / PROJECTS</span>
-                    <h2>Projects</h2>
+            <!-- LEFT PROFILE CARD (clone) -->
+            <div class="profile-card profile-card-clone" id="profileCardProjects">
+                <button class="profile-card-collapse profile-card-collapse-clone" title="Collapse">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <img src="../assets/images/picture.jpeg" alt="Vien Calderon" class="profile-card-avatar">
+                <div class="profile-card-name">Vien Fritzgerald V. Calderon</div>
+                <div class="profile-card-eyebrow">DEVELOPER · STUDENT · TINKERER</div>
+                <div class="profile-card-socials">
+                    <a href="https://www.facebook.com/vnsan15" target="_blank" class="social-btn-icon" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="https://t.me/vnsannn" target="_blank" class="social-btn-icon" title="Telegram"><i class="fa-brands fa-telegram"></i></a>
+                    <a href="https://github.com/devssst" target="_blank" class="social-btn-icon" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                    <a href="https://x.com/vnsannn" target="_blank" class="social-btn-icon" title="Twitter / X"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" target="_blank" class="social-btn-icon" title="Discord"><i class="fa-brands fa-discord"></i></a>
                 </div>
-                <div class="projects-root" id="projectsRoot">
+            </div>
+            <button class="profile-card-expand-btn profile-card-expand-btn-clone" id="profileCardExpandBtnProjects" title="Show profile">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+
+            <!-- RIGHT CONTENT -->
+            <div class="section-with-profile" id="projectsContent">
+                <div class="section-inner">
+                    <div class="section-heading">
+                        <span class="section-tag">04 / PROJECTS</span>
+                        <h2>Projects</h2>
+                    </div>
+                    <div class="projects-root" id="projectsRoot">
+                    </div>
                 </div>
             </div>
         </section>
@@ -224,6 +345,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="../assets/js/dashboard.js"></script>
 </body>
 

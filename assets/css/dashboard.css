@@ -10,6 +10,8 @@
     --purple-light:  #c026d3;
     --header-h:      56px;
     --transition:    0.3s ease;
+    --profile-w:     220px;
+    --profile-gap:   32px;
 }
 
 body {
@@ -207,7 +209,7 @@ body::before {
     padding-top: 0;
 }
 
-/* PART 1 — HERO */
+/* PART 1 -- HERO */
 .hero-inner {
     display: flex;
     align-items: center;
@@ -343,7 +345,7 @@ body::before {
     transform: translateY(-2px);
 }
 
-/* PART 2 — CV / RESUME DOCS */
+/* PART 2 -- CV / RESUME DOCS */
 .home-docs {
     width: 100%;
     max-width: 860px;
@@ -368,7 +370,7 @@ body::before {
 }
 
 /* ============================================================
-   DOC CARDS (CV / RESUME) — Feature 3
+   DOC CARDS (CV / RESUME) -- Feature 3
    ============================================================ */
 .doc-card {
     position: relative;
@@ -405,6 +407,7 @@ body::before {
     justify-content: center;
     overflow: hidden;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
 }
 
 .doc-card-preview img {
@@ -416,6 +419,15 @@ body::before {
 .doc-card-placeholder-icon {
     font-size: 36px;
     color: rgba(255, 255, 255, 0.35);
+}
+
+.doc-card-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .doc-card-body {
@@ -443,7 +455,7 @@ body::before {
     color: rgba(255, 255, 255, 0.4);
 }
 
-/* Expand-bottom footer — slides open on click */
+/* Expand-bottom footer -- slides open on click */
 .doc-card-expand {
     max-height: 0;
     overflow: hidden;
@@ -505,19 +517,306 @@ body::before {
 }
 
 /* ============================================================
-   ABOUT
+   PROFILE CARD (shared: ABOUT, TIMELINE, PROJECTS) -- Feature 4
    ============================================================ */
-.about-content {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 32px;
+
+/* Sections that use the profile card layout */
+#section-about,
+#section-timeline,
+#section-projects {
+    display: flex;
+    flex-direction: row;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* The left profile card */
+.profile-card {
+    width: var(--profile-w);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 32px;
+    gap: 10px;
+    background: rgba(15, 10, 30, 0.45);
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    position: relative;
+    overflow: hidden;
+
+    /* Slide in/out */
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity  0.35s ease,
+                width    0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-card.collapsed {
+    transform: translateX(-100%);
+    opacity: 0;
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    overflow: hidden;
+    border-right-color: transparent;
+}
+
+/* Collapse button -- top right of card */
+.profile-card-collapse {
+    position: absolute;
+    top: 14px;
+    right: 10px;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.profile-card-collapse:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* Avatar in profile card */
+.profile-card-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top center;
+    border: 2px solid rgba(168, 85, 247, 0.35);
+    margin-bottom: 4px;
+    flex-shrink: 0;
+}
+
+.profile-card-name {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    line-height: 1.4;
+}
+
+.profile-card-eyebrow {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: rgba(168, 85, 247, 0.75);
+    text-align: center;
+}
+
+.profile-card-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+/* Smaller social icons inside profile card */
+.profile-card-socials .social-btn-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 11px;
+}
+
+/* Floating expand button -- visible only when card is collapsed */
+.profile-card-expand-btn {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(17, 25, 40, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, background 0.2s, color 0.2s;
+}
+
+.profile-card-expand-btn.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.profile-card-expand-btn:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.4);
+    color: rgba(192, 132, 252, 1);
+}
+
+/* Right scrollable content area */
+.section-with-profile {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 48px 80px 64px 60px;
+    transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.section-with-profile.scrolling {
+    scrollbar-color: rgba(168, 85, 247, 0.3) transparent;
+}
+
+.section-with-profile::-webkit-scrollbar {
+    width: 4px;
+}
+
+.section-with-profile::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.section-with-profile::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+}
+
+.section-with-profile.scrolling::-webkit-scrollbar-thumb {
+    background: rgba(168, 85, 247, 0.3);
+}
+
+/* When card is collapsed, center the content */
+.section-with-profile.card-hidden {
+    padding-left: 80px;
+}
+
+/* ============================================================
+   ABOUT SECTION CONTENT -- Feature 4
+   ============================================================ */
+.about-block {
+    margin-bottom: 36px;
+}
+
+.about-block-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: rgba(168, 85, 247, 0.65);
+    margin-bottom: 12px;
 }
 
 .about-bio {
     font-size: 14.5px;
     color: rgba(255, 255, 255, 0.6);
-    line-height: 1.8;
+    line-height: 1.85;
+}
+
+/* Real-time age */
+.about-age {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.6;
+}
+
+.about-age .age-num {
+    color: rgba(192, 132, 252, 1);
+    font-weight: 800;
+}
+
+/* Education card */
+.about-edu-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 20px 22px;
+}
+
+.about-edu-icon {
+    font-size: 22px;
+    color: rgba(168, 85, 247, 0.7);
+    padding-top: 2px;
+    flex-shrink: 0;
+}
+
+.about-edu-degree {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.88);
+    margin-bottom: 4px;
+}
+
+.about-edu-school {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.5;
+    margin-bottom: 5px;
+}
+
+.about-edu-detail {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgba(168, 85, 247, 0.6);
+}
+
+/* Stat cards */
+.about-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.about-stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 12px;
+    padding: 18px 14px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.about-stat-card:hover {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.22);
+    transform: translateY(-2px);
+}
+
+.about-stat-value {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: rgba(192, 132, 252, 1);
+    line-height: 1;
+    margin-bottom: 7px;
+    text-shadow: 0 0 24px rgba(168, 85, 247, 0.4);
+}
+
+.about-stat-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.35);
+    text-transform: uppercase;
 }
 
 /* ============================================================
@@ -737,7 +1036,7 @@ body::before {
 }
 
 /* ============================================================
-   CERTIFICATES — Feature 7 placeholder
+   CERTIFICATES -- Feature 7 placeholder
    ============================================================ */
 .coming-soon {
     display: flex;
@@ -858,7 +1157,7 @@ body::before {
 }
 
 /* ============================================================
-   BADGE DROPDOWN — Feature 1
+   BADGE DROPDOWN -- Feature 1
    ============================================================ */
 .badge-wrap {
     position: relative;

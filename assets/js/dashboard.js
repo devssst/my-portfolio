@@ -50,7 +50,6 @@ const DOC_DATA_FALLBACK = {
             type: "CV",
             uploaded: "2026-05-01",
             file: "data/files/cv.pdf",
-            preview: null
         }
     ],
     resume: [
@@ -59,7 +58,6 @@ const DOC_DATA_FALLBACK = {
             type: "Resume",
             uploaded: "2026-05-01",
             file: "data/files/resume.pdf",
-            preview: null
         }
     ]
 };
@@ -81,7 +79,12 @@ if (badge) {
     if (isAdmin) badge.classList.add('admin');
 }
 
-// ── SECTION ORDER — Feature 2 ─────────────────────────────────
+// ── PDF.js WORKER CONFIG ──────────────────────────────────────
+
+if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
 
 const SECTION_ORDER = ['home', 'about', 'timeline', 'projects', 'certificates', 'reach'];
 let currentSection = 'home';
@@ -100,7 +103,15 @@ function switchSection(id) {
     }
 
     target.classList.add('active');
-    target.scrollTop = 0;
+
+    // Reset scroll — section-with-profile sections scroll their inner div, not the section
+    const innerScroll = target.querySelector('.section-with-profile');
+    if (innerScroll) {
+        innerScroll.scrollTop = 0;
+    } else {
+        target.scrollTop = 0;
+    }
+
     currentSection = id;
 
     navLinks.forEach(link => {
@@ -139,18 +150,19 @@ function showHeader() {
 const sectionScrollY   = new Map();
 const scrollbarTimers  = new Map();
 
-sections.forEach(section => {
-    sectionScrollY.set(section, 0);
+// Attach scroll listeners to both outer sections AND inner .section-with-profile divs
+function attachScrollListener(el) {
+    sectionScrollY.set(el, 0);
 
-    section.addEventListener('scroll', () => {
-        const scrollY = section.scrollTop;
-        const lastY   = sectionScrollY.get(section);
+    el.addEventListener('scroll', () => {
+        const scrollY = el.scrollTop;
+        const lastY   = sectionScrollY.get(el);
 
-        // Scrollbar fade-in / fade-out — Feature 2
-        section.classList.add('scrolling');
-        clearTimeout(scrollbarTimers.get(section));
-        scrollbarTimers.set(section, setTimeout(() => {
-            section.classList.remove('scrolling');
+        // Scrollbar fade-in / fade-out
+        el.classList.add('scrolling');
+        clearTimeout(scrollbarTimers.get(el));
+        scrollbarTimers.set(el, setTimeout(() => {
+            el.classList.remove('scrolling');
         }, 1500));
 
         // Header hide / show
@@ -161,13 +173,18 @@ sections.forEach(section => {
                 } else if (scrollY < lastY) {
                     showHeader();
                 }
-                sectionScrollY.set(section, scrollY);
+                sectionScrollY.set(el, scrollY);
                 ticking = false;
             });
             ticking = true;
         }
     });
-});
+}
+
+sections.forEach(section => attachScrollListener(section));
+
+// Also attach to section-with-profile divs once DOM is ready
+document.querySelectorAll('.section-with-profile').forEach(el => attachScrollListener(el));
 
 // ── SECTION-HIJACK SCROLL — Feature 2 ────────────────────────
 
@@ -194,8 +211,11 @@ document.addEventListener('wheel', (e) => {
     const activeSection = document.getElementById('section-' + currentSection);
     if (!activeSection) return;
 
-    const atBottom = activeSection.scrollHeight - activeSection.scrollTop - activeSection.clientHeight <= 5;
-    const atTop    = activeSection.scrollTop <= 0;
+    // For profile-card sections, check the inner scrollable div
+    const scrollEl = activeSection.querySelector('.section-with-profile') || activeSection;
+
+    const atBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight <= 5;
+    const atTop    = scrollEl.scrollTop <= 0;
 
     if (e.deltaY > 0 && atBottom) {
         tryHijack(1);
@@ -219,8 +239,10 @@ document.addEventListener('touchend', (e) => {
     const activeSection = document.getElementById('section-' + currentSection);
     if (!activeSection) return;
 
-    const atBottom = activeSection.scrollHeight - activeSection.scrollTop - activeSection.clientHeight <= 5;
-    const atTop    = activeSection.scrollTop <= 0;
+    const scrollEl = activeSection.querySelector('.section-with-profile') || activeSection;
+
+    const atBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight <= 5;
+    const atTop    = scrollEl.scrollTop <= 0;
 
     if (deltaY > 0 && atBottom) {
         tryHijack(1);
@@ -324,19 +346,16 @@ function renderDocCard(data) {
     const card = document.createElement('div');
     card.className = 'doc-card';
 
-    const hasPreview = data.preview && data.preview !== '';
-    const previewHTML = hasPreview
-        ? `<img src="../${data.preview}" alt="${data.title} preview">`
-        : `<i class="fa-regular fa-file-pdf doc-card-placeholder-icon"></i>`;
-
     const dateStr = data.uploaded
         ? new Date(data.uploaded).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
         : 'Date unknown';
 
-    const filePath = data.file ? `../${data.file}` : '#';
+    const filePath = data.file ? `../${data.file}` : null;
 
     card.innerHTML = `
-        <div class="doc-card-preview">${previewHTML}</div>
+        <div class="doc-card-preview">
+            <i class="fa-regular fa-file-pdf doc-card-placeholder-icon"></i>
+        </div>
         <div class="doc-card-body">
             <div class="doc-card-type">${(data.type || 'DOCUMENT').toUpperCase()}</div>
             <div class="doc-card-title">${data.title}</div>
@@ -344,20 +363,50 @@ function renderDocCard(data) {
         </div>
         <div class="doc-card-expand">
             <div class="doc-card-actions">
-                <a href="${filePath}" target="_blank" class="doc-card-btn view">
+                <a href="${filePath || '#'}" target="_blank" class="doc-card-btn view">
                     <i class="fa-solid fa-eye"></i> VIEW
                 </a>
-                <a href="${filePath}" download class="doc-card-btn download">
+                <a href="${filePath || '#'}" download class="doc-card-btn download">
                     <i class="fa-solid fa-download"></i> SAVE
                 </a>
             </div>
         </div>
     `;
 
-    // Click to toggle action buttons — only this card, independently
+    // Async PDF preview — renders page 1 onto a canvas, swaps out placeholder
+    if (filePath && window.pdfjsLib) {
+        const previewEl  = card.querySelector('.doc-card-preview');
+        const placeholder = previewEl.querySelector('.doc-card-placeholder-icon');
+
+        pdfjsLib.getDocument(filePath).promise
+            .then(pdf => pdf.getPage(1))
+            .then(page => {
+                const viewport = page.getViewport({ scale: 1 });
+                const scale    = 220 / viewport.width;
+                const scaled   = page.getViewport({ scale });
+
+                const canvas    = document.createElement('canvas');
+                canvas.className = 'doc-card-canvas';
+                canvas.width    = scaled.width;
+                canvas.height   = scaled.height;
+
+                return page.render({
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: scaled
+                }).promise.then(() => {
+                    placeholder.remove();
+                    previewEl.appendChild(canvas);
+                });
+            })
+            .catch(() => { /* file missing or error — placeholder stays */ });
+    }
+
+    // Click to toggle — accordion: collapse others, expand this one
     card.addEventListener('click', (e) => {
-        if (e.target.closest('.doc-card-actions')) return; // let button links fire normally
-        card.classList.toggle('expanded');
+        if (e.target.closest('.doc-card-actions')) return;
+        const isExpanded = card.classList.contains('expanded');
+        document.querySelectorAll('.doc-card.expanded').forEach(c => c.classList.remove('expanded'));
+        if (!isExpanded) card.classList.add('expanded');
     });
 
     return card;
@@ -438,6 +487,133 @@ if (reachForm) {
         }, 2000);
     });
 }
+
+// ── FEATURE 4: PROFILE CARD COLLAPSE / EXPAND ────────────────
+
+// All profile card instances on the page (one per section)
+const profileCardGroups = [
+    {
+        card:      document.getElementById('profileCard'),
+        expandBtn: document.getElementById('profileCardExpandBtn'),
+        content:   document.getElementById('aboutContent'),
+    },
+    {
+        card:      document.getElementById('profileCardTimeline'),
+        expandBtn: document.getElementById('profileCardExpandBtnTimeline'),
+        content:   document.getElementById('timelineContent'),
+    },
+    {
+        card:      document.getElementById('profileCardProjects'),
+        expandBtn: document.getElementById('profileCardExpandBtnProjects'),
+        content:   document.getElementById('projectsContent'),
+    },
+];
+
+// Shared collapse state — all cards mirror each other
+let profileCardCollapsed = false;
+
+function setProfileCardState(collapsed) {
+    profileCardCollapsed = collapsed;
+
+    profileCardGroups.forEach(({ card, expandBtn, content }) => {
+        if (!card) return;
+
+        if (collapsed) {
+            card.classList.add('collapsed');
+            if (expandBtn) expandBtn.classList.add('visible');
+            if (content)   content.classList.add('card-hidden');
+        } else {
+            card.classList.remove('collapsed');
+            if (expandBtn) expandBtn.classList.remove('visible');
+            if (content)   content.classList.remove('card-hidden');
+        }
+    });
+}
+
+// Wire collapse buttons (one per card instance in HTML)
+document.querySelectorAll('.profile-card-collapse').forEach(btn => {
+    btn.addEventListener('click', () => setProfileCardState(true));
+});
+
+// Wire expand buttons
+document.querySelectorAll('.profile-card-expand-btn').forEach(btn => {
+    btn.addEventListener('click', () => setProfileCardState(false));
+});
+
+// ── FEATURE 4: REAL-TIME AGE ──────────────────────────────────
+
+const DOB = new Date('2006-12-15T00:00:00');
+
+function calcAge() {
+    const now   = new Date();
+    let years   = now.getFullYear() - DOB.getFullYear();
+    let months  = now.getMonth()    - DOB.getMonth();
+    let days    = now.getDate()     - DOB.getDate();
+
+    if (days < 0) {
+        months--;
+        // Days in the previous month
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += prevMonth.getDate();
+    }
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+
+    return { years, months, days };
+}
+
+function updateAge() {
+    const el = document.getElementById('aboutAge');
+    if (!el) return;
+    const { years, months, days } = calcAge();
+    el.innerHTML =
+        `<span class="age-num">${years}</span> years, ` +
+        `<span class="age-num">${months}</span> ${months === 1 ? 'month' : 'months'}, and ` +
+        `<span class="age-num">${days}</span> ${days === 1 ? 'day' : 'days'}`;
+}
+
+updateAge();
+setInterval(updateAge, 1000 * 60); // update every minute
+
+// ── FEATURE 4: STAT CARDS ─────────────────────────────────────
+
+async function populateStats() {
+    let listData = null;
+
+    try {
+        const res = await fetch('../data/list.json');
+        if (res.ok) listData = await res.json();
+    } catch { /* file not present yet */ }
+
+    const projectCount = listData
+        ? (listData.projects || []).length
+        : PROJECTS_DATA.reduce((sum, g) => sum + g.projects.length, 0);
+
+    const certCount = listData
+        ? (listData.certificates || []).length
+        : 0;
+
+    // Years experience — from first project year (2026) to now
+    const startYear = 2024;
+    const yearsExp  = new Date().getFullYear() - startYear;
+
+    // Languages count — hardcoded for now, can be driven by data later
+    const langCount = 5; // HTML, CSS, JS, Python, Java
+
+    const setValue = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+
+    setValue('statProjects', projectCount);
+    setValue('statCerts',    certCount);
+    setValue('statYears',    yearsExp);
+    setValue('statLangs',    langCount);
+}
+
+populateStats();
 
 // ── BOOT ──────────────────────────────────────────────────────
 
