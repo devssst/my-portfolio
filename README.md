@@ -1,6 +1,6 @@
 # 🧑‍💻 Developer VIEN — Portfolio
 ### 🔰 Phase 1 — Welcome Page & Auth (In Progress)
-![Portfolio Background](assets/images/background.jpg)
+![Portfolio Background](assets/images/background.png)
 
 A personal developer portfolio for **Vien Fritzgerald V. Calderon**, built entirely with vanilla HTML, CSS, and JavaScript — no frameworks, no backend. Features a dark glassmorphism aesthetic, dual-mode welcome page (Visitor & Developer), and a fully editable admin dashboard.
 
@@ -118,7 +118,7 @@ my-portfolio/
 ## 🎨 Design Language
 
 ### Color Palette
-- **Background**: Lavender anime art (`background.jpg`)
+- **Background**: Lavender anime art (`background.png`)
 - **Overlay**: `rgba(0, 0, 0, 0.25)` dark tint
 - **Header**: `rgba(17, 25, 40, 0.75)` blurred dark glass
 - **Card**: `rgba(15, 10, 30, 0.55)` glassmorphism
@@ -149,21 +149,22 @@ my-portfolio/
 - [x] Back to Visitor Mode button
 - [ ] Firebase project setup and Google Sign-In integration
 - [ ] Developer UID whitelist in Firebase
-- [ ] Redirect to `pages/dashboard.html?mode=admin` on successful login
+- [x] Redirect to `pages/dashboard.html?mode=admin` on successful login
 - [ ] Store auth state in `sessionStorage`
 
 ### Phase 2 — Dashboard Shell
 - [x] Sticky header matching `index.html` style — show "ADMIN" badge if `?mode=admin`
 - [x] HTML skeleton with section anchors: `#hero`, `#about`, `#timeline`, `#projects`, `#reach`
-- [ ] Smooth scroll navigation links in header
-- [ ] Full-page scrolling layout, dark overlay, consistent padding
-- [ ] Read `?mode=admin` param in `dashboard.js` and set global `isAdmin` flag
+- [x] Smooth scroll navigation links in header
+- [x] Full-page scrolling layout, dark overlay, consistent padding
+- [x] Read `?mode=admin` param in `dashboard.js` and set global `isAdmin` flag
 
 ### Phase 3 — Dashboard Sections
-- [ ] **Hero** — profile photo, nickname, tagline, GitHub link
-- [ ] **About Me** — education card (BSIT, DPLBaliuag), skills tags, bio paragraph; data from JS array
+- [x] **Hero** — profile photo, nickname, tagline, GitHub link
+- [x] **About Me** — education card (BSIT, DPLBaliuag), skills tags, bio paragraph; data from JS array
 - [ ] **Timeline** — vertical timeline with year markers; hover reveals exact date; rendered from JS array
 - [ ] **Projects** — card grid sorted by year; name, description, tech tags, Live + GitHub buttons; rendered from JS array
+- [ ] **Certificates** - certification cards sorted by who gives it
 - [ ] **Reach Me** — EmailJS contact form (name, email, subject, message); test with developer's email
 
 ### Phase 4 — Admin Edit Mode
