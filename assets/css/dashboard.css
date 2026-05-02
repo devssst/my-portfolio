@@ -1,3 +1,8 @@
+/* 
+    NOTE FROM DEVS: 
+        1. The glassmorphism is down! I'm finding a solution but for now, background + opacity first.
+    */
+
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
@@ -16,7 +21,7 @@
 
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background-image: url('../images/background.jpg');
+    background-image: url('../images/background.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -30,14 +35,13 @@ body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.75);
     z-index: 0;
     pointer-events: none;
+    backdrop-filter: blur(6px);
 }
 
-/* ============================================================
-   HEADER
-   ============================================================ */
+/* HEADER */
 .dash-header {
     position: fixed;
     top: 0;
@@ -49,13 +53,16 @@ body::before {
     align-items: center;
     padding: 0 48px;
     background: rgba(17, 25, 40, 0.8);
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-    transform: translateY(0);
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px) saturate(180%);
+    -webkit-backdrop-filter: blur(8px) saturate(180%);
+    transform: translateY(0);
+    
 }
 
+/* JUST COMMENTED THE FUNCTION ON JS TO MATCH THE CURRENT THEME */
+/* BUT I WILL LET THIS SLIP TO THE CODE BECAUSE WHAT IT DOES IS JUST SLIDE UP TO HIDE */
 .dash-header.hidden {
     transform: translateY(-100%);
 }
@@ -99,7 +106,7 @@ body::before {
     text-decoration: none;
     padding: 6px 14px;
     border-radius: 8px;
-    transition: color var(--transition), background var(--transition);
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
     white-space: nowrap;
 }
 
@@ -119,9 +126,7 @@ body::before {
     flex-shrink: 0;
 }
 
-/* ============================================================
-   CONTENT + SECTIONS
-   ============================================================ */
+/* CONTENT SECTION */
 .dash-content {
     position: fixed;
     top: var(--header-h);
@@ -140,15 +145,12 @@ body::before {
     opacity: 0;
     pointer-events: none;
     z-index: 0;
-
-    /* Scrollbar hidden by default */
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
 }
 
-/* Scrollbar visible on active scroll (.scrolling added by JS) */
 .dash-section.scrolling {
-    scrollbar-color: rgba(168, 85, 247, 0.2) transparent;
+    scrollbar-color: rgba(168, 85, 247, 0.1) transparent;
 }
 
 .dash-section::-webkit-scrollbar {
@@ -168,9 +170,6 @@ body::before {
     background: rgba(168, 85, 247, 0.3);
 }
 
-/* Only the incoming section fades in — outgoing snaps away instantly.
-   Using animation (not transition) so the fade is one-directional:
-   removing .active snaps opacity back to 0 with no cross-fade overlap. */
 @keyframes section-fade-in {
     from { opacity: 0; }
     to   { opacity: 1; }
@@ -203,15 +202,13 @@ body::before {
 
 .section-heading h2 {
     font-size: 42px;
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: -0.02em;
     color: #fff;
     line-height: 1;
+    font-family: Arial, Helvetica, sans-serif;
 }
-
-/* ============================================================
-   HOME SECTION
-   ============================================================ */
+/* HOME SECTION */
 #section-home {
     display: flex;
     flex-direction: column;
@@ -220,7 +217,6 @@ body::before {
     padding-top: 0;
 }
 
-/* PART 1 -- HERO */
 .hero-inner {
     display: flex;
     align-items: center;
@@ -233,15 +229,16 @@ body::before {
     flex-shrink: 0;
 }
 
-/* Avatar */
 .hero-avatar-wrap {
     position: relative;
     flex-shrink: 0;
 }
 
 .hero-avatar {
-    width: 180px;
-    height: 180px;
+    width: 240px;
+    height: 240px;
+    margin-left: -56px;
+    margin-top: -16px;
     border-radius: 50%;
     object-fit: cover;
     object-position: top center;
@@ -252,7 +249,7 @@ body::before {
 
 .hero-avatar-glow {
     position: absolute;
-    inset: -12px;
+    inset: -4px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, transparent 70%);
     z-index: 1;
@@ -264,7 +261,6 @@ body::before {
     50%       { transform: scale(1.06); opacity: 1; }
 }
 
-/* Hero text */
 .hero-text {
     display: flex;
     flex-direction: column;
@@ -277,6 +273,11 @@ body::before {
     letter-spacing: 0.2em;
     color: rgba(200, 160, 255, 0.9);
     text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+}
+
+.hero-eyebrow-middle {
+    font-size: 14px;
+    font-weight: 900;
 }
 
 .hero-name {
@@ -325,8 +326,24 @@ body::before {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+.hero-bio-wai {
+    color: rgb(255, 255, 255);
+    font-weight: 800;
+    font-size: 16px;
+    text-shadow: 0 0 20px rgba(168,85,247,0.55), 0 1px 8px rgba(0,0,0,0.5);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.hero-bio-q {  
+    color: rgb(255, 255, 255);
+    font-weight: 400;
+    font-size: 16px;
+    text-shadow: 0 0 20px rgba(168,85,247,0.55), 0 1px 8px rgba(0,0,0,0.5);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
 .hero-bio {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.8);
     line-height: 1.8;
@@ -335,7 +352,6 @@ body::before {
     text-shadow: 0 1px 10px rgba(0,0,0, 0);
 }
 
-/* Social buttons */
 .hero-socials {
     display: flex;
     gap: 10px;
@@ -346,7 +362,7 @@ body::before {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0);
+    background: rgba(255, 255, 255, 0.01);
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: rgba(255, 255, 255, 0.9);
     display: flex;
@@ -355,18 +371,20 @@ body::before {
     text-decoration: none;
     font-size: 14px;
     transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+
+    /*
     backdrop-filter: saturate(140%) blur(4px);
     -webkit-backdrop-filter: saturate(140%) blur(4px);
-    /* Force GPU layer so backdrop-filter is always pre-composited */
-    transform: translateZ(0);
     will-change: transform;
+    transform: translateZ(10px);
+    */
 }
 
 .social-btn-icon:hover {
     background: rgba(168, 85, 247, 0.2);
     border-color: rgba(168, 85, 247, 0.5);
     color: rgba(192, 132, 252, 1);
-    transform: translateY(-2px) translateZ(0);
+    transform: translateY(-2px) /*translateZ(0)*/;
     font-size: 16px;
 }
 
@@ -394,31 +412,30 @@ body::before {
     align-items: flex-start;
 }
 
-/* ============================================================
-   DOC CARDS (CV / RESUME) -- Feature 3
-   ============================================================ */
+/* DOCUMENT CARDS */
 .doc-card {
     position: relative;
     width: 220px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0);
-    backdrop-filter: blur(8px) saturate(160%);
-    -webkit-backdrop-filter: blur(8px) saturate(160%);
+    background: rgba(255, 255, 255, 0.001);
     border: 1px solid rgba(255, 255, 255, 0.15);
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     flex-shrink: 0;
-    /* Force GPU layer so backdrop-filter is always pre-composited */
+
+    /*
+    backdrop-filter: blur(8px) saturate(160%);
+    -webkit-backdrop-filter: blur(8px) saturate(160%);
     transform: translateZ(0);
-    will-change: transform;
+    will-change: transform;*/
 }
 
 .doc-card:hover {
-    transform: translateY(-3px) translateZ(0);
-    background: rgba(255, 255, 255, 0.13);
-    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-3px) /*translateZ(0)*/;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.5);
 }
 
 .doc-card.expanded {
@@ -483,7 +500,6 @@ body::before {
     color: rgba(255, 255, 255, 0.5);
 }
 
-/* Expand-bottom footer -- slides open on click */
 .doc-card-expand {
     max-height: 0;
     overflow: hidden;
@@ -544,11 +560,7 @@ body::before {
     color: rgba(255, 255, 255, 0.9);
 }
 
-/* ============================================================
-   PROFILE CARD (shared: ABOUT, TIMELINE, PROJECTS) -- Feature 4
-   ============================================================ */
-
-/* Sections that use the profile card layout */
+/* PROFILE CARD */
 #section-about,
 #section-timeline,
 #section-projects,
@@ -560,7 +572,6 @@ body::before {
     align-items: flex-start;
 }
 
-/* The left profile card — floating glassmorphism (Bug 2: universal glass style) */
 .profile-card {
     width: var(--profile-w);
     flex-shrink: 0;
@@ -569,48 +580,30 @@ body::before {
     align-items: center;
     padding: 36px 20px 28px;
     gap: 10px;
-
-    /* Bug 2 fix: universal glassmorphism matching doc-card */
-    background: rgba(255, 255, 255, 0);
-    backdrop-filter: blur(8px) saturate(120%);
-    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    background: rgba(255, 255, 255, 0.001);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 20px;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45),
                 inset 0 1px 0 rgba(255, 255, 255, 0.08);
-
-    /* Floating — margin keeps background visible around card */
     margin: 24px 0 24px 24px;
     position: relative;
-
-    /* Force GPU layer so backdrop-filter is always pre-composited */
-    will-change: transform;
     overflow: hidden;
-
-    /* Slide animation: only transform (visual) + margin-right (layout space)
-       animate. Width, padding, opacity never change — card stays full-size
-       the entire time, so inner elements never reflow or zoom. */
     transition: transform     0.4s cubic-bezier(0.4, 0, 0.2, 1),
                 margin-right  0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /*
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    will-change: transform;*/
 }
 
 .profile-card.collapsed {
-    /* translateX moves the card fully behind the section's left wall.
-       -100% = -220px (own width), minus 24px (its left margin) = -244px total.
-       The parent section has overflow:hidden so it clips cleanly. */
     transform: translateX(calc(-100% - 24px));
-
-    /* margin-right reclaims the card's layout space (width + left-margin = 244px)
-       so the content area expands in sync with the visual slide.
-       No width/padding/opacity change — card stays full-size throughout. */
     margin-right: calc(-1 * (var(--profile-w) + 24px));
-
-    /* Same curve as the base transition for a smooth in/out */
     transition: transform     0.4s cubic-bezier(0.4, 0, 0.2, 1),
                 margin-right  0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Collapse button -- top right of card */
 .profile-card-collapse {
     position: absolute;
     top: 14px;
@@ -634,10 +627,9 @@ body::before {
     color: rgba(255, 255, 255, 1);
 }
 
-/* Avatar in profile card */
 .profile-card-avatar {
-    width: 96px;
-    height: 96px;
+    width: 108px;
+    height: 108px;
     border-radius: 50%;
     object-fit: cover;
     object-position: top center;
@@ -647,8 +639,9 @@ body::before {
 }
 
 .profile-card-name {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 16px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 900;
     color: rgba(255, 255, 255, 0.9);
     text-align: center;
     line-height: 1.4;
@@ -669,14 +662,12 @@ body::before {
     margin-top: 4px;
 }
 
-/* Smaller social icons inside profile card */
 .profile-card-socials .social-btn-icon {
     width: 30px;
     height: 30px;
     font-size: 11px;
 }
 
-/* Floating expand button -- visible only when card is collapsed */
 .profile-card-expand-btn {
     position: absolute;
     left: 12px;
@@ -686,9 +677,7 @@ body::before {
     height: 28px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(17, 25, 40, 0.8);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(17, 25, 40, 0.1);
     color: rgba(255, 255, 255, 0.5);
     font-size: 11px;
     cursor: pointer;
@@ -699,8 +688,11 @@ body::before {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease, background 0.2s, color 0.2s;
-    /* Force GPU layer — always composited even when hidden */
+
+    /*
     will-change: opacity;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);*/
 }
 
 .profile-card-expand-btn.visible {
@@ -714,17 +706,13 @@ body::before {
     color: rgba(192, 132, 252, 1);
 }
 
-/* Right scrollable content area */
 .section-with-profile {
     flex: 1;
     align-self: stretch;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 48px 80px 64px 60px;
-    /* Bug 1 fix: padding-left animates at 0.4s in sync with card width */
     transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-    /* Scrollbar styling */
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
 }
@@ -750,16 +738,12 @@ body::before {
     background: rgba(168, 85, 247, 0.3);
 }
 
-/* When card is collapsed, center the content */
 .section-with-profile.card-hidden {
     padding-left: 80px;
-    /* Bug 1 fix: in sync with card — no delayed snap */
     transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ============================================================
-   ABOUT SECTION CONTENT -- Feature 4
-   ============================================================ */
+/* ABOUT SECTION */
 .about-block {
     margin-bottom: 36px;
 }
@@ -773,11 +757,6 @@ body::before {
 }
 
 .about-bio {
-    /*font-size: 16px;
-    color: rgba(255, 255, 255, 0.9);
-    line-height: 1.85;
-    font-weight: 400;
-    margin-top: -16px;*/
     font-size: 14px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.8);
@@ -788,7 +767,6 @@ body::before {
     text-shadow: 0 1px 10px rgba(0,0,0, 0);
 }
 
-/* Real-time age */
 .about-age {
     font-size: 14px;
     font-weight: 600;
@@ -804,20 +782,27 @@ body::before {
     font-size: 22px;
 }
 
-/* Education card */
 .about-edu-card {
     display: flex;
     align-items: flex-start;
     gap: 18px;
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(8px) saturate(140%);
-    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    background: rgba(255, 255, 255, 0.01);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
     padding: 20px 22px;
-    /* Force GPU layer so backdrop-filter is always pre-composited */
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+
+    /*
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
     transform: translateZ(0);
-    will-change: transform;
+    will-change: transform;*/
+}
+
+.about-edu-card:hover {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.5);
+    transform: translateY(-2px) /*translateZ(0)*/;
 }
 
 .about-edu-icon {
@@ -849,7 +834,6 @@ body::before {
     color: rgba(168, 85, 247, 0.75);
 }
 
-/* Stat cards */
 .about-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -857,23 +841,24 @@ body::before {
 }
 
 .about-stat-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.01);
     border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 12px;
     padding: 18px 14px;
     text-align: center;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+
+    /*
     backdrop-filter: saturate(140%) blur(6px);
     -webkit-backdrop-filter: saturate(140%) blur(6px);
-    transition: background 0.2s, border-color 0.2s, transform 0.2s;
-    /* Force GPU layer so backdrop-filter is always pre-composited */
     transform: translateZ(0);
-    will-change: transform;
+    will-change: transform;*/
 }
 
 .about-stat-card:hover {
     background: rgba(168, 85, 247, 0.08);
     border-color: rgba(168, 85, 247, 0.5);
-    transform: translateY(-2px) translateZ(0);
+    transform: translateY(-2px) /*translateZ(0)*/;
 }
 
 .about-stat-value {
@@ -893,10 +878,7 @@ body::before {
     color: rgba(255, 255, 255, 0.75);
     text-transform: uppercase;
 }
-
-/* ============================================================
-   TIMELINE
-   ============================================================ */
+/* TIMELINE SECTION */
 .timeline {
     position: relative;
     padding-left: 24px;
@@ -965,14 +947,15 @@ body::before {
     flex-direction: column;
     padding: 10px 14px;
     border-radius: 10px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.01);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    transition: background 0.2s, border-color 0.2s;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
     cursor: default;
     position: relative;
 }
 
 .timeline-entry:hover {
+    transform: translateY(2px);
     background: rgba(168, 85, 247, 0.07);
     border-color: rgba(168, 85, 247, 0.5);
 }
@@ -1002,9 +985,7 @@ body::before {
     line-height: 1.5;
 }
 
-/* ============================================================
-   PROJECTS
-   ============================================================ */
+/* PROJECT SECTION */
 .projects-year-group {
     margin-bottom: 36px;
 }
@@ -1024,7 +1005,7 @@ body::before {
 }
 
 .project-card {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.01);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
     padding: 20px;
@@ -1110,9 +1091,7 @@ body::before {
     border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* ============================================================
-   CERTIFICATES -- Feature 7 placeholder
-   ============================================================ */
+/* CERTIFICATES */
 .coming-soon {
     display: flex;
     flex-direction: column;
@@ -1136,9 +1115,7 @@ body::before {
     text-transform: uppercase;
 }
 
-/* ============================================================
-   REACH ME
-   ============================================================ */
+/* REACH ME */
 .reach-content {
     max-width: 600px;
 }
@@ -1147,6 +1124,7 @@ body::before {
     font-size: 14px;
     color: rgba(255, 255, 255, 0.75);
     margin-bottom: 28px;
+    margin-top: -24px;
     line-height: 1.6;
 }
 
@@ -1177,7 +1155,7 @@ body::before {
 
 .reach-field input,
 .reach-field textarea {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.01);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     color: #fff;
@@ -1231,9 +1209,7 @@ body::before {
     transform: translateY(0);
 }
 
-/* ============================================================
-   BADGE DROPDOWN -- Feature 1
-   ============================================================ */
+/* BADGE DROPDOWN */
 .badge-wrap {
     position: relative;
     display: inline-block;
@@ -1283,15 +1259,12 @@ body::before {
     transform: rotate(180deg);
 }
 
-/* Dropdown panel */
 .badge-dropdown {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
     min-width: 150px;
-    background: rgba(17, 25, 40, 0.92);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    background: rgba(17, 25, 40, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 6px;
@@ -1303,8 +1276,11 @@ body::before {
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
     z-index: 200;
-    /* Force GPU layer so backdrop-filter is always pre-composited */
-    will-change: transform, opacity;
+
+    /*
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    will-change: transform, opacity;*/
 }
 
 .badge-wrap.open .badge-dropdown {
@@ -1313,7 +1289,6 @@ body::before {
     pointer-events: all;
 }
 
-/* Menu items */
 .badge-menu-item {
     width: 100%;
     display: flex;
@@ -1358,7 +1333,6 @@ body::before {
     color: rgba(255, 120, 120, 0.9);
 }
 
-/* Admin-only EDIT item */
 .badge-menu-item.admin-only {
     display: none;
 }
@@ -1374,13 +1348,11 @@ body::before {
     margin: 4px 6px;
 }
 
-/* ============================================================
-   FAQ OVERLAY
-   ============================================================ */
+/* FAQ */
 .faq-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
     z-index: 500;
     display: flex;
@@ -1389,7 +1361,6 @@ body::before {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
-    /* Force GPU layer so backdrop-filter is always pre-composited */
     will-change: opacity;
 }
 
@@ -1399,11 +1370,9 @@ body::before {
 }
 
 .faq-card {
-    background: rgba(17, 25, 40, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(17, 25, 40, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
+    border-radius: 12px;
     padding: 36px 40px;
     max-width: 480px;
     width: 90%;
@@ -1411,8 +1380,11 @@ body::before {
     transform: translateY(12px) scale(0.97);
     transition: transform 0.25s ease;
     position: relative;
-    /* Force GPU layer so backdrop-filter is always pre-composited */
-    will-change: transform;
+
+    /*
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    will-change: transform;*/
 }
 
 .faq-overlay.open .faq-card {

@@ -2,13 +2,14 @@
 body {
     margin: 0;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background-image: url('../images/background.jpg');
+    background-image: url('../images/background.png');
     background-size: cover;
 }
 
 /* FLOATING BACKGROUND */
 .base-card {
-    background-color: rgba(0, 0, 0, 0.25);
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(2px);
     overflow: hidden;
     width: 100%;
     height: 100vh;

@@ -36,7 +36,7 @@ const PROJECTS_DATA = [
                 desc: "School Library Inventory Management System for Dalubhasaang Politekniko ng Lungsod ng Baliwag.",
                 tags: ["HTML", "CSS", "JS"],
                 live: "https://devssst.github.io/btech-slims",
-                source: "https://github.com/devssst/slims"
+                source: "https://github.com/devssst/btech-slims"
             }
         ]
     }
@@ -52,6 +52,7 @@ const DOC_DATA_FALLBACK = {
             file: "data/files/cv.pdf",
         }
     ],
+
     resume: [
         {
             title: "Resume",
@@ -59,21 +60,19 @@ const DOC_DATA_FALLBACK = {
             uploaded: "2026-05-01",
             file: "data/files/resume.pdf",
         }
-    ]
+    ],
 };
 
 // ── INIT ─────────────────────────────────────────────────────
 
 const params   = new URLSearchParams(window.location.search);
 const isAdmin  = params.get('mode') === 'admin';
-
 const badge    = document.getElementById('modeBadge');
 const header   = document.getElementById('dashHeader');
 const content  = document.getElementById('dashContent');
 const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.dash-section');
 
-// Fix: use innerHTML so the chevron <i> tag is preserved
 if (badge) {
     badge.innerHTML = `${isAdmin ? 'ADMIN' : 'VISITOR'} <i class="fa-solid fa-chevron-down badge-chevron"></i>`;
     if (isAdmin) badge.classList.add('admin');
@@ -104,7 +103,6 @@ function switchSection(id) {
 
     target.classList.add('active');
 
-    // Reset scroll — section-with-profile sections scroll their inner div, not the section
     const innerScroll = target.querySelector('.section-with-profile');
     if (innerScroll) {
         innerScroll.scrollTop = 0;
@@ -157,15 +155,15 @@ function attachScrollListener(el) {
     el.addEventListener('scroll', () => {
         const scrollY = el.scrollTop;
         const lastY   = sectionScrollY.get(el);
-
-        // Scrollbar fade-in / fade-out
         el.classList.add('scrolling');
         clearTimeout(scrollbarTimers.get(el));
         scrollbarTimers.set(el, setTimeout(() => {
             el.classList.remove('scrolling');
         }, 1500));
 
-        // Header hide / show
+        // HEADER SHOW/HIDE WHEN SCROLLING
+
+        /*
         if (!ticking) {
             window.requestAnimationFrame(() => {
                 if (scrollY > lastY && scrollY > 60) {
@@ -177,16 +175,14 @@ function attachScrollListener(el) {
                 ticking = false;
             });
             ticking = true;
-        }
+        }*/
     });
 }
 
 sections.forEach(section => attachScrollListener(section));
-
-// Also attach to section-with-profile divs once DOM is ready
 document.querySelectorAll('.section-with-profile').forEach(el => attachScrollListener(el));
 
-// ── SECTION-HIJACK SCROLL — Feature 2 ────────────────────────
+// ── SECTION-HIJACK SCROLL ────────────────────────────────────
 
 let hijackCooldown = false;
 
@@ -206,12 +202,10 @@ function tryHijack(dir) {
     setTimeout(() => { hijackCooldown = false; }, 300);
 }
 
-// Wheel — hijack only at scroll boundaries
 document.addEventListener('wheel', (e) => {
     const activeSection = document.getElementById('section-' + currentSection);
     if (!activeSection) return;
 
-    // For profile-card sections, check the inner scrollable div
     const scrollEl = activeSection.querySelector('.section-with-profile') || activeSection;
 
     const atBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight <= 5;
@@ -224,7 +218,6 @@ document.addEventListener('wheel', (e) => {
     }
 }, { passive: true });
 
-// Touch — hijack only at scroll boundaries
 let touchStartY = 0;
 
 document.addEventListener('touchstart', (e) => {
@@ -340,7 +333,7 @@ function renderProjects() {
     });
 }
 
-// ── RENDER DOC CARD — Feature 3 ───────────────────────────────
+// ── RENDER DOC CARD ───────────────────────────────
 
 function renderDocCard(data) {
     const card = document.createElement('div');
@@ -373,7 +366,7 @@ function renderDocCard(data) {
         </div>
     `;
 
-    // Async PDF preview — renders page 1 onto a canvas, swaps out placeholder
+    // Async PDF preview
     if (filePath && window.pdfjsLib) {
         const previewEl  = card.querySelector('.doc-card-preview');
         const placeholder = previewEl.querySelector('.doc-card-placeholder-icon');
@@ -398,10 +391,9 @@ function renderDocCard(data) {
                     previewEl.appendChild(canvas);
                 });
             })
-            .catch(() => { /* file missing or error — placeholder stays */ });
+            .catch(() => {});
     }
 
-    // Click to toggle — accordion: collapse others, expand this one
     card.addEventListener('click', (e) => {
         if (e.target.closest('.doc-card-actions')) return;
         const isExpanded = card.classList.contains('expanded');
@@ -412,7 +404,7 @@ function renderDocCard(data) {
     return card;
 }
 
-// ── RENDER DOCS (HOME SECTION) — Feature 3 ───────────────────
+// ── RENDER DOCS (HOME SECTION) ───────────────────
 
 async function renderDocs() {
     const grid = document.getElementById('homeDocsGrid');
@@ -420,11 +412,10 @@ async function renderDocs() {
 
     let docData = null;
 
-    // 1. Check localStorage first
     try {
         const stored = localStorage.getItem('portfolio_docs');
         if (stored) docData = JSON.parse(stored);
-    } catch { /* ignore */ }
+    } catch {}
 
     // 2. Try fetching data/list.json from the repo
     if (!docData) {
@@ -437,10 +428,9 @@ async function renderDocs() {
                     resume: json.resume || []
                 };
             }
-        } catch { /* file doesn't exist yet — use fallback */ }
+        } catch {}
     }
 
-    // 3. Fall back to hardcoded placeholder
     if (!docData) {
         docData = DOC_DATA_FALLBACK;
     }
@@ -488,9 +478,7 @@ if (reachForm) {
     });
 }
 
-// ── FEATURE 4: PROFILE CARD COLLAPSE / EXPAND ────────────────
-
-// All profile card instances on the page (one per section)
+// ── PROFILE CARD COLLAPSE / EXPAND ────────────────
 const profileCardGroups = [
     {
         card:      document.getElementById('profileCard'),
@@ -514,7 +502,6 @@ const profileCardGroups = [
     },
 ];
 
-// Shared collapse state — all cards mirror each other
 let profileCardCollapsed = false;
 
 function setProfileCardState(collapsed) {
@@ -535,17 +522,15 @@ function setProfileCardState(collapsed) {
     });
 }
 
-// Wire collapse buttons (one per card instance in HTML)
 document.querySelectorAll('.profile-card-collapse').forEach(btn => {
     btn.addEventListener('click', () => setProfileCardState(true));
 });
 
-// Wire expand buttons
 document.querySelectorAll('.profile-card-expand-btn').forEach(btn => {
     btn.addEventListener('click', () => setProfileCardState(false));
 });
 
-// ── FEATURE 4: REAL-TIME AGE ──────────────────────────────────
+// ── REAL-TIME AGE ──────────────────────────────────
 
 const DOB = new Date('2006-12-15T00:00:00');
 
@@ -557,7 +542,6 @@ function calcAge() {
 
     if (days < 0) {
         months--;
-        // Days in the previous month
         const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
         days += prevMonth.getDate();
     }
@@ -580,9 +564,9 @@ function updateAge() {
 }
 
 updateAge();
-setInterval(updateAge, 1000 * 60); // update every minute
+setInterval(updateAge, 1000 * 60);
 
-// ── FEATURE 4: STAT CARDS ─────────────────────────────────────
+// ── STAT CARDS ─────────────────────────────────────
 
 async function populateStats() {
     let listData = null;
@@ -590,7 +574,7 @@ async function populateStats() {
     try {
         const res = await fetch('../data/list.json');
         if (res.ok) listData = await res.json();
-    } catch { /* file not present yet */ }
+    } catch {}
 
     const projectCount = listData
         ? (listData.projects || []).length
@@ -600,12 +584,9 @@ async function populateStats() {
         ? (listData.certificates || []).length
         : 0;
 
-    // Years experience — from first project year (2026) to now
-    const startYear = 2024;
+    const startYear = 2025;
     const yearsExp  = new Date().getFullYear() - startYear;
-
-    // Languages count — hardcoded for now, can be driven by data later
-    const langCount = 5; // HTML, CSS, JS, Python, Java
+    const langCount = 5;
 
     const setValue = (id, val) => {
         const el = document.getElementById(id);
@@ -619,14 +600,13 @@ async function populateStats() {
 }
 
 populateStats();
-
 // ── BOOT ──────────────────────────────────────────────────────
 
 renderTimeline();
 renderProjects();
 renderDocs();
 
-// ── BADGE DROPDOWN — Feature 1 ────────────────────────────────
+// ── BADGE DROPDOWN ────────────────────────────────
 
 const badgeWrap     = document.getElementById('badgeWrap');
 const badgeDropdown = document.getElementById('badgeDropdown');
@@ -636,12 +616,10 @@ const menuLeave     = document.getElementById('menuLeave');
 const faqOverlay    = document.getElementById('faqOverlay');
 const faqClose      = document.getElementById('faqClose');
 
-// Show EDIT button for admin
 if (isAdmin && menuEdit) {
     menuEdit.classList.add('visible');
 }
 
-// Toggle dropdown
 if (badgeWrap) {
     badgeWrap.querySelector('.mode-badge').addEventListener('click', (e) => {
         e.stopPropagation();
@@ -649,12 +627,10 @@ if (badgeWrap) {
     });
 }
 
-// Close on outside click
 document.addEventListener('click', (e) => {
     if (badgeWrap && !badgeWrap.contains(e.target)) {
         badgeWrap.classList.remove('open');
     }
-    // Collapse any expanded doc card when clicking outside it
     if (!e.target.closest('.doc-card')) {
         document.querySelectorAll('.doc-card.expanded').forEach(c => c.classList.remove('expanded'));
     }

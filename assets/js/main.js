@@ -1,3 +1,5 @@
+// NOTE FROM DEVS: The credentials are hardcoded as of now. Will connect it to firebase later.
+
 const backBtn = document.getElementById("backToVST");
 const vstBtn = document.getElementById("vst");
 const logo = document.getElementById("logo");
