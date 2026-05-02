@@ -1,6 +1,6 @@
 # 🧑‍💻 Developer VIEN — Portfolio
 ### 🔰 Phase 1 — Welcome Page & Auth (In Progress)
-![Portfolio Background](assets/images/background.png)
+![Portfolio Background](assets/images/banner.png)
 
 A personal developer portfolio for **Vien Fritzgerald V. Calderon**, built entirely with vanilla HTML, CSS, and JavaScript — no frameworks, no backend. Features a dark glassmorphism aesthetic, dual-mode welcome page (Visitor & Developer), and a fully editable admin dashboard.
 
