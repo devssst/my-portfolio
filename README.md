@@ -80,7 +80,7 @@ my-portfolio/
 │   │
 │   └── 📂 images/
 │       ├── logo.png            # Red V logo (favicon + header)
-│       ├── background.png      # Lavender anime background
+│       ├── background.png      # python code background
 │       ├── picture.jpeg        # Developer profile picture
 │       ├── google.png          # Google OAuth icon
 │       ├── banner.png          # README.md preview
