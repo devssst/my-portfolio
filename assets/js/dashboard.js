@@ -507,6 +507,11 @@ const profileCardGroups = [
         expandBtn: document.getElementById('profileCardExpandBtnProjects'),
         content:   document.getElementById('projectsContent'),
     },
+    {
+        card:      document.getElementById('profileCardCertificates'),
+        expandBtn: document.getElementById('profileCardExpandBtnCertificates'),
+        content:   document.getElementById('certificatesContent'),
+    },
 ];
 
 // Shared collapse state — all cards mirror each other

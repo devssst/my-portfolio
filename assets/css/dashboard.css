@@ -523,43 +523,66 @@ body::before {
 /* Sections that use the profile card layout */
 #section-about,
 #section-timeline,
-#section-projects {
+#section-projects,
+#section-certificates {
     display: flex;
     flex-direction: row;
     padding: 0;
     overflow: hidden;
+    align-items: flex-start;
 }
 
-/* The left profile card */
+/* The left profile card — floating glassmorphism (Bug 1) */
 .profile-card {
     width: var(--profile-w);
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px 32px;
+    padding: 36px 20px 28px;
     gap: 10px;
-    background: rgba(15, 10, 30, 0.45);
-    border-right: 1px solid rgba(255, 255, 255, 0.07);
-    position: relative;
-    overflow: hidden;
 
-    /* Slide in/out */
-    transform: translateX(0);
-    opacity: 1;
+    /* Glassmorphism matching login-card */
+    background: rgba(15, 10, 30, 0.55);
+    backdrop-filter: blur(8px) saturate(160%);
+    -webkit-backdrop-filter: blur(8px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    /* Floating — margin keeps background visible around card */
+    margin: 24px 0 24px 24px;
+    position: relative;
+
+    /* Bug 5: pre-composite blur to prevent flash on section entry */
+    will-change: backdrop-filter;
+
+    /* Expand transition (applied when .collapsed is REMOVED) —
+       dimensional props snap back immediately, visual props animate */
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity  0.35s ease,
-                width    0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                opacity   0.35s ease,
+                width     0s,
+                margin    0s,
+                padding   0s;
 }
 
 .profile-card.collapsed {
     transform: translateX(-100%);
     opacity: 0;
     width: 0;
-    padding-left: 0;
-    padding-right: 0;
+    padding: 0;
+    margin: 0;
     overflow: hidden;
-    border-right-color: transparent;
+
+    /* Bug 4: collapse transition — let transform+opacity animate first,
+       then snap dimensional props to 0 after 0.4s so children
+       never get squished during the visual animation */
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity   0.35s ease,
+                width     0s 0.4s,
+                margin    0s 0.4s,
+                padding   0s 0.4s;
 }
 
 /* Collapse button -- top right of card */
@@ -668,6 +691,7 @@ body::before {
 /* Right scrollable content area */
 .section-with-profile {
     flex: 1;
+    align-self: stretch;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 48px 80px 64px 60px;
@@ -743,8 +767,10 @@ body::before {
     display: flex;
     align-items: flex-start;
     gap: 18px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px) saturate(160%);
+    -webkit-backdrop-filter: blur(8px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
     padding: 20px 22px;
 }
