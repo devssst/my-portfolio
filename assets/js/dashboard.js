@@ -812,12 +812,117 @@ if (levelsOverlay) {
     });
 }
 
+// ── RENDER CERTIFICATES ───────────────────────────────────────
+
+function renderCertCard(data) {
+    const card = document.createElement('div');
+    card.className = 'cert-card';
+
+    const filePath = data.file ? `../${data.file}` : null;
+
+    let dateStr = '';
+    if (data.date) {
+        const d = new Date(data.date + '-01');
+        dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    }
+
+    const previewHTML = filePath
+        ? `<img src="${filePath}" alt="${data.title}" loading="lazy">`
+        : `<i class="fa-solid fa-certificate cert-card-placeholder-icon"></i>`;
+
+    card.innerHTML = `
+        <div class="cert-card-preview">${previewHTML}</div>
+        <div class="cert-card-body">
+            <div class="cert-card-title">${data.title}</div>
+            ${data.details ? `<div class="cert-card-details">${data.details}</div>` : ''}
+            ${dateStr ? `<div class="cert-card-date">${dateStr}</div>` : ''}
+        </div>
+    `;
+
+    // Handle broken image -> fallback to placeholder icon
+    const img = card.querySelector('.cert-card-preview img');
+    if (img) {
+        img.addEventListener('error', () => {
+            img.replaceWith(Object.assign(
+                document.createElement('i'),
+                { className: 'fa-solid fa-certificate cert-card-placeholder-icon' }
+            ));
+        });
+    }
+
+    // Click anywhere on card -> open overlay
+    card.addEventListener('click', () => {
+        const overlay  = document.getElementById('certOverlay');
+        const overlayImg = document.getElementById('certOverlayImg');
+        if (!overlay || !overlayImg || !filePath) return;
+        overlayImg.src = filePath;
+        overlayImg.alt = data.title;
+        overlay.classList.add('open');
+    });
+
+    return card;
+}
+
+async function renderCerts() {
+    const root = document.getElementById('certsRoot');
+    if (!root) return;
+
+    let certs = null;
+
+    // 1. localStorage override
+    try {
+        const stored = localStorage.getItem('portfolio_certs');
+        if (stored) certs = JSON.parse(stored);
+    } catch {}
+
+    // 2. Fetch metadata.json
+    if (!certs) {
+        try {
+            const res = await fetch('../data/metadata.json');
+            if (res.ok) {
+                const json = await res.json();
+                certs = json.certificates || [];
+            }
+        } catch {}
+    }
+
+    // 3. Nothing found
+    if (!certs || certs.length === 0) {
+        root.innerHTML = `
+            <div class="certs-empty">
+                <i class="fa-solid fa-certificate certs-empty-icon"></i>
+                <p>No certificates yet.</p>
+            </div>
+        `;
+        return;
+    }
+
+    root.innerHTML = '';
+    certs.forEach(cert => root.appendChild(renderCertCard(cert)));
+}
+
+// ── CERT OVERLAY WIRING ───────────────────────────────────────
+
+const certOverlay      = document.getElementById('certOverlay');
+const certOverlayClose = document.getElementById('certOverlayClose');
+
+if (certOverlayClose) {
+    certOverlayClose.addEventListener('click', () => certOverlay.classList.remove('open'));
+}
+
+if (certOverlay) {
+    certOverlay.addEventListener('click', (e) => {
+        if (e.target === certOverlay) certOverlay.classList.remove('open');
+    });
+}
+
 // ── BOOT ──────────────────────────────────────────────────────
 
 renderTimeline();
 renderProjects();
 renderDocs();
 renderSkills();
+renderCerts();
 
 // ── BADGE DROPDOWN ────────────────────────────────
 

@@ -1,0 +1,16 @@
+{
+    "certificates": [
+        {
+            "title": "Test Certificate 1",
+            "details": "Don't take it seriously, this is just for testing!",
+            "date": "2025-01",
+            "file": "data/files/cert1.png"
+        },
+        {
+            "title": "Test Certificate 2, long description",
+            "details": "Don't take it seriously, this is just for testing! Don't take it seriously, this is just for testing! Don't take it seriously, this is just for testing! Don't take it seriously, this is just for testing! Don't take it seriously, this is just for testing!",
+            "date": "2026-01",
+            "file": "data/files/cert2.png"
+        }
+    ]
+}

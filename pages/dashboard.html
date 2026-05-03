@@ -298,10 +298,7 @@
                         <span class="section-tag">05 / CERTIFICATES</span>
                         <h2>CERTIFICATES</h2>
                     </div>
-                    <div class="coming-soon">
-                        <i class="fa-solid fa-certificate coming-soon-icon"></i>
-                        <p>Coming soon.</p>
-                    </div>
+                    <div class="certs-grid" id="certsRoot"></div>
                 </div>
             </div>
         </section>
@@ -375,6 +372,12 @@
             <h3>Proficiency Levels</h3>
             <div id="levelsModalContent"></div>
         </div>
+    </div>
+
+    <!-- CERT IMAGE OVERLAY -->
+    <div class="cert-overlay" id="certOverlay">
+        <button class="cert-overlay-close" id="certOverlayClose"><i class="fa-solid fa-xmark"></i></button>
+        <img class="cert-overlay-img" id="certOverlayImg" src="" alt="">
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

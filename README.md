@@ -1,5 +1,5 @@
 # 🧑‍💻 Developer VIEN — Portfolio
-### 🔰 Phase 3 — Dashboard Sections (In Progress)
+### 🔰 Phase 3 — Dashboard Sections (Near Complete)
 ![Portfolio Background](assets/images/banner.png)
 
 A personal developer portfolio for **Vien Fritzgerald V. Calderon**, built entirely with vanilla HTML, CSS, and JavaScript — no frameworks, no backend. Features a dark glassmorphism aesthetic, dual-mode welcome page (Visitor & Developer), and a fully editable admin dashboard.
@@ -26,9 +26,9 @@ This portfolio is designed to present Vien's developer life, projects, and backg
 - **Home**: Hero section with profile photo, name, and social icon links; CV/Resume doc cards with PDF.js thumbnails
 - **WHO AM I?**: Age (live-calculated, updates every minute), educational background, and stat cards (Projects, Certificates, Yrs Experience, Languages) — stat cards are clickable and navigate to their respective sections
 - **Languages & Tools**: Animated horizontal skill bars with language logo icons and brand colors (HTML orange, CSS purple, JS yellow, Python blue, Java red); level labels per bar; a legend card (right of bars) showing all 6 proficiency levels as color-coded dots — click the legend to open a full modal with level definitions
-- **TIMESTAMPS**: Developer life milestones rendered from a JS data array, grouped by year; date shown on hover
+- **TIMESTAMPS**: Developer life milestones rendered from a JS data array, grouped by year; date shown on click (accordion toggle); "Learn More" button on project-type entries cross-links to PROJECTS
 - **Projects**: Year-grouped card grid rendered from a JS data array; universal card spec with preview zone (banner image from `INFO.json` or placeholder icon), accordion expand footer showing contribution text + Live and Source buttons; `INFO.json` fetched async from `raw.githubusercontent.com` per repo
-- **Certificates**: Structure in place — rendering not yet implemented
+- **Certificates**: Gallery layout with certificate cards (220px, PNG preview, title, short details, date obtained); clicking a card opens the certificate as a full-screen image overlay with blur backdrop and outside-click/X-button close
 - **SEND ME YOUR DM**: Contact form (name, email, subject, message) — EmailJS integration pending
 
 ### 🔐 Authentication
@@ -91,8 +91,9 @@ my-portfolio/
 │
 ├── 📂 data/
 │   ├── 📂 files/
-│   │   └── resume.pdf          # Sample resume for the website
-│   └── list.json               # CV/Resume/Certificate metadata (not yet created — JS falls back to in-code arrays)
+│   │   └── resume.pdf          # Sample resume; certificate PNGs also go here
+│   ├── list.json               # CV/Resume metadata (not yet created — JS falls back to in-code arrays)
+│   └── metadata.json           # Certificate metadata (created — read by renderCerts())
 │
 ├── 📂 pages/
 │   └── dashboard.html          # Main portfolio dashboard
@@ -180,10 +181,10 @@ Each skill bar uses the official brand color of the language:
 - [x] **Home** — profile photo, name, tagline, social icon links, CV/Resume doc cards with PDF.js thumbnails
 - [x] **WHO AM I?** — live age counter (updates every minute), education card, bio paragraph; profile card collapse animation; stat grid with clickable cards (Projects → projects, Certificates → certificates, Experience → timeline, Languages → pointer cursor only)
 - [x] **Languages & Tools** — animated horizontal bars with language logo icons, brand-colored fills, level labels; legend card (right-side) with 6 color-coded proficiency dots; clicking legend opens a modal with full level definitions; bar animation triggers once on first ABOUT section entry
-- [x] **TIMESTAMPS** — year-grouped timeline rendered from `TIMELINE_DATA` JS array; date shown on hover
+- [x] **TIMESTAMPS** — year-grouped timeline rendered from `TIMELINE_DATA` JS array; date shown on click (accordion toggle); "Learn More" on project entries cross-links to PROJECTS and highlights matching card
 - [x] **Projects** — universal card spec: 110px preview zone (banner from `INFO.json` full raw URL or `fa-code` placeholder), body with PROJECT eyebrow + name + desc + stack tags, accordion expand footer with contribution text above LIVE + SOURCE buttons; `INFO.json` fetched async per repo from `raw.githubusercontent.com`; `align-items: start` on grid fixes row-stretch expand bug
 - [x] **CV / Resume** — document cards with PDF.js first-page canvas thumbnail, click to expand, VIEW + SAVE buttons; loads from `data/list.json` → localStorage → fallback array
-- [ ] **Certificates** — HTML structure exists, rendering function not yet implemented
+- [x] **Certificates** — gallery layout with `.cert-card` (PNG preview, title, details, date obtained); clicking a card opens a full-screen image overlay (`#certOverlay`) with blur backdrop, X button, and outside-click close; data from `data/metadata.json` → `certificates` array; localStorage `portfolio_certs` overrides; empty state shows centered placeholder
 - [ ] **SEND ME YOUR DM** — HTML structure exists, EmailJS integration pending
 
 ### Phase 4 — Admin Edit Mode
@@ -244,6 +245,31 @@ Each skill bar uses the official brand color of the language:
 - Legend card sits to the right of the bars showing all 6 proficiency levels as color-coded dots
 - Clicking the legend card opens a modal (reusing the FAQ card structure) with full definitions for each level
 - `LANG_DATA` and `LEVEL_DATA` arrays added to `dashboard.js`; `renderSkills()` builds both the bars and legend; `langCount` in stat grid now reads `LANG_DATA.length` dynamically
+
+---
+
+**Certificates Section — Feature 7**
+- Gallery layout using `.certs-grid` (flex-wrap, `align-items: flex-start`) replacing the "coming soon" placeholder
+- `.cert-card` matches the universal card visual spec (220px, same border/hover/radius) but has no accordion expand footer — the full card is the click target
+- Preview zone: PNG loaded directly from `data.file` path; broken image falls back to `fa-certificate` placeholder icon
+- Body: title, short details, date obtained formatted "Mon YYYY" in purple
+- Clicking a card opens `#certOverlay` — full-screen image modal with `backdrop-filter: blur(4px)`, X button, outside-click close
+- Data source: `data/metadata.json` → `certificates` array. Multiple certs go inside the same array, not as separate keys. localStorage `portfolio_certs` overrides on load.
+- Empty state (no certificates): centered placeholder icon + "No certificates yet." — `width: 100%` required on the container to center correctly inside the flex grid parent
+
+**metadata.json schema** — place at `data/metadata.json` in repo root:
+```json
+{
+    "certificates": [
+        {
+            "title": "Certificate Name",
+            "details": "Issuing organization or short description.",
+            "date": "2026-01",
+            "file": "data/files/cert1.png"
+        }
+    ]
+}
+```
 
 ---
 
