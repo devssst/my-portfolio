@@ -1,84 +1,72 @@
 // ── DATA ─────────────────────────────────────────────────────
 
-const TIMELINE_DATA = [
-    {
-        year: 2026,
-        entries: [
-            { title: "My Portfolio", date: "May 2026", desc: "Personal developer portfolio — vanilla HTML/CSS/JS.", type: "project" },
-            { title: "SLIMS", date: "February 2026", desc: "School Library Inventory Management System for DPLBaliuag.", type: "project" }
-        ]
-    },
-    {
+// ── FOR MANUAL TIMELINE ENTRIES ────────────────────────────── 
+TIMELINE_DATA = [
+    /*{
         year: 2025,
         entries: [
             { title: "BSIT - Dalubhasaang Politekniko ng Lungsod ng Baliwag", date: "June 2025", desc: "Mr. Calderon goes to college." }
         ]
-    },
-    {
-        year: 2024,
-        entries: []
-    }
-];
-
-const PROJECTS_DATA = [
-    {
-        year: 2026,
-        projects: [
-            {
-                name: "My Portfolio",
-                desc: "A personal developer portfolio with dual-mode welcome page, glassmorphism UI, and admin edit mode.",
-                tags: ["HTML", "CSS", "JS", "Firebase"],
-                live: "https://devssst.github.io/my-portfolio",
-                source: "https://github.com/devssst/my-portfolio"
-            },
-            {
-                name: "SLIMS",
-                desc: "School Library Inventory Management System for Dalubhasaang Politekniko ng Lungsod ng Baliwag.",
-                tags: ["HTML", "CSS", "JS"],
-                live: "https://devssst.github.io/btech-slims",
-                source: "https://github.com/devssst/btech-slims"
-            }
-        ]
-    }
+    }*/
 ];
 
 const LANG_DATA = [
-    { name: 'HTML',       icon: 'fa-brands fa-html5',   color: '#E34F26', level: 'Familiar',   pct: 30 },
+    { name: 'HTML',       icon: 'fa-brands fa-html5',   color: '#E34F26', level: 'Familiar',    pct: 30 },
     { name: 'CSS',        icon: 'fa-brands fa-css3-alt', color: '#663399', level: 'Comfortable', pct: 55 },
     { name: 'JavaScript', icon: 'fa-brands fa-js',       color: '#F7DF1E', level: 'Comfortable', pct: 55 },
     { name: 'Python',     icon: 'fa-brands fa-python',   color: '#013763', level: 'Comfortable', pct: 55 },
-    { name: 'Java',       icon: 'fa-brands fa-java',     color: '#E32C2E', level: 'Familiar',   pct: 30 },
+    { name: 'Java',       icon: 'fa-brands fa-java',     color: '#E32C2E', level: 'Familiar',    pct: 30 },
 ];
 
 const LEVEL_DATA = [
-    { level: 'Exposure',   color: '#6b7280', desc: "Seen it, read about it, maybe ran someone else's code. Haven't written anything independently." },
-    { level: 'Familiar',   color: '#f59e0b', desc: 'Can write basic things independently. Understands the fundamentals but has clear gaps. Needs reference for anything beyond basics.' },
+    { level: 'Exposure',    color: '#6b7280', desc: "Seen it, read about it, maybe ran someone else's code. Haven't written anything independently." },
+    { level: 'Familiar',    color: '#f59e0b', desc: 'Can write basic things independently. Understands the fundamentals but has clear gaps. Needs reference for anything beyond basics.' },
     { level: 'Comfortable', color: '#10b981', desc: 'Builds real things with it. Understands how and why things work, not just copying patterns. Still has a ceiling but can problem-solve within that ceiling.' },
-    { level: 'Proficient', color: '#3b82f6', desc: 'Confident across most use cases. Writes clean, intentional code. Knows best practices and applies them. Gaps exist but they are specific and narrow.' },
-    { level: 'Advanced',   color: '#8b5cf6', desc: 'Deep knowledge including internals, edge cases, and patterns. Can mentor others. Knows what they do not know and knows how to find it.' },
-    { level: 'Expert',     color: '#ec4899', desc: 'Mastery. Contributes to the language or ecosystem itself, or is a go-to authority in professional settings. Rare.' },
+    { level: 'Proficient',  color: '#3b82f6', desc: 'Confident across most use cases. Writes clean, intentional code. Knows best practices and applies them. Gaps exist but they are specific and narrow.' },
+    { level: 'Advanced',    color: '#8b5cf6', desc: 'Deep knowledge including internals, edge cases, and patterns. Can mentor others. Knows what they do not know and knows how to find it.' },
+    { level: 'Expert',      color: '#ec4899', desc: 'Mastery. Contributes to the language or ecosystem itself, or is a go-to authority in professional settings. Rare.' },
 ];
 
-// Fallback doc data — replaced by data/list.json when available
-const DOC_DATA_FALLBACK = {
-    cv: [
-        {
-            title: "Curriculum Vitae",
-            type: "CV",
-            uploaded: "2026-05-01",
-            file: "data/files/cv.pdf",
-        }
-    ],
+// ── FETCHED DATA STORES ───────────────────────────────────────
+// Populated by loadAllData() before any render function runs
 
-    resume: [
-        {
-            title: "Resume",
-            type: "Resume",
-            uploaded: "2026-05-01",
-            file: "data/files/resume.pdf",
+let FETCHED_PROJECTS = []; // INFO.json objects, one per project repo
+let FETCHED_CERTS    = []; // entries from certs.json (or localStorage override)
+
+// ── LOAD ALL DATA ─────────────────────────────────────────────
+
+async function loadAllData() {
+
+    // 1. Projects: read projects.json registry, then fetch each repo's INFO.json
+    try {
+        const res = await fetch('../data/projects.json');
+        if (res.ok) {
+            const repos = await res.json();
+            const results = await Promise.all(
+                repos.map(r =>
+                    fetch(`https://raw.githubusercontent.com/${r.repo}/main/INFO.json`)
+                        .then(r => r.ok ? r.json() : null)
+                        .catch(() => null)
+                )
+            );
+            FETCHED_PROJECTS = results.filter(Boolean);
         }
-    ],
-};
+    } catch {}
+
+    // 2. Certs: localStorage override first, else fetch certs.json
+    try {
+        const stored = localStorage.getItem('portfolio_certs');
+        if (stored) {
+            FETCHED_CERTS = JSON.parse(stored) || [];
+        } else {
+            const res = await fetch('../data/certs.json');
+            if (res.ok) {
+                const json = await res.json();
+                FETCHED_CERTS = json.certificates || [];
+            }
+        }
+    } catch {}
+}
 
 // ── INIT ─────────────────────────────────────────────────────
 
@@ -104,8 +92,6 @@ if (window.pdfjsLib) {
 
 const SECTION_ORDER = ['home', 'about', 'timeline', 'projects', 'certificates', 'reach'];
 let currentSection = 'home';
-
-// ── SECTION SWITCHING ─────────────────────────────────────────
 
 // ── SKILLS ANIMATION ──────────────────────────────
 let skillsAnimated = false;
@@ -277,33 +263,91 @@ document.addEventListener('touchend', (e) => {
 function renderTimeline() {
     const root = document.getElementById('timelineRoot');
     if (!root) return;
-
-    const data = loadFromStorage('portfolio_timeline', TIMELINE_DATA);
     root.innerHTML = '';
 
-    data.forEach((yearBlock, i) => {
-        const block = document.createElement('div');
+    // Build a flat entry list from all three sources
+    const allEntries = [];
+
+    // 1. Manual entries from TIMELINE_DATA (education, milestones, etc.)
+    TIMELINE_DATA.forEach(block => {
+        (block.entries || []).forEach(entry => {
+            allEntries.push({ year: block.year, ...entry });
+        });
+    });
+
+    // 2. Project entries auto-generated from FETCHED_PROJECTS
+    FETCHED_PROJECTS.forEach(info => {
+        const year = info.year || new Date().getFullYear();
+        allEntries.push({
+            year,
+            title: info.name,
+            date:  String(year),
+            desc:  info.description || '',
+            type:  'project',
+            id:    info.id || null,
+        });
+    });
+
+    // 3. Cert entries auto-generated from FETCHED_CERTS
+    FETCHED_CERTS.forEach(cert => {
+        const year    = cert.date ? parseInt(cert.date.split('-')[0]) : new Date().getFullYear();
+        const d       = cert.date ? new Date(cert.date + '-01') : null;
+        const dateStr = d
+            ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+            : String(year);
+
+        allEntries.push({
+            year,
+            title: cert.title,
+            date:  dateStr,
+            desc:  cert.company ? `Issued by ${cert.company}` : (cert.details || ''),
+            type:  'cert',
+            id:    cert.id || null,
+        });
+    });
+
+    // Group by year, sort years descending
+    const byYear = {};
+    allEntries.forEach(e => {
+        if (!byYear[e.year]) byYear[e.year] = [];
+        byYear[e.year].push(e);
+    });
+
+    const sortedYears = Object.keys(byYear).map(Number).sort((a, b) => b - a);
+
+    if (sortedYears.length === 0) {
+        root.innerHTML = `
+            <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.2);">
+                <i class="fa-regular fa-clock" style="font-size:32px;margin-bottom:10px;display:block;"></i>
+                No activity to timestamp.
+            </div>
+        `;
+        return;
+    }
+
+    sortedYears.forEach((year, i) => {
+        const entries = byYear[year];
+        const block   = document.createElement('div');
         block.className = 'timeline-year-block';
 
-        const isLast = i === data.length - 1;
+        const isLast = i === sortedYears.length - 1;
 
         block.innerHTML = `
             <div class="timeline-year-row">
-                <span class="timeline-year-label">${yearBlock.year}</span>
+                <span class="timeline-year-label">${year}</span>
                 <div class="timeline-line-col">
                     <div class="timeline-dot"></div>
-                    ${!isLast || yearBlock.entries.length > 0 ? '<div class="timeline-vline"></div>' : ''}
+                    ${!isLast || entries.length > 0 ? '<div class="timeline-vline"></div>' : ''}
                 </div>
-                <div class="timeline-entries" id="entries-${yearBlock.year}">
-                    ${yearBlock.entries.length === 0 ? '<span style="font-size:12px;color:rgba(255,255,255,0.2);padding:4px 0;">No entries</span>' : ''}
-                </div>
+                <div class="timeline-entries" id="entries-${year}"></div>
             </div>
         `;
 
         root.appendChild(block);
 
-        const entriesEl = document.getElementById('entries-' + yearBlock.year);
-        yearBlock.entries.forEach(entry => {
+        const entriesEl = document.getElementById('entries-' + year);
+
+        entries.forEach(entry => {
             const el = document.createElement('div');
             el.className = 'timeline-entry';
 
@@ -341,8 +385,10 @@ function renderTimeline() {
                     setTimeout(() => {
                         const allCards = document.querySelectorAll('.project-card');
                         allCards.forEach(card => {
-                            const nameEl = card.querySelector('.project-name');
-                            if (nameEl && nameEl.textContent.trim() === entry.title) {
+                            // Prefer id match, fall back to name match
+                            const matchById   = entry.id && card.dataset.projectId === entry.id;
+                            const matchByName = !entry.id && card.querySelector('.project-name')?.textContent.trim() === entry.title;
+                            if (matchById || matchByName) {
                                 card.classList.add('highlight');
                                 card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                 setTimeout(() => card.classList.remove('highlight'), 1500);
@@ -362,45 +408,71 @@ function renderTimeline() {
 function renderProjects() {
     const root = document.getElementById('projectsRoot');
     if (!root) return;
-
-    const data = loadFromStorage('portfolio_projects', PROJECTS_DATA);
     root.innerHTML = '';
 
-    data.forEach(yearGroup => {
+    if (FETCHED_PROJECTS.length === 0) {
+        root.innerHTML = `
+            <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.2);">
+                <i class="fa-solid fa-code" style="font-size:32px;margin-bottom:10px;display:block;"></i>
+                No projects yet.
+            </div>
+        `;
+        return;
+    }
+
+    // Group by year, sort descending
+    const byYear = {};
+    FETCHED_PROJECTS.forEach(info => {
+        const y = info.year || new Date().getFullYear();
+        if (!byYear[y]) byYear[y] = [];
+        byYear[y].push(info);
+    });
+
+    Object.keys(byYear).sort((a, b) => b - a).forEach(year => {
         const group = document.createElement('div');
         group.className = 'projects-year-group';
-
-        group.innerHTML = `<div class="projects-year-label">${yearGroup.year}</div>`;
+        group.innerHTML = `<div class="projects-year-label">${year}</div>`;
 
         const grid = document.createElement('div');
         grid.className = 'projects-grid';
 
-        yearGroup.projects.forEach(project => {
+        byYear[year].forEach(info => {
             const card = document.createElement('div');
             card.className = 'project-card';
 
-            const tagsHTML = (project.tags || []).map(t => `<span class="project-tag">${t}</span>`).join('');
+            // Store id as data attribute for timeline "Learn More" cross-linking
+            if (info.id) card.dataset.projectId = info.id;
 
-            const liveBtnHTML = project.live
-                ? `<a href="${project.live}" target="_blank" class="doc-card-btn view"><i class="fa-solid fa-arrow-up-right-from-square"></i> LIVE</a>`
+            const tagsHTML = (info.stack || []).map(t => `<span class="project-tag">${t}</span>`).join('');
+
+            const liveBtnHTML = info.live
+                ? `<a href="${info.live}" target="_blank" class="doc-card-btn view"><i class="fa-solid fa-arrow-up-right-from-square"></i> LIVE</a>`
                 : `<span class="doc-card-btn view" style="opacity:0.3;cursor:not-allowed;pointer-events:none;"><i class="fa-solid fa-ban"></i> NO LIVE</span>`;
 
-            const sourceBtnHTML = project.source
-                ? `<a href="${project.source}" target="_blank" class="doc-card-btn download"><i class="fa-brands fa-github"></i> SOURCE</a>`
+            const sourceBtnHTML = info.source
+                ? `<a href="${info.source}" target="_blank" class="doc-card-btn download"><i class="fa-brands fa-github"></i> SOURCE</a>`
+                : '';
+
+            // Banner is already in INFO.json — no secondary fetch needed
+            const previewHTML = info.banner
+                ? `<img src="${info.banner}" alt="${info.name}" class="project-card-banner">`
+                : `<i class="fa-solid fa-code project-card-placeholder-icon"></i>`;
+
+            const contribHTML = info.contributions
+                ? `<div class="project-card-contribution">${info.contributions}</div>`
                 : '';
 
             card.innerHTML = `
-                <div class="project-card-preview">
-                    <i class="fa-solid fa-code project-card-placeholder-icon"></i>
-                </div>
+                <div class="project-card-preview">${previewHTML}</div>
                 <div class="project-card-body">
                     <div class="project-card-type">PROJECT</div>
-                    <div class="project-name">${project.name}</div>
-                    <div class="project-desc">${project.desc}</div>
+                    <div class="project-name">${info.name}</div>
+                    <div class="project-desc">${info.description || ''}</div>
                     <div class="project-tags">${tagsHTML}</div>
                 </div>
                 <div class="project-card-expand">
                     <div class="project-card-expand-inner">
+                        ${contribHTML}
                         <div class="project-card-actions">
                             ${liveBtnHTML}${sourceBtnHTML}
                         </div>
@@ -408,38 +480,18 @@ function renderProjects() {
                 </div>
             `;
 
-            // Async: fetch INFO.json for banner image + contributions
-            if (project.source && project.source.includes('github.com/')) {
-                const repo    = project.source.split('github.com/')[1].replace(/\/$/, '');
-                const infoUrl = `https://raw.githubusercontent.com/${repo}/main/INFO.json`;
-                const previewEl  = card.querySelector('.project-card-preview');
-                const actionsEl  = card.querySelector('.project-card-actions');
-                const expandInner = card.querySelector('.project-card-expand-inner');
-
-                fetch(infoUrl)
-                    .then(r => r.ok ? r.json() : Promise.reject())
-                    .then(info => {
-                        // Banner image
-                        if (info.banner) {
-                            const img = document.createElement('img');
-                            img.src = info.banner;
-                            img.alt = project.name;
-                            img.className = 'project-card-banner';
-                            previewEl.innerHTML = '';
-                            previewEl.appendChild(img);
-                        }
-                        // Contributions text
-                        if (info.contributions) {
-                            const contrib = document.createElement('div');
-                            contrib.className = 'project-card-contribution';
-                            contrib.textContent = info.contributions;
-                            expandInner.insertBefore(contrib, actionsEl);
-                        }
-                    })
-                    .catch(() => {});
+            // Handle broken banner image -> fallback icon
+            const img = card.querySelector('.project-card-banner');
+            if (img) {
+                img.addEventListener('error', () => {
+                    img.replaceWith(Object.assign(
+                        document.createElement('i'),
+                        { className: 'fa-solid fa-code project-card-placeholder-icon' }
+                    ));
+                });
             }
 
-            // Click accordion — collapses others, toggles self
+            // Click accordion
             card.addEventListener('click', (e) => {
                 if (e.target.closest('.project-card-actions')) return;
                 const isExpanded = card.classList.contains('expanded');
@@ -490,7 +542,7 @@ function renderDocCard(data) {
 
     // Async PDF preview
     if (filePath && window.pdfjsLib) {
-        const previewEl  = card.querySelector('.doc-card-preview');
+        const previewEl   = card.querySelector('.doc-card-preview');
         const placeholder = previewEl.querySelector('.doc-card-placeholder-icon');
 
         pdfjsLib.getDocument(filePath).promise
@@ -500,10 +552,10 @@ function renderDocCard(data) {
                 const scale    = 220 / viewport.width;
                 const scaled   = page.getViewport({ scale });
 
-                const canvas    = document.createElement('canvas');
+                const canvas     = document.createElement('canvas');
                 canvas.className = 'doc-card-canvas';
-                canvas.width    = scaled.width;
-                canvas.height   = scaled.height;
+                canvas.width     = scaled.width;
+                canvas.height    = scaled.height;
 
                 return page.render({
                     canvasContext: canvas.getContext('2d'),
@@ -534,15 +586,16 @@ async function renderDocs() {
 
     let docData = null;
 
+    // 1. localStorage override
     try {
         const stored = localStorage.getItem('portfolio_docs');
         if (stored) docData = JSON.parse(stored);
     } catch {}
 
-    // 2. Try fetching data/list.json from the repo
+    // 2. Fetch data/docs.json
     if (!docData) {
         try {
-            const res = await fetch('../data/list.json');
+            const res = await fetch('../data/docs.json');
             if (res.ok) {
                 const json = await res.json();
                 docData = {
@@ -553,9 +606,8 @@ async function renderDocs() {
         } catch {}
     }
 
-    if (!docData) {
-        docData = DOC_DATA_FALLBACK;
-    }
+    // If neither localStorage nor docs.json returned anything, treat as empty
+    if (!docData) docData = { cv: [], resume: [] };
 
     grid.innerHTML = '';
 
@@ -565,7 +617,12 @@ async function renderDocs() {
     ];
 
     if (allDocs.length === 0) {
-        grid.innerHTML = '<span style="font-size:12px;color:rgba(255,255,255,0.2);">No documents yet.</span>';
+        grid.innerHTML = `
+            <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.2);width:100%;">
+                <i class="fa-regular fa-folder-open" style="font-size:32px;margin-bottom:10px;display:block;"></i>
+                No documents yet.
+            </div>
+        `;
         return;
     }
 
@@ -690,25 +747,13 @@ setInterval(updateAge, 1000 * 60);
 
 // ── STAT CARDS ─────────────────────────────────────
 
-async function populateStats() {
-    let listData = null;
-
-    try {
-        const res = await fetch('../data/list.json');
-        if (res.ok) listData = await res.json();
-    } catch {}
-
-    const projectCount = listData
-        ? (listData.projects || []).length
-        : PROJECTS_DATA.reduce((sum, g) => sum + g.projects.length, 0);
-
-    const certCount = listData
-        ? (listData.certificates || []).length
-        : 0;
-
-    const startYear = 2025;
-    const yearsExp  = new Date().getFullYear() - startYear;
-    const langCount = LANG_DATA.length;
+function populateStats() {
+    // Counts derived entirely from fetched JSON data
+    const projectCount = FETCHED_PROJECTS.length;
+    const certCount    = FETCHED_CERTS.length;
+    const startYear    = 2025;
+    const yearsExp     = new Date().getFullYear() - startYear;
+    const langCount    = LANG_DATA.length;
 
     const setValue = (id, val) => {
         const el = document.getElementById(id);
@@ -721,8 +766,6 @@ async function populateStats() {
     setValue('statLangs',    langCount);
 }
 
-populateStats();
-
 // ── STAT CARD NAVIGATION ──────────────────────────
 document.querySelectorAll('.about-stat-card[data-goto]').forEach(card => {
     card.addEventListener('click', () => {
@@ -730,6 +773,7 @@ document.querySelectorAll('.about-stat-card[data-goto]').forEach(card => {
         if (target) switchSection(target);
     });
 });
+
 // ── RENDER SKILLS ─────────────────────────────────
 
 function renderSkills() {
@@ -852,7 +896,7 @@ function renderCertCard(data) {
 
     // Click anywhere on card -> open overlay
     card.addEventListener('click', () => {
-        const overlay  = document.getElementById('certOverlay');
+        const overlay   = document.getElementById('certOverlay');
         const overlayImg = document.getElementById('certOverlayImg');
         if (!overlay || !overlayImg || !filePath) return;
         overlayImg.src = filePath;
@@ -863,42 +907,22 @@ function renderCertCard(data) {
     return card;
 }
 
-async function renderCerts() {
+function renderCerts() {
     const root = document.getElementById('certsRoot');
     if (!root) return;
 
-    let certs = null;
-
-    // 1. localStorage override
-    try {
-        const stored = localStorage.getItem('portfolio_certs');
-        if (stored) certs = JSON.parse(stored);
-    } catch {}
-
-    // 2. Fetch metadata.json
-    if (!certs) {
-        try {
-            const res = await fetch('../data/metadata.json');
-            if (res.ok) {
-                const json = await res.json();
-                certs = json.certificates || [];
-            }
-        } catch {}
-    }
-
-    // 3. Nothing found
-    if (!certs || certs.length === 0) {
+    if (!FETCHED_CERTS || FETCHED_CERTS.length === 0) {
         root.innerHTML = `
-            <div class="certs-empty">
-                <i class="fa-solid fa-certificate certs-empty-icon"></i>
-                <p>No certificates yet.</p>
+            <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.2);width:100%;">
+                <i class="fa-solid fa-certificate" style="font-size:32px;margin-bottom:10px;display:block;"></i>
+                No certificates yet.
             </div>
         `;
         return;
     }
 
     root.innerHTML = '';
-    certs.forEach(cert => root.appendChild(renderCertCard(cert)));
+    FETCHED_CERTS.forEach(cert => root.appendChild(renderCertCard(cert)));
 }
 
 // ── CERT OVERLAY WIRING ───────────────────────────────────────
@@ -918,11 +942,17 @@ if (certOverlay) {
 
 // ── BOOT ──────────────────────────────────────────────────────
 
-renderTimeline();
-renderProjects();
-renderDocs();
-renderSkills();
-renderCerts();
+async function boot() {
+    try { await loadAllData(); } catch(e) { console.warn('loadAllData failed:', e); }
+    try { renderTimeline(); }  catch(e) { console.warn('renderTimeline failed:', e); }
+    try { renderProjects(); }  catch(e) { console.warn('renderProjects failed:', e); }
+    try { renderDocs(); }      catch(e) { console.warn('renderDocs failed:', e); }
+    try { renderSkills(); }    catch(e) { console.warn('renderSkills failed:', e); }
+    try { renderCerts(); }     catch(e) { console.warn('renderCerts failed:', e); }
+    try { populateStats(); }   catch(e) { console.warn('populateStats failed:', e); }
+}
+
+boot();
 
 // ── BADGE DROPDOWN ────────────────────────────────
 

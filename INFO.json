@@ -1,5 +1,12 @@
 {
-    "name": "Developer VIEN - Portfolio",
-    "banner": "https://raw.githubusercontent.com/devssst/my-portfolio/main/assets/images/banner.png",
-    "contributions": "I build this myself from scratch so that hiring me is much easier through REACH ME system."
+    "id": "PR-002",
+    "name": "Developer VIEN - PORTFOLIO",
+    "year": 2026,
+    "description": "Personal portfolio for an aspiring developer, Vien Calderon!",
+    "about": "It is a unique web-based dev-portfolio for Vien Fritzgerald V. Calderon. It's goal is to simplify the hiring process of the man behind this site.",
+    "contributions": "I built this bare-handed using front-end stacks of HTML, CSS, and JS then as for storing data such as projects, certifications and cv/resume, I use github-fetching capabilities with json as a highway in mind.",
+    "stack": ["HTML", "CSS", "JS", "JSON"],
+    "banner": "https://raw.githubusercontent.com/devssst/my-portfolio/main/data/previews/banner.png",
+    "live": "https://devssst.github.io/my-portfolio",
+    "source": "https://github.com/devssst/my-portfolio"
 }

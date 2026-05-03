@@ -1,0 +1,20 @@
+{
+    "certificates": [
+        {
+            "id": "cert-001",
+            "title": "Microsoft Excel - Beginner",
+            "company": "Microsoft",
+            "details": "Excel proficiency certificate",
+            "date": "2025-01",
+            "file": "data/files/cert1.png"
+        },
+        {
+            "id": "cert-002",
+            "title": "Microsoft Access - Beginner",
+            "company": "Microsoft",
+            "details": "Access proficiency certificate",
+            "date": "2026-01",
+            "file": "data/files/cert2.png"
+        }
+    ]
+}
