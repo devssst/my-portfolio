@@ -166,7 +166,7 @@ body::before {
 }
 
 .dash-section.scrolling::-webkit-scrollbar-thumb {
-    background: rgba(168, 85, 247, 0.3);
+    background: rgba(168, 85, 247, 0.1);
 }
 
 @keyframes section-fade-in {
@@ -696,10 +696,11 @@ body::before {
     transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
+    scrollbar-gutter: stable;
 }
 
 .section-with-profile.scrolling {
-    scrollbar-color: rgba(168, 85, 247, 0.3) transparent;
+    scrollbar-color: rgba(168, 85, 247, 0.1) transparent;
 }
 
 .section-with-profile::-webkit-scrollbar {
@@ -716,7 +717,7 @@ body::before {
 }
 
 .section-with-profile.scrolling::-webkit-scrollbar-thumb {
-    background: rgba(168, 85, 247, 0.3);
+    background: rgba(168, 85, 247, 0.1);
 }
 
 .section-with-profile.card-hidden {
@@ -1127,19 +1128,32 @@ body::before {
 .timeline-entry {
     display: flex;
     flex-direction: column;
-    padding: 10px 14px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.01);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    transition: background 0.2s, border-color 0.2s, transform 0.2s;
-    cursor: default;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.001);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
     position: relative;
 }
 
 .timeline-entry:hover {
-    transform: translateY(2px);
+    transform: translateY(-3px);
     background: rgba(168, 85, 247, 0.07);
+    border-color: rgba(168, 85, 247, 0.4);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+}
+
+.timeline-entry.expanded {
     border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(168, 85, 247, 0.1);
+    background: rgba(168, 85, 247, 0.06);
+}
+
+.timeline-entry-body {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
 }
 
 .timeline-entry-title {
@@ -1148,23 +1162,71 @@ body::before {
     color: rgba(255, 255, 255, 0.9);
 }
 
-.timeline-entry-date {
-    font-size: 12px;
-    font-weight: 900;
-    color: rgba(168, 85, 247, 0.75);
-    margin-top: 2px;
-    display: none;
-}
-
-.timeline-entry:hover .timeline-entry-date {
-    display: block;
-}
-
 .timeline-entry-desc {
     font-size: 12.5px;
-    color: rgba(255, 255, 255, 0.75);
-    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.65);
+    margin-top: 5px;
     line-height: 1.5;
+}
+
+/* REVEAL SECTION — click to expand */
+.timeline-entry-reveal {
+    max-height: 0;
+    overflow: hidden;
+    border-top: 1px solid transparent;
+    transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.28s ease;
+}
+
+.timeline-entry.expanded .timeline-entry-reveal {
+    max-height: 60px;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.timeline-entry-reveal-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px 11px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease 0.05s;
+}
+
+.timeline-entry.expanded .timeline-entry-reveal-inner {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.timeline-entry-date {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: rgba(168, 85, 247, 0.85);
+}
+
+.timeline-learn-more {
+    height: 24px;
+    padding: 0 12px;
+    border-radius: 6px;
+    border: none;
+    background: linear-gradient(135deg, var(--purple-dark), var(--purple-mid));
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.timeline-learn-more:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
 }
 
 /* PROJECT SECTION */
@@ -1195,6 +1257,13 @@ body::before {
     flex-direction: column;
     gap: 10px;
     transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.project-card.highlight {
+    border-color: rgba(168, 85, 247, 0.8);
+    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.3), 0 12px 36px rgba(0, 0, 0, 0.3);
+    background: rgba(168, 85, 247, 0.12);
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 .project-card:hover {

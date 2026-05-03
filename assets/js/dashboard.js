@@ -4,8 +4,8 @@ const TIMELINE_DATA = [
     {
         year: 2026,
         entries: [
-            { title: "My Portfolio", date: "May 2026", desc: "Personal developer portfolio — vanilla HTML/CSS/JS." },
-            { title: "SLIMS", date: "February 2026", desc: "School Library Inventory Management System for DPLBaliuag." }
+            { title: "My Portfolio", date: "May 2026", desc: "Personal developer portfolio — vanilla HTML/CSS/JS.", type: "project" },
+            { title: "SLIMS", date: "February 2026", desc: "School Library Inventory Management System for DPLBaliuag.", type: "project" }
         ]
     },
     {
@@ -306,11 +306,52 @@ function renderTimeline() {
         yearBlock.entries.forEach(entry => {
             const el = document.createElement('div');
             el.className = 'timeline-entry';
+
+            const learnMoreHTML = entry.type === 'project'
+                ? `<button class="timeline-learn-more">Learn More <i class="fa-solid fa-arrow-right"></i></button>`
+                : '';
+
             el.innerHTML = `
-                <span class="timeline-entry-title">${entry.title}</span>
-                <span class="timeline-entry-date">${entry.date}</span>
-                ${entry.desc ? `<span class="timeline-entry-desc">${entry.desc}</span>` : ''}
+                <div class="timeline-entry-body">
+                    <span class="timeline-entry-title">${entry.title}</span>
+                    ${entry.desc ? `<span class="timeline-entry-desc">${entry.desc}</span>` : ''}
+                </div>
+                <div class="timeline-entry-reveal">
+                    <div class="timeline-entry-reveal-inner">
+                        <span class="timeline-entry-date">${entry.date}</span>
+                        ${learnMoreHTML}
+                    </div>
+                </div>
             `;
+
+            // Click to expand / collapse (accordion)
+            el.addEventListener('click', (e) => {
+                if (e.target.closest('.timeline-learn-more')) return;
+                const isExpanded = el.classList.contains('expanded');
+                document.querySelectorAll('.timeline-entry.expanded').forEach(c => c.classList.remove('expanded'));
+                if (!isExpanded) el.classList.add('expanded');
+            });
+
+            // Learn More — switch to Projects and briefly highlight matching card
+            const learnMoreBtn = el.querySelector('.timeline-learn-more');
+            if (learnMoreBtn) {
+                learnMoreBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    switchSection('projects');
+                    setTimeout(() => {
+                        const allCards = document.querySelectorAll('.project-card');
+                        allCards.forEach(card => {
+                            const nameEl = card.querySelector('.project-name');
+                            if (nameEl && nameEl.textContent.trim() === entry.title) {
+                                card.classList.add('highlight');
+                                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                setTimeout(() => card.classList.remove('highlight'), 1500);
+                            }
+                        });
+                    }, 350);
+                });
+            }
+
             entriesEl.appendChild(el);
         });
     });
@@ -752,6 +793,9 @@ document.addEventListener('click', (e) => {
     }
     if (!e.target.closest('.doc-card')) {
         document.querySelectorAll('.doc-card.expanded').forEach(c => c.classList.remove('expanded'));
+    }
+    if (!e.target.closest('.timeline-entry')) {
+        document.querySelectorAll('.timeline-entry.expanded').forEach(c => c.classList.remove('expanded'));
     }
 });
 
