@@ -127,6 +127,7 @@ Add one line per project repo. The site fetches `INFO.json` from each repo autom
     "id": "proj-001",
     "name": "Project Name",
     "year": 2026,
+    "date": 2026-03,
     "description": "One sentence shown on the project card.",
     "about": "Full paragraph shown on expand.",
     "contributions": "Your role and what you specifically built.",
