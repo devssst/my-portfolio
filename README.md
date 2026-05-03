@@ -107,13 +107,10 @@ my-portfolio/
 
 ### Prerequisites
 - Modern web browser (Chrome, Firefox, Edge, Safari)
-- No local server required — open `index.html` directly
+- Internet
 
-### Running Locally
-1. Clone the repository: `git clone https://github.com/devssst/my-portfolio`
-2. Open `index.html` directly in a browser
-3. Double-click the logo to switch to Developer Mode
-4. Enter authorized credentials to access the admin dashboard
+### Running on your web
+- Access through the web: https://devssst.github.io/my-portfolio
 
 ### Firebase Setup *(planned — not yet active)*
 1. Go to [Firebase Console](https://console.firebase.google.com) and create a project
