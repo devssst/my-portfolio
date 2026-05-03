@@ -46,7 +46,7 @@ const LANG_DATA = [
     { name: 'HTML',       icon: 'fa-brands fa-html5',   color: '#E34F26', level: 'Familiar',   pct: 30 },
     { name: 'CSS',        icon: 'fa-brands fa-css3-alt', color: '#663399', level: 'Comfortable', pct: 55 },
     { name: 'JavaScript', icon: 'fa-brands fa-js',       color: '#F7DF1E', level: 'Comfortable', pct: 55 },
-    { name: 'Python',     icon: 'fa-brands fa-python',   color: '#3776AB', level: 'Comfortable', pct: 55 },
+    { name: 'Python',     icon: 'fa-brands fa-python',   color: '#013763', level: 'Comfortable', pct: 55 },
     { name: 'Java',       icon: 'fa-brands fa-java',     color: '#E32C2E', level: 'Familiar',   pct: 30 },
 ];
 
@@ -379,20 +379,73 @@ function renderProjects() {
             const card = document.createElement('div');
             card.className = 'project-card';
 
-            const tagsHTML = project.tags.map(t => `<span class="project-tag">${t}</span>`).join('');
+            const tagsHTML = (project.tags || []).map(t => `<span class="project-tag">${t}</span>`).join('');
+
             const liveBtnHTML = project.live
-                ? `<a href="${project.live}" target="_blank" class="project-btn live"><i class="fa-solid fa-arrow-up-right-from-square"></i> Live</a>`
-                : `<span class="project-btn live" style="opacity:0.35;cursor:not-allowed;pointer-events:none;"><i class="fa-solid fa-ban"></i> No Live</span>`;
+                ? `<a href="${project.live}" target="_blank" class="doc-card-btn view"><i class="fa-solid fa-arrow-up-right-from-square"></i> LIVE</a>`
+                : `<span class="doc-card-btn view" style="opacity:0.3;cursor:not-allowed;pointer-events:none;"><i class="fa-solid fa-ban"></i> NO LIVE</span>`;
+
             const sourceBtnHTML = project.source
-                ? `<a href="${project.source}" target="_blank" class="project-btn source"><i class="fa-brands fa-github"></i> Source</a>`
+                ? `<a href="${project.source}" target="_blank" class="doc-card-btn download"><i class="fa-brands fa-github"></i> SOURCE</a>`
                 : '';
 
             card.innerHTML = `
-                <div class="project-name">${project.name}</div>
-                <div class="project-desc">${project.desc}</div>
-                <div class="project-tags">${tagsHTML}</div>
-                <div class="project-btns">${liveBtnHTML}${sourceBtnHTML}</div>
+                <div class="project-card-preview">
+                    <i class="fa-solid fa-code project-card-placeholder-icon"></i>
+                </div>
+                <div class="project-card-body">
+                    <div class="project-card-type">PROJECT</div>
+                    <div class="project-name">${project.name}</div>
+                    <div class="project-desc">${project.desc}</div>
+                    <div class="project-tags">${tagsHTML}</div>
+                </div>
+                <div class="project-card-expand">
+                    <div class="project-card-expand-inner">
+                        <div class="project-card-actions">
+                            ${liveBtnHTML}${sourceBtnHTML}
+                        </div>
+                    </div>
+                </div>
             `;
+
+            // Async: fetch INFO.json for banner image + contributions
+            if (project.source && project.source.includes('github.com/')) {
+                const repo    = project.source.split('github.com/')[1].replace(/\/$/, '');
+                const infoUrl = `https://raw.githubusercontent.com/${repo}/main/INFO.json`;
+                const previewEl  = card.querySelector('.project-card-preview');
+                const actionsEl  = card.querySelector('.project-card-actions');
+                const expandInner = card.querySelector('.project-card-expand-inner');
+
+                fetch(infoUrl)
+                    .then(r => r.ok ? r.json() : Promise.reject())
+                    .then(info => {
+                        // Banner image
+                        if (info.banner) {
+                            const img = document.createElement('img');
+                            img.src = info.banner;
+                            img.alt = project.name;
+                            img.className = 'project-card-banner';
+                            previewEl.innerHTML = '';
+                            previewEl.appendChild(img);
+                        }
+                        // Contributions text
+                        if (info.contributions) {
+                            const contrib = document.createElement('div');
+                            contrib.className = 'project-card-contribution';
+                            contrib.textContent = info.contributions;
+                            expandInner.insertBefore(contrib, actionsEl);
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            // Click accordion — collapses others, toggles self
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.project-card-actions')) return;
+                const isExpanded = card.classList.contains('expanded');
+                document.querySelectorAll('.project-card.expanded').forEach(c => c.classList.remove('expanded'));
+                if (!isExpanded) card.classList.add('expanded');
+            });
 
             grid.appendChild(card);
         });
@@ -796,6 +849,9 @@ document.addEventListener('click', (e) => {
     }
     if (!e.target.closest('.timeline-entry')) {
         document.querySelectorAll('.timeline-entry.expanded').forEach(c => c.classList.remove('expanded'));
+    }
+    if (!e.target.closest('.project-card')) {
+        document.querySelectorAll('.project-card.expanded').forEach(c => c.classList.remove('expanded'));
     }
 });
 

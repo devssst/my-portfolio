@@ -27,7 +27,7 @@ This portfolio is designed to present Vien's developer life, projects, and backg
 - **WHO AM I?**: Age (live-calculated, updates every minute), educational background, and stat cards (Projects, Certificates, Yrs Experience, Languages) — stat cards are clickable and navigate to their respective sections
 - **Languages & Tools**: Animated horizontal skill bars with language logo icons and brand colors (HTML orange, CSS purple, JS yellow, Python blue, Java red); level labels per bar; a legend card (right of bars) showing all 6 proficiency levels as color-coded dots — click the legend to open a full modal with level definitions
 - **TIMESTAMPS**: Developer life milestones rendered from a JS data array, grouped by year; date shown on hover
-- **Projects**: Year-grouped card grid rendered from a JS array; tech tag pills, Live and Source buttons
+- **Projects**: Year-grouped card grid rendered from a JS data array; universal card spec with preview zone (banner image from `INFO.json` or placeholder icon), accordion expand footer showing contribution text + Live and Source buttons; `INFO.json` fetched async from `raw.githubusercontent.com` per repo
 - **Certificates**: Structure in place — rendering not yet implemented
 - **SEND ME YOUR DM**: Contact form (name, email, subject, message) — EmailJS integration pending
 
@@ -181,7 +181,7 @@ Each skill bar uses the official brand color of the language:
 - [x] **WHO AM I?** — live age counter (updates every minute), education card, bio paragraph; profile card collapse animation; stat grid with clickable cards (Projects → projects, Certificates → certificates, Experience → timeline, Languages → pointer cursor only)
 - [x] **Languages & Tools** — animated horizontal bars with language logo icons, brand-colored fills, level labels; legend card (right-side) with 6 color-coded proficiency dots; clicking legend opens a modal with full level definitions; bar animation triggers once on first ABOUT section entry
 - [x] **TIMESTAMPS** — year-grouped timeline rendered from `TIMELINE_DATA` JS array; date shown on hover
-- [x] **Projects** — year-grouped card grid rendered from `PROJECTS_DATA` JS array; tech tag pills, Live + Source buttons
+- [x] **Projects** — universal card spec: 110px preview zone (banner from `INFO.json` full raw URL or `fa-code` placeholder), body with PROJECT eyebrow + name + desc + stack tags, accordion expand footer with contribution text above LIVE + SOURCE buttons; `INFO.json` fetched async per repo from `raw.githubusercontent.com`; `align-items: start` on grid fixes row-stretch expand bug
 - [x] **CV / Resume** — document cards with PDF.js first-page canvas thumbnail, click to expand, VIEW + SAVE buttons; loads from `data/list.json` → localStorage → fallback array
 - [ ] **Certificates** — HTML structure exists, rendering function not yet implemented
 - [ ] **SEND ME YOUR DM** — HTML structure exists, EmailJS integration pending
@@ -207,7 +207,28 @@ Each skill bar uses the official brand color of the language:
 
 ### Phase 3 — Dashboard Sections (In Progress, May 2026)
 
-**Latest additions:**
+**Projects Section — Universal Card Spec (Feature 6)**
+- `.project-card` rebuilt to match the universal card spec used by CV/Resume doc cards
+- Preview zone (110px): banner image fetched async from `INFO.json` in each project repo via `raw.githubusercontent.com`; falls back to `fa-code` placeholder icon if field is missing or fetch fails
+- Body: PROJECT type eyebrow, project name, description, tech stack tag pills
+- Accordion expand footer: contribution text (`info.contributions`) rendered above LIVE + SOURCE action buttons; contribution row omitted if field is absent
+- Buttons use `.doc-card-btn` classes — shared styling with CV/Resume cards
+- `align-items: start` added to `.projects-grid` — fixes the row-stretch bug where collapsed sibling cards grew to match the expanded card's height, making them appear partially open
+- Outside-click collapse wired in the global document handler alongside doc cards and timeline entries
+- `highlight` class (used by TIMESTAMPS "Learn More" cross-link) preserved
+
+**INFO.json format** — place at the root of each project repo:
+```json
+{
+    "name": "Project Name",
+    "banner": "https://raw.githubusercontent.com/{user}/{repo}/main/data/previews/banner.png",
+    "contributions": "What you built or contributed. One or two sentences."
+}
+```
+
+---
+
+
 
 **Clickable Stat Cards (ABOUT section)**
 - PROJECT, CERTIFICATES, and EXPERIENCE stat cards now navigate to their respective sections on click using `switchSection()`
@@ -229,7 +250,7 @@ Each skill bar uses the official brand color of the language:
 **Earlier Phase 3 work:**
 - Section navigation system with 6 sections; supports header nav clicks and wheel/touch hijacking with 300ms cooldown
 - TIMESTAMPS rendered dynamically from `TIMELINE_DATA` array; grouped by year
-- Projects rendered dynamically from `PROJECTS_DATA` array; tech tag pills, live + source buttons
+- Projects rendered dynamically from `PROJECTS_DATA` array; universal card spec with accordion expand, banner image, contribution text, LIVE + SOURCE buttons
 - CV/Resume document cards with PDF.js canvas thumbnails (first page, scaled to 220px width); click to expand, VIEW + SAVE buttons; loads from `data/list.json` → localStorage → fallback array
 - Profile card collapse: smooth `translateX` slide-out + synchronized negative `margin-right`; state synced across all 4 sections; persisted to `localStorage`
 - Live age counter (`calcAge()`) updating every minute in the WHO AM I? section
