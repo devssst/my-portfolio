@@ -319,7 +319,4 @@ See [LICENSE.md](LICENSE.md) for full terms.
 
 **Made with ❤️ — a personal space to grow as a developer.**
 
-*"First, solve the problem. Then, write the code."* — John Johnson
-grow as a developer.**
-
-*"First, solve the problem. Then, write the code."* — John Johnson
+*"Know the process and learn how to play with it."* — Developer VIEN
