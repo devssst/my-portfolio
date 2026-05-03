@@ -31,7 +31,7 @@ All content (projects, certificates, CV/resume documents) is driven by JSON file
 - **TIMESTAMPS**: Auto-generated from `projects.json` (project entries) + `certs.json` (certificate entries) + hardcoded `TIMELINE_DATA` (education/milestones); grouped by year descending; date shown on click (accordion toggle); "Learn More" on project entries cross-links to PROJECTS by `data-project-id`
 - **Projects**: Year-grouped card grid auto-fetched via `data/projects.json` registry — each entry fetches its repo's `INFO.json` from `raw.githubusercontent.com`; universal card spec with preview zone (banner or placeholder icon), accordion expand footer with contribution text + Live and Source buttons
 - **Certificates**: Gallery layout with certificate cards (220px, PNG preview, title, short details, date obtained); clicking a card opens the certificate as a full-screen image overlay with blur backdrop and outside-click/X-button close — data from `data/certs.json`
-- **SEND ME YOUR DM**: Contact form (name, email, subject, message) — EmailJS integration pending
+- **SEND ME YOUR DM**: Contact form (name, email, subject, message) with full validation (all fields required, email format checked), animated error states (shake + red border per field, red button with message), success state (green button, auto-reset + form clear after 2.5s), and EmailJS integration — sends directly to Vien's Gmail inbox with Reply-To set to the sender's email
 
 ### 🔐 Authentication
 - Developer Mode toggle via logo double-click on the welcome page
@@ -53,7 +53,7 @@ All content (projects, certificates, CV/resume documents) is driven by JSON file
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
 - **Styling**: Custom CSS — glassmorphism (body-level backdrop-filter), CSS Grid, CSS Variables
 - **Auth**: Firebase Authentication (Google OAuth) — *planned, not yet integrated*
-- **Contact**: EmailJS (free tier, no backend) — *planned, not yet integrated*
+- **Contact**: EmailJS (free tier, no backend) — Gmail service, domain-restricted to `devssst.github.io`
 - **PDF Preview**: PDF.js (v3.11.174) — canvas-based first-page thumbnail rendering
 - **Persistence**: localStorage (admin edits, profile card state, cert/doc overrides)
 - **Font**: Plus Jakarta Sans
@@ -269,7 +269,7 @@ Each skill bar uses the official brand color of the language:
 - [x] **CV / Resume** — doc cards with PDF.js thumbnails; VIEW + SAVE buttons; loads from `data/docs.json` → fallback; empty state on missing file
 - [x] **Certificates** — gallery layout; PNG card previews; full-screen image overlay; data from `data/certs.json`; empty state on no data
 - [x] **Auto-rendering** — all content sourced from JSON; stats auto-counted; timeline auto-generated; boot crash-isolated per render function
-- [ ] **SEND ME YOUR DM** — HTML structure exists, glass card styling + EmailJS integration pending
+- [x] **SEND ME YOUR DM** — full validation (name, email format, subject, message); shake + error animations; EmailJS wired (service_14k6rn2, template_3vpd3va); success/spinner states; domain-restricted to devssst.github.io
 
 ### Phase 4 — Admin Edit Mode
 - [ ] EDIT in badge dropdown triggers edit mode globally (currently `console.log` placeholder)
@@ -330,6 +330,18 @@ Each skill bar uses the official brand color of the language:
 **Consistent empty states**
 - All sections now use the same style: centered 32px FA icon + muted text + `padding: 40px 0`
 - Icons: `fa-folder-open` (docs), `fa-clock` (timeline), `fa-code` (projects), `fa-certificate` (certs)
+
+---
+
+**REACH ME Section — Feature 8 (May 2026)**
+- Full form validation: name, email (regex format check), subject, message — all required; first invalid field triggers error
+- Error animations ported from login page: `.shake` on `.reach-field` wrapper, `.input-error` red border on input, `.btn-error` red gradient on button with descriptive message
+- Success state: green button "Sent!", auto-resets after 2.5s and clears the form
+- Spinner state ("Sending...") while EmailJS request is in-flight; button disabled during send
+- EmailJS integrated: `service_14k6rn2`, `template_3vpd3va`, Public Key `Ud1McQEFvE0f7-f5I`
+- Template variables: `from_name`, `from_email`, `subject`, `message`; Reply-To set to sender's email
+- Domain allowlist set in EmailJS Security tab: `https://devssst.github.io`
+- Telegram and Messenger buttons dropped entirely from scope
 
 ---
 

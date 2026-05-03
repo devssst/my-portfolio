@@ -663,20 +663,129 @@ function loadFromStorage(key, fallback) {
     }
 }
 
-// ── REACH ME FORM (placeholder — wire EmailJS later) ──────────
+// ── REACH ME FORM ─────────────────────────────────────────────
+
+// EmailJS config — fill in your actual IDs before going live
+const EMAILJS_SERVICE_ID  = 'service_14k6rn2';
+const EMAILJS_TEMPLATE_ID = 'template_3vpd3va';
+const EMAILJS_PUBLIC_KEY  = 'Ud1McQEFvE0f7-f5I';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const reachForm = document.getElementById('reachForm');
+
+let reachBtnResetTimer = null;
+
+function triggerReachInputError(input) {
+    const field = input.closest('.reach-field');
+
+    input.classList.remove('input-error');
+    if (field) field.classList.remove('shake');
+    void input.offsetWidth;
+
+    input.classList.add('input-error');
+    if (field) field.classList.add('shake');
+
+    if (field) {
+        field.addEventListener('animationend', () => {
+            field.classList.remove('shake');
+        }, { once: true });
+    }
+
+    input.addEventListener('input', () => {
+        input.classList.remove('input-error');
+    }, { once: true });
+}
+
+function triggerReachBtnError(message) {
+    const btn = reachForm.querySelector('.reach-btn');
+    if (!btn) return;
+    if (reachBtnResetTimer) clearTimeout(reachBtnResetTimer);
+    btn.classList.remove('btn-error', 'btn-success');
+    void btn.offsetWidth;
+    btn.classList.add('btn-error');
+    btn.innerHTML = `${message} <i class="fa-solid fa-xmark"></i>`;
+    reachBtnResetTimer = setTimeout(() => {
+        btn.classList.remove('btn-error');
+        btn.innerHTML = 'Send Message <i class="fa-solid fa-paper-plane"></i>';
+    }, 1800);
+}
+
+function triggerReachBtnSuccess() {
+    const btn = reachForm.querySelector('.reach-btn');
+    if (!btn) return;
+    if (reachBtnResetTimer) clearTimeout(reachBtnResetTimer);
+    btn.classList.remove('btn-error');
+    btn.classList.add('btn-success');
+    btn.innerHTML = 'Sent! <i class="fa-solid fa-check"></i>';
+    btn.disabled = true;
+    reachBtnResetTimer = setTimeout(() => {
+        btn.classList.remove('btn-success');
+        btn.innerHTML = 'Send Message <i class="fa-solid fa-paper-plane"></i>';
+        btn.disabled = false;
+        reachForm.reset();
+    }, 2500);
+}
+
 if (reachForm) {
-    reachForm.addEventListener('submit', (e) => {
+    reachForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        const nameInput    = document.getElementById('r-name');
+        const emailInput   = document.getElementById('r-email');
+        const subjectInput = document.getElementById('r-subject');
+        const msgInput     = document.getElementById('r-message');
+
+        const name    = nameInput.value.trim();
+        const email   = emailInput.value.trim();
+        const subject = subjectInput.value.trim();
+        const message = msgInput.value.trim();
+
+        // Validate all fields in order
+        if (!name) {
+            triggerReachInputError(nameInput);
+            triggerReachBtnError('ENTER YOUR NAME');
+            return;
+        }
+        if (!email) {
+            triggerReachInputError(emailInput);
+            triggerReachBtnError('ENTER YOUR EMAIL');
+            return;
+        }
+        if (!EMAIL_REGEX.test(email)) {
+            triggerReachInputError(emailInput);
+            triggerReachBtnError('INVALID EMAIL');
+            return;
+        }
+        if (!subject) {
+            triggerReachInputError(subjectInput);
+            triggerReachBtnError('ENTER A SUBJECT');
+            return;
+        }
+        if (!message) {
+            triggerReachInputError(msgInput);
+            triggerReachBtnError('ENTER YOUR MESSAGE');
+            return;
+        }
+
+        // Send via EmailJS
         const btn = reachForm.querySelector('.reach-btn');
-        btn.textContent = 'Sent!';
-        btn.style.background = 'linear-gradient(135deg, #0f7a3a, #22c55e)';
-        setTimeout(() => {
-            btn.innerHTML = 'Send Message <i class="fa-solid fa-paper-plane"></i>';
-            btn.style.background = '';
-            reachForm.reset();
-        }, 2000);
+        btn.disabled = true;
+        btn.innerHTML = 'Sending... <i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+            await emailjs.send(
+                EMAILJS_SERVICE_ID,
+                EMAILJS_TEMPLATE_ID,
+                { from_name: name, from_email: email, subject, message },
+                EMAILJS_PUBLIC_KEY
+            );
+            triggerReachBtnSuccess();
+        } catch (err) {
+            console.error('EmailJS error:', err);
+            btn.disabled = false;
+            triggerReachBtnError('FAILED TO SEND');
+        }
     });
 }
 

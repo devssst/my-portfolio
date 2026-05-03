@@ -1434,6 +1434,35 @@ body::before {
     padding: 10px 12px 12px;
 }
 
+/* REACH ME — ERROR / SUCCESS ANIMATIONS */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-6px); }
+    40%       { transform: translateX(6px); }
+    60%       { transform: translateX(-4px); }
+    80%       { transform: translateX(4px); }
+}
+
+.reach-field input.input-error,
+.reach-field textarea.input-error {
+    border-color: rgba(239, 68, 68, 0.7) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.reach-field.shake {
+    animation: shake 0.35s ease;
+}
+
+.reach-btn.btn-error {
+    background: linear-gradient(135deg, #b91c1c, #ef4444) !important;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.35) !important;
+}
+
+.reach-btn.btn-success {
+    background: linear-gradient(135deg, #0f7a3a, #22c55e) !important;
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.35) !important;
+}
+
 /* REACH ME */
 .reach-content {
     max-width: 600px;
