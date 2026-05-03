@@ -11,7 +11,7 @@ const TIMELINE_DATA = [
     {
         year: 2025,
         entries: [
-            { title: "Learning Python", date: "2025", desc: "Started exploring Python for scripting and automation." }
+            { title: "BSIT - Dalubhasaang Politekniko ng Lungsod ng Baliwag", date: "June 2025", desc: "Mr. Calderon goes to college." }
         ]
     },
     {
@@ -40,6 +40,23 @@ const PROJECTS_DATA = [
             }
         ]
     }
+];
+
+const LANG_DATA = [
+    { name: 'HTML',       icon: 'fa-brands fa-html5',   color: '#E34F26', level: 'Familiar',   pct: 30 },
+    { name: 'CSS',        icon: 'fa-brands fa-css3-alt', color: '#663399', level: 'Comfortable', pct: 55 },
+    { name: 'JavaScript', icon: 'fa-brands fa-js',       color: '#F7DF1E', level: 'Comfortable', pct: 55 },
+    { name: 'Python',     icon: 'fa-brands fa-python',   color: '#3776AB', level: 'Comfortable', pct: 55 },
+    { name: 'Java',       icon: 'fa-brands fa-java',     color: '#E32C2E', level: 'Familiar',   pct: 30 },
+];
+
+const LEVEL_DATA = [
+    { level: 'Exposure',   color: '#6b7280', desc: "Seen it, read about it, maybe ran someone else's code. Haven't written anything independently." },
+    { level: 'Familiar',   color: '#f59e0b', desc: 'Can write basic things independently. Understands the fundamentals but has clear gaps. Needs reference for anything beyond basics.' },
+    { level: 'Comfortable', color: '#10b981', desc: 'Builds real things with it. Understands how and why things work, not just copying patterns. Still has a ceiling but can problem-solve within that ceiling.' },
+    { level: 'Proficient', color: '#3b82f6', desc: 'Confident across most use cases. Writes clean, intentional code. Knows best practices and applies them. Gaps exist but they are specific and narrow.' },
+    { level: 'Advanced',   color: '#8b5cf6', desc: 'Deep knowledge including internals, edge cases, and patterns. Can mentor others. Knows what they do not know and knows how to find it.' },
+    { level: 'Expert',     color: '#ec4899', desc: 'Mastery. Contributes to the language or ecosystem itself, or is a go-to authority in professional settings. Rare.' },
 ];
 
 // Fallback doc data — replaced by data/list.json when available
@@ -90,6 +107,9 @@ let currentSection = 'home';
 
 // ── SECTION SWITCHING ─────────────────────────────────────────
 
+// ── SKILLS ANIMATION ──────────────────────────────
+let skillsAnimated = false;
+
 function switchSection(id) {
     if (id === currentSection) return;
 
@@ -116,6 +136,14 @@ function switchSection(id) {
         link.classList.toggle('active', link.dataset.section === id);
     });
     showHeader();
+
+    if (id === 'about' && !skillsAnimated) {
+        setTimeout(() => {
+            const barsEl = document.getElementById('skillsBars');
+            if (barsEl) barsEl.classList.add('animated');
+            skillsAnimated = true;
+        }, 350);
+    }
 }
 
 navLinks.forEach(link => {
@@ -586,7 +614,7 @@ async function populateStats() {
 
     const startYear = 2025;
     const yearsExp  = new Date().getFullYear() - startYear;
-    const langCount = 5;
+    const langCount = LANG_DATA.length;
 
     const setValue = (id, val) => {
         const el = document.getElementById(id);
@@ -600,11 +628,102 @@ async function populateStats() {
 }
 
 populateStats();
+
+// ── STAT CARD NAVIGATION ──────────────────────────
+document.querySelectorAll('.about-stat-card[data-goto]').forEach(card => {
+    card.addEventListener('click', () => {
+        const target = card.dataset.goto;
+        if (target) switchSection(target);
+    });
+});
+// ── RENDER SKILLS ─────────────────────────────────
+
+function renderSkills() {
+    const barsEl   = document.getElementById('skillsBars');
+    const legendEl = document.getElementById('skillsLegend');
+    if (!barsEl || !legendEl) return;
+
+    // Build bars
+    barsEl.innerHTML = '';
+    LANG_DATA.forEach((lang, i) => {
+        const row = document.createElement('div');
+        row.className = 'skills-bar-row';
+        row.innerHTML = `
+            <div class="skills-bar-meta">
+                <div class="skills-bar-left">
+                    <i class="${lang.icon} skills-bar-icon" style="color:${lang.color};"></i>
+                    <span class="skills-bar-name">${lang.name}</span>
+                </div>
+                <span class="skills-bar-level">${lang.level}</span>
+            </div>
+            <div class="skills-bar-track">
+                <div class="skills-bar-fill"
+                     style="--bar-w:${lang.pct}%; background:${lang.color}; transition-delay:${i * 0.1}s;"></div>
+            </div>
+        `;
+        barsEl.appendChild(row);
+    });
+
+    // Build legend card
+    legendEl.innerHTML = `<div class="skills-legend-title">LEGEND</div>`;
+    LEVEL_DATA.forEach(lvl => {
+        const item = document.createElement('div');
+        item.className = 'skills-legend-item';
+        item.innerHTML = `
+            <div class="skills-legend-dot" style="background:${lvl.color};"></div>
+            <span class="skills-legend-label">${lvl.level}</span>
+        `;
+        legendEl.appendChild(item);
+    });
+    legendEl.innerHTML += `<div class="skills-legend-hint">CLICK FOR DETAILS</div>`;
+
+    // Build levels modal content
+    const modalContent = document.getElementById('levelsModalContent');
+    if (modalContent) {
+        modalContent.innerHTML = '';
+        LEVEL_DATA.forEach(lvl => {
+            const item = document.createElement('div');
+            item.className = 'level-item';
+            item.innerHTML = `
+                <div class="level-item-dot" style="background:${lvl.color};"></div>
+                <div class="level-item-body">
+                    <div class="level-item-name" style="color:${lvl.color};">${lvl.level}</div>
+                    <div class="level-item-desc">${lvl.desc}</div>
+                </div>
+            `;
+            modalContent.appendChild(item);
+        });
+    }
+}
+
+// ── LEVELS MODAL ──────────────────────────────────
+
+const levelsOverlay = document.getElementById('levelsOverlay');
+const levelsClose   = document.getElementById('levelsClose');
+const skillsLegend  = document.getElementById('skillsLegend');
+
+if (skillsLegend) {
+    skillsLegend.addEventListener('click', () => {
+        if (levelsOverlay) levelsOverlay.classList.add('open');
+    });
+}
+
+if (levelsClose) {
+    levelsClose.addEventListener('click', () => levelsOverlay.classList.remove('open'));
+}
+
+if (levelsOverlay) {
+    levelsOverlay.addEventListener('click', (e) => {
+        if (e.target === levelsOverlay) levelsOverlay.classList.remove('open');
+    });
+}
+
 // ── BOOT ──────────────────────────────────────────────────────
 
 renderTimeline();
 renderProjects();
 renderDocs();
+renderSkills();
 
 // ── BADGE DROPDOWN ────────────────────────────────
 

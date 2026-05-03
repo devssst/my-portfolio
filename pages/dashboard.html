@@ -167,22 +167,31 @@
                     <div class="about-block">
                         <div class="about-block-label">STATS</div>
                         <div class="about-stats-grid" id="aboutStatsGrid">
-                            <div class="about-stat-card">
+                            <div class="about-stat-card" data-goto="projects">
                                 <div class="about-stat-value" id="statProjects">—</div>
                                 <div class="about-stat-label">Projects</div>
                             </div>
-                            <div class="about-stat-card">
+                            <div class="about-stat-card" data-goto="certificates">
                                 <div class="about-stat-value" id="statCerts">—</div>
                                 <div class="about-stat-label">Certificates</div>
                             </div>
-                            <div class="about-stat-card">
+                            <div class="about-stat-card" data-goto="timeline">
                                 <div class="about-stat-value" id="statYears">—</div>
                                 <div class="about-stat-label">Yr/s Experience</div>
                             </div>
-                            <div class="about-stat-card">
+                            <div class="about-stat-card" data-goto="">
                                 <div class="about-stat-value" id="statLangs">—</div>
                                 <div class="about-stat-label">Languages</div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- LANGUAGES & TOOLS -->
+                    <div class="about-block">
+                        <div class="about-block-label">LANGUAGES & TOOLS</div>
+                        <div class="skills-layout">
+                            <div class="skills-bars" id="skillsBars"></div>
+                            <div class="skills-legend" id="skillsLegend" title="Click to see level definitions"></div>
                         </div>
                     </div>
 
@@ -356,6 +365,15 @@
                 <div class="faq-q">Is this site open source?</div>
                 <div class="faq-a">The source code is visible on GitHub for portfolio evaluation only. It is proprietary — not licensed for reuse.</div>
             </div>
+        </div>
+    </div>
+
+    <!-- LEVELS MODAL -->
+    <div class="levels-overlay" id="levelsOverlay">
+        <div class="faq-card levels-card" id="levelsCard">
+            <button class="faq-close" id="levelsClose"><i class="fa-solid fa-xmark"></i></button>
+            <h3>Proficiency Levels</h3>
+            <div id="levelsModalContent"></div>
         </div>
     </div>
 

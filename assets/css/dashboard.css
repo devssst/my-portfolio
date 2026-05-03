@@ -843,6 +843,7 @@ body::before {
     border-radius: 12px;
     padding: 18px 14px;
     text-align: center;
+    cursor: pointer;
     transition: background 0.2s, border-color 0.2s, transform 0.2s;
 
     /*
@@ -875,6 +876,198 @@ body::before {
     color: rgba(255, 255, 255, 0.75);
     text-transform: uppercase;
 }
+/* SKILLS / LANGUAGES */
+.skills-layout {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.skills-bars {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.skills-bar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.skills-bar-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.skills-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.skills-bar-icon {
+    font-size: 16px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.skills-bar-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.skills-bar-level {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.skills-bar-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.skills-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    width: 0;
+    transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.skills-bars.animated .skills-bar-fill {
+    width: var(--bar-w);
+}
+
+/* LEGEND CARD */
+.skills-legend {
+    width: 148px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 14px 16px 12px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    user-select: none;
+}
+
+.skills-legend:hover {
+    background: rgba(168, 85, 247, 0.07);
+    border-color: rgba(168, 85, 247, 0.4);
+    transform: translateY(-2px);
+}
+
+.skills-legend-title {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    color: rgba(168, 85, 247, 0.9);
+    margin-bottom: 10px;
+}
+
+.skills-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.skills-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.skills-legend-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.skills-legend-hint {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.2);
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* LEVELS MODAL */
+.levels-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    will-change: opacity;
+}
+
+.levels-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.levels-card {
+    max-width: 480px;
+}
+
+.levels-overlay .faq-card {
+    transform: translateY(12px) scale(0.97);
+    transition: transform 0.25s ease;
+}
+
+.levels-overlay.open .faq-card {
+    transform: translateY(0) scale(1);
+}
+
+.level-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.level-item-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
+/*
+.level-item-body {}
+*/
+
+.level-item-name {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.level-item-desc {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.6;
+}
+
 /* TIMELINE SECTION */
 .timeline {
     position: relative;
