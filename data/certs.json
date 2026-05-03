@@ -5,15 +5,15 @@
             "title": "Microsoft Excel - Beginner Certificate",
             "company": "Microsoft",
             "details": "Excel proficiency certificate",
-            "date": "2025-01",
+            "date": "2025-03",
             "file": "data/files/cert1.png"
         },
         {
             "id": "cert-002",
-            "title": "Microsoft Access - Beginner Certificate",
-            "company": "Microsoft",
-            "details": "Access proficiency certificate",
-            "date": "2026-01",
+            "title": "Google Notebook Certification",
+            "company": "Google",
+            "details": "Python Notebook Completion Certificate",
+            "date": "2026-02",
             "file": "data/files/cert2.png"
         }
     ]

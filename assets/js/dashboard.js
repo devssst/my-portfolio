@@ -2,12 +2,12 @@
 
 // ── FOR MANUAL TIMELINE ENTRIES ────────────────────────────── 
 TIMELINE_DATA = [
-    /*{
+    {
         year: 2025,
         entries: [
             { title: "BSIT - Dalubhasaang Politekniko ng Lungsod ng Baliwag", date: "June 2025", desc: "Mr. Calderon goes to college." }
         ]
-    }*/
+    }
 ];
 
 const LANG_DATA = [
@@ -277,11 +277,20 @@ function renderTimeline() {
 
     // 2. Project entries auto-generated from FETCHED_PROJECTS
     FETCHED_PROJECTS.forEach(info => {
-        const year = info.year || new Date().getFullYear();
+        // Prefer date (YYYY-MM) over year (YYYY) for month-accurate timeline display
+        const raw     = info.date || null;
+        const year    = raw
+            ? parseInt(raw.split('-')[0])
+            : (info.year || new Date().getFullYear());
+        const d       = raw ? new Date(raw + '-01') : null;
+        const dateStr = d
+            ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+            : String(year);
+
         allEntries.push({
             year,
             title: info.name,
-            date:  String(year),
+            date:  dateStr,
             desc:  info.description || '',
             type:  'project',
             id:    info.id || null,
@@ -351,7 +360,7 @@ function renderTimeline() {
             const el = document.createElement('div');
             el.className = 'timeline-entry';
 
-            const learnMoreHTML = entry.type === 'project'
+            const learnMoreHTML = (entry.type === 'project' || entry.type === 'cert')
                 ? `<button class="timeline-learn-more">Learn More <i class="fa-solid fa-arrow-right"></i></button>`
                 : '';
 
@@ -376,25 +385,39 @@ function renderTimeline() {
                 if (!isExpanded) el.classList.add('expanded');
             });
 
-            // Learn More — switch to Projects and briefly highlight matching card
+            // Learn More — switch to relevant section and highlight matching card
             const learnMoreBtn = el.querySelector('.timeline-learn-more');
             if (learnMoreBtn) {
                 learnMoreBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    switchSection('projects');
-                    setTimeout(() => {
-                        const allCards = document.querySelectorAll('.project-card');
-                        allCards.forEach(card => {
-                            // Prefer id match, fall back to name match
-                            const matchById   = entry.id && card.dataset.projectId === entry.id;
-                            const matchByName = !entry.id && card.querySelector('.project-name')?.textContent.trim() === entry.title;
-                            if (matchById || matchByName) {
-                                card.classList.add('highlight');
-                                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                setTimeout(() => card.classList.remove('highlight'), 1500);
-                            }
-                        });
-                    }, 350);
+
+                    if (entry.type === 'project') {
+                        switchSection('projects');
+                        setTimeout(() => {
+                            document.querySelectorAll('.project-card').forEach(card => {
+                                const matchById   = entry.id && card.dataset.projectId === entry.id;
+                                const matchByName = !entry.id && card.querySelector('.project-name')?.textContent.trim() === entry.title;
+                                if (matchById || matchByName) {
+                                    card.classList.add('highlight');
+                                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setTimeout(() => card.classList.remove('highlight'), 1500);
+                                }
+                            });
+                        }, 350);
+                    } else if (entry.type === 'cert') {
+                        switchSection('certificates');
+                        setTimeout(() => {
+                            document.querySelectorAll('.cert-card').forEach(card => {
+                                const matchById   = entry.id && card.dataset.certId === entry.id;
+                                const matchByName = !entry.id && card.querySelector('.cert-card-title')?.textContent.trim() === entry.title;
+                                if (matchById || matchByName) {
+                                    card.classList.add('highlight');
+                                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setTimeout(() => card.classList.remove('highlight'), 1500);
+                                }
+                            });
+                        }, 350);
+                    }
                 });
             }
 
@@ -861,6 +884,7 @@ if (levelsOverlay) {
 function renderCertCard(data) {
     const card = document.createElement('div');
     card.className = 'cert-card';
+    if (data.id) card.dataset.certId = data.id;
 
     const filePath = data.file ? `../${data.file}` : null;
 
@@ -908,10 +932,12 @@ function renderCertCard(data) {
 }
 
 function renderCerts() {
-    const root = document.getElementById('certsRoot');
+    const root    = document.getElementById('certsRoot');
+    const sortBar = document.getElementById('certsSortBar');
     if (!root) return;
 
     if (!FETCHED_CERTS || FETCHED_CERTS.length === 0) {
+        if (sortBar) sortBar.innerHTML = '';
         root.innerHTML = `
             <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.2);width:100%;">
                 <i class="fa-solid fa-certificate" style="font-size:32px;margin-bottom:10px;display:block;"></i>
@@ -921,8 +947,43 @@ function renderCerts() {
         return;
     }
 
+    // Build unique company list, sorted alphabetically, Unknown last
+    const companies = [];
+    FETCHED_CERTS.forEach(cert => {
+        const c = (cert.company || '').trim() || 'Unknown';
+        if (!companies.includes(c)) companies.push(c);
+    });
+    companies.sort((a, b) => a === 'Unknown' ? 1 : b === 'Unknown' ? -1 : a.localeCompare(b));
+
+    // Always show company pills as labels (no click/filter)
+    if (sortBar) {
+        sortBar.innerHTML = '';
+        companies.forEach(company => {
+            const pill = document.createElement('span');
+            pill.className = 'certs-sort-btn active';
+            pill.textContent = company.toUpperCase();
+            sortBar.appendChild(pill);
+        });
+    }
+
+    // Always render grouped by company
     root.innerHTML = '';
-    FETCHED_CERTS.forEach(cert => root.appendChild(renderCertCard(cert)));
+    companies.forEach(company => {
+        const group = FETCHED_CERTS.filter(c =>
+            ((c.company || '').trim() || 'Unknown') === company
+        );
+        if (group.length === 0) return;
+
+        const groupEl = document.createElement('div');
+        groupEl.className = 'certs-company-group';
+        groupEl.innerHTML = `<div class="certs-company-label">${company.toUpperCase()}</div>`;
+
+        const grid = document.createElement('div');
+        grid.className = 'certs-grid';
+        group.forEach(cert => grid.appendChild(renderCertCard(cert)));
+        groupEl.appendChild(grid);
+        root.appendChild(groupEl);
+    });
 }
 
 // ── CERT OVERLAY WIRING ───────────────────────────────────────
