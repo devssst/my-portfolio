@@ -53,7 +53,7 @@ are not covered by this license:
 
 | Asset | Owner | Terms |
 |---|---|---|
-| Background image (`background.jpg`) | Original artist | Personal/portfolio use only |
+| python-background image (`background.png`) | Original artist | Personal/portfolio use only |
 | Plus Jakarta Sans font | Tokotype / Google Fonts | SIL Open Font License 1.1 |
 | Font Awesome icons | Fonticons, Inc. | Font Awesome Free License |
 | Google logo (`google.png`) | Google LLC | Google Brand Guidelines |
