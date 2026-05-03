@@ -2,7 +2,7 @@
     "certificates": [
         {
             "id": "cert-001",
-            "title": "Microsoft Excel - Beginner",
+            "title": "Microsoft Excel - Beginner Certificate",
             "company": "Microsoft",
             "details": "Excel proficiency certificate",
             "date": "2025-01",
@@ -10,7 +10,7 @@
         },
         {
             "id": "cert-002",
-            "title": "Microsoft Access - Beginner",
+            "title": "Microsoft Access - Beginner Certificate",
             "company": "Microsoft",
             "details": "Access proficiency certificate",
             "date": "2026-01",
