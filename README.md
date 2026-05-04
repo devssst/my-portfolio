@@ -95,7 +95,7 @@ my-portfolio/
 │   ├── timestamp.json          # Registry: project repo slugs + manual timeline entries
 │   ├── docs.json               # CV/Resume metadata
 │   ├── certs.json              # Certificate metadata
-│   └── credentials.json        # EmailJS service/template/public key (gitignore planned)
+│   └── credentials.json        # EmailJS service/template/public key
 │
 ├── 📂 pages/
 │   └── dashboard.html          # Main portfolio dashboard
