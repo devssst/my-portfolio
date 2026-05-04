@@ -1,3 +1,20 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+
+// ── FIREBASE INIT (dashboard) ─────────────────────────────────
+
+const _dCfg = {
+    apiKey:            "AIzaSyAZLCVYWX2Nn6GYYYHpwSFkZXj2ZjIJhRE",
+    authDomain:        "developer-vien-portfolio.firebaseapp.com",
+    projectId:         "developer-vien-portfolio",
+    storageBucket:     "developer-vien-portfolio.firebasestorage.app",
+    messagingSenderId: "830687475736",
+    appId:             "1:830687475736:web:4ad1263787f0d1af112b6d"
+};
+
+const _dApp  = initializeApp(_dCfg);
+const _dAuth = getAuth(_dApp);
+
 // ── DATA ─────────────────────────────────────────────────────
 
 const LANG_DATA = [
@@ -85,18 +102,54 @@ async function loadAllData() {
 
 // ── INIT ─────────────────────────────────────────────────────
 
-const params   = new URLSearchParams(window.location.search);
-const isAdmin  = params.get('mode') === 'admin';
+const params         = new URLSearchParams(window.location.search);
+const _editRequested = params.get('ref') === 'edit';
+let   isEditor       = false; // set true only after Firebase auth verified
+
 const badge    = document.getElementById('modeBadge');
 const header   = document.getElementById('dashHeader');
 const content  = document.getElementById('dashContent');
 const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.dash-section');
 
-if (badge) {
-    badge.innerHTML = `${isAdmin ? 'ADMIN' : 'VISITOR'} <i class="fa-solid fa-chevron-down badge-chevron"></i>`;
-    if (isAdmin) badge.classList.add('admin');
+function initBadge() {
+    if (badge) {
+        badge.innerHTML = `${isEditor ? 'ADMIN' : 'VISITOR'} <i class="fa-solid fa-chevron-down badge-chevron"></i>`;
+        if (isEditor) badge.classList.add('admin');
+    }
 }
+
+// ── AUTH GATE ─────────────────────────────────────────────────
+
+async function verifyEditorAccess() {
+    // Load allowed credentials — fail closed if unavailable
+    let _allowed = null, _allowedUidEmail = null, _allowedUidGoogle = null;
+    try {
+        const res  = await fetch('../data/credentials.json');
+        const json = await res.json();
+        _allowed        = json.auth?.allowed    || null;
+        _allowedUidEmail  = json.auth?.uid_email  || null;
+        _allowedUidGoogle = json.auth?.uid_google || null;
+    } catch {
+        return false; // credentials unreadable → deny
+    }
+
+    // If credentials file exists but auth fields are missing → deny
+    if (!_allowed || (!_allowedUidEmail && !_allowedUidGoogle)) return false;
+
+    // Wait for Firebase to resolve auth state
+    return new Promise((resolve) => {
+        const unsub = onAuthStateChanged(_dAuth, (user) => {
+            unsub();
+            if (!user) { resolve(false); return; }
+            const emailOk = user.email === _allowed;
+            const uidOk   = user.uid === _allowedUidEmail || user.uid === _allowedUidGoogle;
+            resolve(emailOk && uidOk);
+        });
+    });
+}
+
+// Boot is deferred until auth check completes — see bottom of file
 
 // ── PDF.js WORKER CONFIG ──────────────────────────────────────
 
@@ -1083,7 +1136,25 @@ async function boot() {
     try { populateStats(); }      catch(e) { console.warn('populateStats failed:', e); }
 }
 
-boot();
+// ── AUTH-GATED STARTUP ────────────────────────────────────────
+
+(async () => {
+    // Always check for a valid session — URL param is just the login trigger
+    const verified = await verifyEditorAccess();
+    if (verified) {
+        isEditor = true;
+        // Clean up the URL param if present — session is the real gate
+        if (_editRequested) {
+            window.history.replaceState({}, "", window.location.pathname);
+        }
+    } else if (_editRequested) {
+        // Had the param but no valid session — strip it
+        window.history.replaceState({}, "", window.location.pathname);
+    }
+    initBadge();
+    boot();
+    if (isEditor && menuEdit) menuEdit.classList.add('visible');
+})();
 
 // ── BADGE DROPDOWN ────────────────────────────────────────────
 
@@ -1095,9 +1166,7 @@ const menuLeave     = document.getElementById('menuLeave');
 const faqOverlay    = document.getElementById('faqOverlay');
 const faqClose      = document.getElementById('faqClose');
 
-if (isAdmin && menuEdit) {
-    menuEdit.classList.add('visible');
-}
+// menuEdit visibility handled in auth-gated startup
 
 if (badgeWrap) {
     badgeWrap.querySelector('.mode-badge').addEventListener('click', (e) => {
@@ -1147,7 +1216,8 @@ if (menuEdit) {
 }
 
 if (menuLeave) {
-    menuLeave.addEventListener('click', () => {
+    menuLeave.addEventListener('click', async () => {
+        await signOut(_dAuth);
         window.location.href = '../index.html';
     });
 }
