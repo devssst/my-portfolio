@@ -240,8 +240,9 @@ if (googleImg) {
 
         try {
             const result = await signInWithPopup(_auth, provider);
-            const uidOk = result.user.uid === _ALLOWED_UID_EMAIL || result.user.uid === _ALLOWED_UID_GOOGLE;
-            if (result.user.email !== _ALLOWED || !uidOk) {
+            // Google may not return email — UID is the source of truth for Google sign-in
+            const uidOk = result.user.uid === _ALLOWED_UID_GOOGLE;
+            if (!uidOk) {
                 await _auth.signOut();
                 triggerBtnError("NOT AUTHORIZED");
                 return;

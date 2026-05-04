@@ -142,9 +142,10 @@ async function verifyEditorAccess() {
         const unsub = onAuthStateChanged(_dAuth, (user) => {
             unsub();
             if (!user) { resolve(false); return; }
-            const emailOk = user.email === _allowed;
-            const uidOk   = user.uid === _allowedUidEmail || user.uid === _allowedUidGoogle;
-            resolve(emailOk && uidOk);
+            // Google may not store email — check by provider UID directly
+            const isGoogleUid = user.uid === _allowedUidGoogle;
+            const isEmailUid  = user.uid === _allowedUidEmail && user.email === _allowed;
+            resolve(isGoogleUid || isEmailUid);
         });
     });
 }
