@@ -1,15 +1,5 @@
 // ── DATA ─────────────────────────────────────────────────────
 
-// ── FOR MANUAL TIMELINE ENTRIES ────────────────────────────── 
-TIMELINE_DATA = [
-    {
-        year: 2025,
-        entries: [
-            { title: "BSIT - Dalubhasaang Politekniko ng Lungsod ng Baliwag", date: "June 2025", desc: "Mr. Calderon goes to college." }
-        ]
-    }
-];
-
 const LANG_DATA = [
     { name: 'HTML',       icon: 'fa-brands fa-html5',   color: '#E34F26', level: 'Familiar',    pct: 30 },
     { name: 'CSS',        icon: 'fa-brands fa-css3-alt', color: '#663399', level: 'Comfortable', pct: 55 },
@@ -28,23 +18,37 @@ const LEVEL_DATA = [
 ];
 
 // ── FETCHED DATA STORES ───────────────────────────────────────
-// Populated by loadAllData() before any render function runs
 
-let FETCHED_PROJECTS = []; // INFO.json objects, one per project repo
-let FETCHED_CERTS    = []; // entries from certs.json (or localStorage override)
+let FETCHED_PROJECTS  = []; // INFO.json objects from repo entries in timestamp.json
+let FETCHED_TIMELINE  = []; // Direct timeline entries from timestamp.json
+let FETCHED_CERTS     = []; // Entries from certs.json (or localStorage override)
+
+// ── EMAILJS CREDENTIALS (loaded from data/credentials.json) ──
+
+let EMAILJS_SERVICE_ID  = null;
+let EMAILJS_TEMPLATE_ID = null;
+let EMAILJS_PUBLIC_KEY  = null;
 
 // ── LOAD ALL DATA ─────────────────────────────────────────────
 
 async function loadAllData() {
 
-    // 1. Projects: read projects.json registry, then fetch each repo's INFO.json
+    // 1. timestamp.json — mixed entries (repo slugs + direct timeline entries)
     try {
-        const res = await fetch('../data/projects.json');
+        const res = await fetch('../data/timestamp.json');
         if (res.ok) {
-            const repos = await res.json();
+            const entries = await res.json();
+
+            const repoEntries    = entries.filter(e => e.repo);
+            const directEntries  = entries.filter(e => !e.repo);
+
+            // Direct timeline entries
+            FETCHED_TIMELINE = directEntries;
+
+            // Repo entries — fetch each INFO.json
             const results = await Promise.all(
-                repos.map(r =>
-                    fetch(`https://raw.githubusercontent.com/${r.repo}/main/INFO.json`)
+                repoEntries.map(e =>
+                    fetch(`https://raw.githubusercontent.com/${e.repo}/main/INFO.json`)
                         .then(r => r.ok ? r.json() : null)
                         .catch(() => null)
                 )
@@ -53,7 +57,7 @@ async function loadAllData() {
         }
     } catch {}
 
-    // 2. Certs: localStorage override first, else fetch certs.json
+    // 2. Certs — localStorage override first, else fetch certs.json
     try {
         const stored = localStorage.getItem('portfolio_certs');
         if (stored) {
@@ -64,6 +68,17 @@ async function loadAllData() {
                 const json = await res.json();
                 FETCHED_CERTS = json.certificates || [];
             }
+        }
+    } catch {}
+
+    // 3. EmailJS credentials
+    try {
+        const res = await fetch('../data/credentials.json');
+        if (res.ok) {
+            const json = await res.json();
+            EMAILJS_SERVICE_ID  = json.emailjs?.serviceId  || null;
+            EMAILJS_TEMPLATE_ID = json.emailjs?.templateId || null;
+            EMAILJS_PUBLIC_KEY  = json.emailjs?.publicKey  || null;
         }
     } catch {}
 }
@@ -93,8 +108,11 @@ if (window.pdfjsLib) {
 const SECTION_ORDER = ['home', 'about', 'timeline', 'projects', 'certificates', 'reach'];
 let currentSection = 'home';
 
-// ── SKILLS ANIMATION ──────────────────────────────
+// ── SKILLS ANIMATION ──────────────────────────────────────────
+
 let skillsAnimated = false;
+
+// ── SECTION SWITCHING ─────────────────────────────────────────
 
 function switchSection(id) {
     if (id === currentSection) return;
@@ -103,9 +121,7 @@ function switchSection(id) {
     const target  = document.getElementById('section-' + id);
     if (!target) return;
 
-    if (current) {
-        current.classList.remove('active');
-    }
+    if (current) current.classList.remove('active');
 
     target.classList.add('active');
 
@@ -139,7 +155,7 @@ navLinks.forEach(link => {
     });
 });
 
-// ── HEADER HIDE/SHOW ON SECTION SCROLL ───────────────────────
+// ── HEADER HIDE/SHOW ──────────────────────────────────────────
 
 let headerVisible = true;
 let ticking       = false;
@@ -158,45 +174,41 @@ function showHeader() {
     }
 }
 
-// Per-section lastScrollY — fixes the shared state bug
-const sectionScrollY   = new Map();
-const scrollbarTimers  = new Map();
+// Per-section scroll state
+const sectionScrollY  = new Map();
+const scrollbarTimers = new Map();
 
-// Attach scroll listeners to both outer sections AND inner .section-with-profile divs
 function attachScrollListener(el) {
     sectionScrollY.set(el, 0);
 
     el.addEventListener('scroll', () => {
         const scrollY = el.scrollTop;
-        const lastY   = sectionScrollY.get(el);
         el.classList.add('scrolling');
         clearTimeout(scrollbarTimers.get(el));
         scrollbarTimers.set(el, setTimeout(() => {
             el.classList.remove('scrolling');
         }, 1500));
 
-        // HEADER SHOW/HIDE WHEN SCROLLING
-
+        // Header hide/show — uncomment to re-enable
         /*
         if (!ticking) {
             window.requestAnimationFrame(() => {
-                if (scrollY > lastY && scrollY > 60) {
-                    hideHeader();
-                } else if (scrollY < lastY) {
-                    showHeader();
-                }
+                const lastY = sectionScrollY.get(el);
+                if (scrollY > lastY && scrollY > 60) hideHeader();
+                else if (scrollY < lastY) showHeader();
                 sectionScrollY.set(el, scrollY);
                 ticking = false;
             });
             ticking = true;
-        }*/
+        }
+        */
     });
 }
 
 sections.forEach(section => attachScrollListener(section));
 document.querySelectorAll('.section-with-profile').forEach(el => attachScrollListener(el));
 
-// ── SECTION-HIJACK SCROLL ────────────────────────────────────
+// ── SECTION-HIJACK SCROLL ─────────────────────────────────────
 
 let hijackCooldown = false;
 
@@ -217,19 +229,20 @@ function tryHijack(dir) {
 }
 
 document.addEventListener('wheel', (e) => {
+    // Never hijack when scrolling inside a textarea or any independently scrollable element
+    const target = e.target;
+    if (target.tagName === 'TEXTAREA') return;
+    if (target.closest('textarea')) return;
+
     const activeSection = document.getElementById('section-' + currentSection);
     if (!activeSection) return;
 
     const scrollEl = activeSection.querySelector('.section-with-profile') || activeSection;
-
     const atBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight <= 5;
     const atTop    = scrollEl.scrollTop <= 0;
 
-    if (e.deltaY > 0 && atBottom) {
-        tryHijack(1);
-    } else if (e.deltaY < 0 && atTop) {
-        tryHijack(-1);
-    }
+    if (e.deltaY > 0 && atBottom)  tryHijack(1);
+    else if (e.deltaY < 0 && atTop) tryHijack(-1);
 }, { passive: true });
 
 let touchStartY = 0;
@@ -247,15 +260,11 @@ document.addEventListener('touchend', (e) => {
     if (!activeSection) return;
 
     const scrollEl = activeSection.querySelector('.section-with-profile') || activeSection;
-
     const atBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight <= 5;
     const atTop    = scrollEl.scrollTop <= 0;
 
-    if (deltaY > 0 && atBottom) {
-        tryHijack(1);
-    } else if (deltaY < 0 && atTop) {
-        tryHijack(-1);
-    }
+    if (deltaY > 0 && atBottom)  tryHijack(1);
+    else if (deltaY < 0 && atTop) tryHijack(-1);
 }, { passive: true });
 
 // ── RENDER TIMELINE ───────────────────────────────────────────
@@ -265,19 +274,31 @@ function renderTimeline() {
     if (!root) return;
     root.innerHTML = '';
 
-    // Build a flat entry list from all three sources
     const allEntries = [];
 
-    // 1. Manual entries from TIMELINE_DATA (education, milestones, etc.)
-    TIMELINE_DATA.forEach(block => {
-        (block.entries || []).forEach(entry => {
-            allEntries.push({ year: block.year, ...entry });
+    // 1. Direct timeline entries from timestamp.json
+    FETCHED_TIMELINE.forEach(entry => {
+        const raw     = entry.date || null;
+        const year    = raw
+            ? parseInt(raw.split('-')[0])
+            : (entry.year || new Date().getFullYear());
+        const d       = raw && raw.includes('-') ? new Date(raw + (raw.split('-').length === 2 ? '-01' : '')) : null;
+        const dateStr = d
+            ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+            : String(year);
+
+        allEntries.push({
+            year,
+            title: entry.title,
+            date:  dateStr,
+            desc:  entry.desc || '',
+            type:  entry.type || 'manual',
+            id:    entry.id   || null,
         });
     });
 
     // 2. Project entries auto-generated from FETCHED_PROJECTS
     FETCHED_PROJECTS.forEach(info => {
-        // Prefer date (YYYY-MM) over year (YYYY) for month-accurate timeline display
         const raw     = info.date || null;
         const year    = raw
             ? parseInt(raw.split('-')[0])
@@ -315,7 +336,7 @@ function renderTimeline() {
         });
     });
 
-    // Group by year, sort years descending
+    // Group by year, sort descending
     const byYear = {};
     allEntries.forEach(e => {
         if (!byYear[e.year]) byYear[e.year] = [];
@@ -338,7 +359,6 @@ function renderTimeline() {
         const entries = byYear[year];
         const block   = document.createElement('div');
         block.className = 'timeline-year-block';
-
         const isLast = i === sortedYears.length - 1;
 
         block.innerHTML = `
@@ -377,7 +397,6 @@ function renderTimeline() {
                 </div>
             `;
 
-            // Click to expand / collapse (accordion)
             el.addEventListener('click', (e) => {
                 if (e.target.closest('.timeline-learn-more')) return;
                 const isExpanded = el.classList.contains('expanded');
@@ -385,7 +404,6 @@ function renderTimeline() {
                 if (!isExpanded) el.classList.add('expanded');
             });
 
-            // Learn More — switch to relevant section and highlight matching card
             const learnMoreBtn = el.querySelector('.timeline-learn-more');
             if (learnMoreBtn) {
                 learnMoreBtn.addEventListener('click', (e) => {
@@ -443,7 +461,6 @@ function renderProjects() {
         return;
     }
 
-    // Group by year, sort descending
     const byYear = {};
     FETCHED_PROJECTS.forEach(info => {
         const y = info.year || new Date().getFullYear();
@@ -463,7 +480,6 @@ function renderProjects() {
             const card = document.createElement('div');
             card.className = 'project-card';
 
-            // Store id as data attribute for timeline "Learn More" cross-linking
             if (info.id) card.dataset.projectId = info.id;
 
             const tagsHTML = (info.stack || []).map(t => `<span class="project-tag">${t}</span>`).join('');
@@ -476,7 +492,6 @@ function renderProjects() {
                 ? `<a href="${info.source}" target="_blank" class="doc-card-btn download"><i class="fa-brands fa-github"></i> SOURCE</a>`
                 : '';
 
-            // Banner is already in INFO.json — no secondary fetch needed
             const previewHTML = info.banner
                 ? `<img src="${info.banner}" alt="${info.name}" class="project-card-banner">`
                 : `<i class="fa-solid fa-code project-card-placeholder-icon"></i>`;
@@ -503,7 +518,6 @@ function renderProjects() {
                 </div>
             `;
 
-            // Handle broken banner image -> fallback icon
             const img = card.querySelector('.project-card-banner');
             if (img) {
                 img.addEventListener('error', () => {
@@ -514,7 +528,6 @@ function renderProjects() {
                 });
             }
 
-            // Click accordion
             card.addEventListener('click', (e) => {
                 if (e.target.closest('.project-card-actions')) return;
                 const isExpanded = card.classList.contains('expanded');
@@ -530,7 +543,7 @@ function renderProjects() {
     });
 }
 
-// ── RENDER DOC CARD ───────────────────────────────
+// ── RENDER DOC CARD ───────────────────────────────────────────
 
 function renderDocCard(data) {
     const card = document.createElement('div');
@@ -563,7 +576,6 @@ function renderDocCard(data) {
         </div>
     `;
 
-    // Async PDF preview
     if (filePath && window.pdfjsLib) {
         const previewEl   = card.querySelector('.doc-card-preview');
         const placeholder = previewEl.querySelector('.doc-card-placeholder-icon');
@@ -601,7 +613,7 @@ function renderDocCard(data) {
     return card;
 }
 
-// ── RENDER DOCS (HOME SECTION) ───────────────────
+// ── RENDER DOCS ───────────────────────────────────────────────
 
 async function renderDocs() {
     const grid = document.getElementById('homeDocsGrid');
@@ -609,13 +621,11 @@ async function renderDocs() {
 
     let docData = null;
 
-    // 1. localStorage override
     try {
         const stored = localStorage.getItem('portfolio_docs');
         if (stored) docData = JSON.parse(stored);
     } catch {}
 
-    // 2. Fetch data/docs.json
     if (!docData) {
         try {
             const res = await fetch('../data/docs.json');
@@ -629,7 +639,6 @@ async function renderDocs() {
         } catch {}
     }
 
-    // If neither localStorage nor docs.json returned anything, treat as empty
     if (!docData) docData = { cv: [], resume: [] };
 
     grid.innerHTML = '';
@@ -665,33 +674,23 @@ function loadFromStorage(key, fallback) {
 
 // ── REACH ME FORM ─────────────────────────────────────────────
 
-// EmailJS config — fill in your actual IDs before going live
-const EMAILJS_SERVICE_ID  = 'service_14k6rn2';
-const EMAILJS_TEMPLATE_ID = 'template_3vpd3va';
-const EMAILJS_PUBLIC_KEY  = 'Ud1McQEFvE0f7-f5I';
-
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const reachForm = document.getElementById('reachForm');
+const reachForm   = document.getElementById('reachForm');
 
 let reachBtnResetTimer = null;
 
 function triggerReachInputError(input) {
     const field = input.closest('.reach-field');
-
     input.classList.remove('input-error');
     if (field) field.classList.remove('shake');
     void input.offsetWidth;
-
     input.classList.add('input-error');
     if (field) field.classList.add('shake');
-
     if (field) {
         field.addEventListener('animationend', () => {
             field.classList.remove('shake');
         }, { once: true });
     }
-
     input.addEventListener('input', () => {
         input.classList.remove('input-error');
     }, { once: true });
@@ -741,34 +740,17 @@ if (reachForm) {
         const subject = subjectInput.value.trim();
         const message = msgInput.value.trim();
 
-        // Validate all fields in order
-        if (!name) {
-            triggerReachInputError(nameInput);
-            triggerReachBtnError('ENTER YOUR NAME');
-            return;
-        }
-        if (!email) {
-            triggerReachInputError(emailInput);
-            triggerReachBtnError('ENTER YOUR EMAIL');
-            return;
-        }
-        if (!EMAIL_REGEX.test(email)) {
-            triggerReachInputError(emailInput);
-            triggerReachBtnError('INVALID EMAIL');
-            return;
-        }
-        if (!subject) {
-            triggerReachInputError(subjectInput);
-            triggerReachBtnError('ENTER A SUBJECT');
-            return;
-        }
-        if (!message) {
-            triggerReachInputError(msgInput);
-            triggerReachBtnError('ENTER YOUR MESSAGE');
+        if (!name)    { triggerReachInputError(nameInput);    triggerReachBtnError('ENTER YOUR NAME');    return; }
+        if (!email)   { triggerReachInputError(emailInput);   triggerReachBtnError('ENTER YOUR EMAIL');   return; }
+        if (!EMAIL_REGEX.test(email)) { triggerReachInputError(emailInput); triggerReachBtnError('INVALID EMAIL'); return; }
+        if (!subject) { triggerReachInputError(subjectInput); triggerReachBtnError('ENTER A SUBJECT');    return; }
+        if (!message) { triggerReachInputError(msgInput);     triggerReachBtnError('ENTER YOUR MESSAGE'); return; }
+
+        if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+            triggerReachBtnError('EMAIL NOT CONFIGURED');
             return;
         }
 
-        // Send via EmailJS
         const btn = reachForm.querySelector('.reach-btn');
         btn.disabled = true;
         btn.innerHTML = 'Sending... <i class="fa-solid fa-spinner fa-spin"></i>';
@@ -789,7 +771,8 @@ if (reachForm) {
     });
 }
 
-// ── PROFILE CARD COLLAPSE / EXPAND ────────────────
+// ── PROFILE CARD COLLAPSE / EXPAND ───────────────────────────
+
 const profileCardGroups = [
     {
         card:      document.getElementById('profileCard'),
@@ -817,10 +800,8 @@ let profileCardCollapsed = false;
 
 function setProfileCardState(collapsed) {
     profileCardCollapsed = collapsed;
-
     profileCardGroups.forEach(({ card, expandBtn, content }) => {
         if (!card) return;
-
         if (collapsed) {
             card.classList.add('collapsed');
             if (expandBtn) expandBtn.classList.add('visible');
@@ -841,7 +822,7 @@ document.querySelectorAll('.profile-card-expand-btn').forEach(btn => {
     btn.addEventListener('click', () => setProfileCardState(false));
 });
 
-// ── REAL-TIME AGE ──────────────────────────────────
+// ── REAL-TIME AGE ─────────────────────────────────────────────
 
 const DOB = new Date('2006-12-15T00:00:00');
 
@@ -877,10 +858,9 @@ function updateAge() {
 updateAge();
 setInterval(updateAge, 1000 * 60);
 
-// ── STAT CARDS ─────────────────────────────────────
+// ── STAT CARDS ────────────────────────────────────────────────
 
 function populateStats() {
-    // Counts derived entirely from fetched JSON data
     const projectCount = FETCHED_PROJECTS.length;
     const certCount    = FETCHED_CERTS.length;
     const startYear    = 2025;
@@ -898,7 +878,6 @@ function populateStats() {
     setValue('statLangs',    langCount);
 }
 
-// ── STAT CARD NAVIGATION ──────────────────────────
 document.querySelectorAll('.about-stat-card[data-goto]').forEach(card => {
     card.addEventListener('click', () => {
         const target = card.dataset.goto;
@@ -906,14 +885,13 @@ document.querySelectorAll('.about-stat-card[data-goto]').forEach(card => {
     });
 });
 
-// ── RENDER SKILLS ─────────────────────────────────
+// ── RENDER SKILLS ─────────────────────────────────────────────
 
 function renderSkills() {
     const barsEl   = document.getElementById('skillsBars');
     const legendEl = document.getElementById('skillsLegend');
     if (!barsEl || !legendEl) return;
 
-    // Build bars
     barsEl.innerHTML = '';
     LANG_DATA.forEach((lang, i) => {
         const row = document.createElement('div');
@@ -934,7 +912,6 @@ function renderSkills() {
         barsEl.appendChild(row);
     });
 
-    // Build legend card
     legendEl.innerHTML = `<div class="skills-legend-title">LEGEND</div>`;
     LEVEL_DATA.forEach(lvl => {
         const item = document.createElement('div');
@@ -947,7 +924,6 @@ function renderSkills() {
     });
     legendEl.innerHTML += `<div class="skills-legend-hint">CLICK FOR DETAILS</div>`;
 
-    // Build levels modal content
     const modalContent = document.getElementById('levelsModalContent');
     if (modalContent) {
         modalContent.innerHTML = '';
@@ -966,7 +942,7 @@ function renderSkills() {
     }
 }
 
-// ── LEVELS MODAL ──────────────────────────────────
+// ── LEVELS MODAL ──────────────────────────────────────────────
 
 const levelsOverlay = document.getElementById('levelsOverlay');
 const levelsClose   = document.getElementById('levelsClose');
@@ -1016,7 +992,6 @@ function renderCertCard(data) {
         </div>
     `;
 
-    // Handle broken image -> fallback to placeholder icon
     const img = card.querySelector('.cert-card-preview img');
     if (img) {
         img.addEventListener('error', () => {
@@ -1027,9 +1002,8 @@ function renderCertCard(data) {
         });
     }
 
-    // Click anywhere on card -> open overlay
     card.addEventListener('click', () => {
-        const overlay   = document.getElementById('certOverlay');
+        const overlay    = document.getElementById('certOverlay');
         const overlayImg = document.getElementById('certOverlayImg');
         if (!overlay || !overlayImg || !filePath) return;
         overlayImg.src = filePath;
@@ -1041,12 +1015,10 @@ function renderCertCard(data) {
 }
 
 function renderCerts() {
-    const root    = document.getElementById('certsRoot');
-    const sortBar = document.getElementById('certsSortBar');
+    const root = document.getElementById('certsRoot');
     if (!root) return;
 
     if (!FETCHED_CERTS || FETCHED_CERTS.length === 0) {
-        if (sortBar) sortBar.innerHTML = '';
         root.innerHTML = `
             <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.2);width:100%;">
                 <i class="fa-solid fa-certificate" style="font-size:32px;margin-bottom:10px;display:block;"></i>
@@ -1056,7 +1028,7 @@ function renderCerts() {
         return;
     }
 
-    // Build unique company list, sorted alphabetically, Unknown last
+    // Build unique company list sorted alphabetically, Unknown last
     const companies = [];
     FETCHED_CERTS.forEach(cert => {
         const c = (cert.company || '').trim() || 'Unknown';
@@ -1064,18 +1036,7 @@ function renderCerts() {
     });
     companies.sort((a, b) => a === 'Unknown' ? 1 : b === 'Unknown' ? -1 : a.localeCompare(b));
 
-    // Always show company pills as labels (no click/filter)
-    if (sortBar) {
-        sortBar.innerHTML = '';
-        companies.forEach(company => {
-            const pill = document.createElement('span');
-            pill.className = 'certs-sort-btn active';
-            pill.textContent = company.toUpperCase();
-            sortBar.appendChild(pill);
-        });
-    }
-
-    // Always render grouped by company
+    // Render grouped by company — labels only, no filter buttons
     root.innerHTML = '';
     companies.forEach(company => {
         const group = FETCHED_CERTS.filter(c =>
@@ -1095,7 +1056,7 @@ function renderCerts() {
     });
 }
 
-// ── CERT OVERLAY WIRING ───────────────────────────────────────
+// ── CERT OVERLAY ──────────────────────────────────────────────
 
 const certOverlay      = document.getElementById('certOverlay');
 const certOverlayClose = document.getElementById('certOverlayClose');
@@ -1113,18 +1074,18 @@ if (certOverlay) {
 // ── BOOT ──────────────────────────────────────────────────────
 
 async function boot() {
-    try { await loadAllData(); } catch(e) { console.warn('loadAllData failed:', e); }
-    try { renderTimeline(); }  catch(e) { console.warn('renderTimeline failed:', e); }
-    try { renderProjects(); }  catch(e) { console.warn('renderProjects failed:', e); }
-    try { renderDocs(); }      catch(e) { console.warn('renderDocs failed:', e); }
-    try { renderSkills(); }    catch(e) { console.warn('renderSkills failed:', e); }
-    try { renderCerts(); }     catch(e) { console.warn('renderCerts failed:', e); }
-    try { populateStats(); }   catch(e) { console.warn('populateStats failed:', e); }
+    try { await loadAllData(); }  catch(e) { console.warn('loadAllData failed:', e); }
+    try { renderTimeline(); }     catch(e) { console.warn('renderTimeline failed:', e); }
+    try { renderProjects(); }     catch(e) { console.warn('renderProjects failed:', e); }
+    try { await renderDocs(); }   catch(e) { console.warn('renderDocs failed:', e); }
+    try { renderSkills(); }       catch(e) { console.warn('renderSkills failed:', e); }
+    try { renderCerts(); }        catch(e) { console.warn('renderCerts failed:', e); }
+    try { populateStats(); }      catch(e) { console.warn('populateStats failed:', e); }
 }
 
 boot();
 
-// ── BADGE DROPDOWN ────────────────────────────────
+// ── BADGE DROPDOWN ────────────────────────────────────────────
 
 const badgeWrap     = document.getElementById('badgeWrap');
 const badgeDropdown = document.getElementById('badgeDropdown');
@@ -1160,7 +1121,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// FAQ
 if (menuFaq) {
     menuFaq.addEventListener('click', () => {
         badgeWrap.classList.remove('open');
@@ -1178,16 +1138,14 @@ if (faqOverlay) {
     });
 }
 
-// EDIT — placeholder until Feature 9 (admin edit mode)
 if (menuEdit) {
     menuEdit.addEventListener('click', () => {
         badgeWrap.classList.remove('open');
-        // TODO: trigger edit mode in Feature 9
+        // TODO: trigger edit mode — Feature 9
         console.log('Edit mode triggered');
     });
 }
 
-// LEAVE
 if (menuLeave) {
     menuLeave.addEventListener('click', () => {
         window.location.href = '../index.html';
