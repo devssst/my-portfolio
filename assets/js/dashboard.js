@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc }             from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
 
 // ── FIREBASE INIT (dashboard) ─────────────────────────────────
 
@@ -14,6 +15,7 @@ const _dCfg = {
 
 const _dApp  = initializeApp(_dCfg);
 const _dAuth = getAuth(_dApp);
+const _dDb   = getFirestore(_dApp);
 
 // ── DATA ─────────────────────────────────────────────────────
 
@@ -38,9 +40,9 @@ const LEVEL_DATA = [
 
 let FETCHED_PROJECTS  = []; // INFO.json objects from repo entries in timestamp.json
 let FETCHED_TIMELINE  = []; // Direct timeline entries from timestamp.json
-let FETCHED_CERTS     = []; // Entries from certs.json (or localStorage override)
+let FETCHED_CERTS     = []; // Entries from certs.json
 
-// ── EMAILJS CREDENTIALS (loaded from data/credentials.json) ──
+// ── EMAILJS CREDENTIALS
 
 let EMAILJS_SERVICE_ID  = null;
 let EMAILJS_TEMPLATE_ID = null;
@@ -50,11 +52,11 @@ let EMAILJS_PUBLIC_KEY  = null;
 
 async function loadAllData() {
 
-    // 1. timestamp.json — mixed entries (repo slugs + direct timeline entries)
+    // 1. timestamp — from Firestore portfolio/timestamp
     try {
-        const res = await fetch('../data/timestamp.json');
-        if (res.ok) {
-            const entries = await res.json();
+        const snap    = await getDoc(doc(_dDb, "portfolio", "timestamp"));
+        if (snap.exists()) {
+            const entries = snap.data().data || [];
 
             const repoEntries    = entries.filter(e => e.repo);
             const directEntries  = entries.filter(e => !e.repo);
@@ -62,7 +64,7 @@ async function loadAllData() {
             // Direct timeline entries
             FETCHED_TIMELINE = directEntries;
 
-            // Repo entries — fetch each INFO.json
+            // Repo entries — fetch each INFO.json from GitHub
             const results = await Promise.all(
                 repoEntries.map(e =>
                     fetch(`https://raw.githubusercontent.com/${e.repo}/main/INFO.json`)
@@ -74,25 +76,19 @@ async function loadAllData() {
         }
     } catch {}
 
-    // 2. Certs — localStorage override first, else fetch certs.json
+    // 2. Certs — from Firestore portfolio/certs
     try {
-        const stored = localStorage.getItem('portfolio_certs');
-        if (stored) {
-            FETCHED_CERTS = JSON.parse(stored) || [];
-        } else {
-            const res = await fetch('../data/certs.json');
-            if (res.ok) {
-                const json = await res.json();
-                FETCHED_CERTS = json.certificates || [];
-            }
+        const snap = await getDoc(doc(_dDb, "portfolio", "certs"));
+        if (snap.exists()) {
+            FETCHED_CERTS = snap.data().data?.certificates || [];
         }
     } catch {}
 
-    // 3. EmailJS credentials
+    // 3. EmailJS credentials — from Firestore portfolio/credentials
     try {
-        const res = await fetch('../data/credentials.json');
-        if (res.ok) {
-            const json = await res.json();
+        const snap = await getDoc(doc(_dDb, "portfolio", "credentials"));
+        if (snap.exists()) {
+            const json = snap.data().data || {};
             EMAILJS_SERVICE_ID  = json.emailjs?.serviceId  || null;
             EMAILJS_TEMPLATE_ID = json.emailjs?.templateId || null;
             EMAILJS_PUBLIC_KEY  = json.emailjs?.publicKey  || null;
@@ -122,27 +118,29 @@ function initBadge() {
 // ── AUTH GATE ─────────────────────────────────────────────────
 
 async function verifyEditorAccess() {
-    // Load allowed credentials — fail closed if unavailable
+    // Load allowed credentials from Firestore — fail closed if unavailable
     let _allowed = null, _allowedUidEmail = null, _allowedUidGoogle = null;
     try {
-        const res  = await fetch('../data/credentials.json');
-        const json = await res.json();
-        _allowed        = json.auth?.allowed    || null;
+        const snap = await getDoc(doc(_dDb, "portfolio", "credentials"));
+        if (!snap.exists()) return false;
+        const json        = snap.data().data || {};
+        _allowed          = json.auth?.allowed    || null;
         _allowedUidEmail  = json.auth?.uid_email  || null;
         _allowedUidGoogle = json.auth?.uid_google || null;
-    } catch {
-        return false; // credentials unreadable → deny
+
+
+    } catch (err) {
+        return false;
     }
 
-    // If credentials file exists but auth fields are missing → deny
-    if (!_allowed || (!_allowedUidEmail && !_allowedUidGoogle)) return false;
+    if (!_allowed || (!_allowedUidEmail && !_allowedUidGoogle)) {
+        return false;
+    }
 
-    // Wait for Firebase to resolve auth state
     return new Promise((resolve) => {
         const unsub = onAuthStateChanged(_dAuth, (user) => {
             unsub();
             if (!user) { resolve(false); return; }
-            // Google may not store email — check by provider UID directly
             const isGoogleUid = user.uid === _allowedUidGoogle;
             const isEmailUid  = user.uid === _allowedUidEmail && user.email === _allowed;
             resolve(isGoogleUid || isEmailUid);
@@ -682,9 +680,9 @@ async function renderDocs() {
 
     if (!docData) {
         try {
-            const res = await fetch('../data/docs.json');
-            if (res.ok) {
-                const json = await res.json();
+            const snap = await getDoc(doc(_dDb, "portfolio", "docs"));
+            if (snap.exists()) {
+                const json = snap.data().data || {};
                 docData = {
                     cv:     json.cv     || [],
                     resume: json.resume || []

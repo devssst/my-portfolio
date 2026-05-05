@@ -1,6 +1,7 @@
 import { initializeApp }                              from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword,
          signInWithPopup, GoogleAuthProvider }        from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc }                  from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
 
 // ── FIREBASE INIT ─────────────────────────────────────────────
 
@@ -15,8 +16,9 @@ const _cfg = {
 
 const _app  = initializeApp(_cfg);
 const _auth = getAuth(_app);
+const _db   = getFirestore(_app);
 
-// ── CONFIG (loaded from data/credentials.json) ────────────────
+// ── CONFIG ────────────────
 
 let _ALLOWED         = null;
 let _ALLOWED_UID_EMAIL  = null;
@@ -24,8 +26,9 @@ let _ALLOWED_UID_GOOGLE = null;
 
 async function loadConfig() {
     try {
-        const res  = await fetch("data/credentials.json");
-        const json = await res.json();
+        const snap = await getDoc(doc(_db, "portfolio", "credentials"));
+        if (!snap.exists()) throw new Error("credentials doc missing");
+        const json           = snap.data().data || {};
         _ALLOWED             = json.auth?.allowed    || null;
         _ALLOWED_UID_EMAIL   = json.auth?.uid_email  || null;
         _ALLOWED_UID_GOOGLE  = json.auth?.uid_google || null;
@@ -62,7 +65,7 @@ if (vstBtn) {
     });
 }
 
-// ── DEVELOPER PANEL TOGGLE (double-click logo) ────────────────
+// ── PANEL ────────────────
 
 let _panel = false;
 
@@ -263,7 +266,7 @@ const microsoftImg = socialBtn?.querySelector('img[alt="Microsoft Logo"]');
 if (microsoftImg) {
     microsoftImg.style.cursor = "pointer";
     microsoftImg.addEventListener("click", () => {
-        alert("Feature unavailable.");
+        alert("Feature unavailable because I can't make my account part of development program.");
         console.log("SHIT, MICROSOFT!");
     });
 }
