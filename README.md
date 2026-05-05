@@ -31,11 +31,6 @@ All content (projects, certificates, CV/resume documents, timeline events) is dr
 - **Certificates**: Gallery layout (220px cards, PNG previews, title, details, date); clicking a card opens a full-screen image overlay — data from Firestore `portfolio/certs`
 - **SEND ME YOUR DM**: Contact form (name, email, subject, message) with full validation, animated error states, EmailJS integration with success/spinner states 
 
-### ✏️ Admin Edit Mode *(Phase 4 — In Progress)*
-- EDIT in badge dropdown triggers edit mode (currently in development)
-- Inline editing per section, saves to Firestore
-- Project fetch by GitHub URL, certificate/document upload with config form
-
 ---
 
 ## 🛠️ Technology Stack
