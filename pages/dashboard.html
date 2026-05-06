@@ -351,10 +351,6 @@
                 <div class="faq-a">This portfolio was built by Vien Fritzgerald V. Calderon, a BSIT student at Dalubhasaang Politekniko ng Lungsod ng Baliwag.</div>
             </div>
             <div class="faq-item">
-                <div class="faq-q">What is DEVELOPER mode?</div>
-                <div class="faq-a">Developer mode grants admin access to Vien only. It allows editing of portfolio content directly on the dashboard.</div>
-            </div>
-            <div class="faq-item">
                 <div class="faq-q">How do I contact Vien?</div>
                 <div class="faq-a">Head to the REACH ME section and send a message through the contact form.</div>
             </div>
@@ -378,6 +374,67 @@
     <div class="cert-overlay" id="certOverlay">
         <button class="cert-overlay-close" id="certOverlayClose"><i class="fa-solid fa-xmark"></i></button>
         <img class="cert-overlay-img" id="certOverlayImg" src="" alt="">
+    </div>
+
+    <!-- DOC DELETE CONFIRM MODAL -->
+    <div class="faq-overlay doc-delete-overlay" id="docDeleteOverlay">
+        <div class="faq-card doc-delete-card" id="docDeleteCard">
+            <button class="faq-close" id="docDeleteClose"><i class="fa-solid fa-xmark"></i></button>
+            <div class="doc-delete-body">
+                <i class="fa-solid fa-triangle-exclamation doc-delete-icon"></i>
+                <div class="doc-delete-heading">ARE YOU SURE?</div>
+                <div class="doc-delete-sub" id="docDeleteSub">The file you wanted to delete is <strong id="docDeleteTitle"></strong>.</div>
+                <div class="doc-delete-note">This cannot be undone.</div>
+            </div>
+            <div class="doc-delete-actions">
+                <button type="button" class="doc-delete-cancel" id="docDeleteCancel">CANCEL</button>
+                <button type="button" class="doc-delete-confirm" id="docDeleteConfirm">
+                    <i class="fa-solid fa-trash"></i> YES, DELETE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DOC UPLOAD MODAL -->
+    <div class="faq-overlay doc-upload-overlay" id="docUploadOverlay">
+        <div class="faq-card doc-upload-card" id="docUploadCard">
+            <button class="faq-close" id="docUploadClose"><i class="fa-solid fa-xmark"></i></button>
+            <h3>Upload Document</h3>
+
+            <div class="doc-drop-zone" id="docDropZone">
+                <input type="file" id="docFileInput" accept=".pdf" hidden>
+                <i class="fa-solid fa-cloud-arrow-up doc-drop-icon"></i>
+                <div class="doc-drop-main">Drag &amp; drop your PDF here</div>
+                <div class="doc-drop-or">or</div>
+                <button type="button" class="doc-drop-browse" id="docDropBrowse">Browse file</button>
+                <div class="doc-drop-hint">PDF files only</div>
+            </div>
+
+            <div class="doc-drop-selected" id="docDropSelected">
+                <i class="fa-regular fa-file-pdf doc-drop-selected-icon"></i>
+                <span id="docDropFileName">No file selected</span>
+            </div>
+
+            <div class="doc-upload-fields">
+                <div class="doc-upload-field">
+                    <label for="docTitleInput">TITLE</label>
+                    <input type="text" id="docTitleInput" placeholder="Document title" autocomplete="off">
+                </div>
+                <div class="doc-upload-field">
+                    <label for="docTypeSelect">TYPE</label>
+                    <select id="docTypeSelect">
+                        <option value="resume">Resume</option>
+                        <option value="cv">Curriculum Vitae</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="button" class="doc-upload-submit" id="docUploadSubmit">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+            </button>
+
+            <div class="doc-upload-status" id="docUploadStatus"></div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>

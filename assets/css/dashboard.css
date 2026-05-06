@@ -372,7 +372,7 @@ body::before {
 /* PART 2 -- CV / RESUME DOCS */
 .home-docs {
     width: 100%;
-    max-width: 860px;
+    max-width: 940px;
     padding: 40px 0 80px;
     flex-shrink: 0;
 }
@@ -1728,11 +1728,35 @@ body::before {
     transform: translateY(12px) scale(0.97);
     transition: transform 0.25s ease;
     position: relative;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 
     /*
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     will-change: transform;*/
+}
+
+.faq-card::-webkit-scrollbar {
+    width: 4px;
+}
+
+.faq-card::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.faq-card::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 2px;
+}
+
+.faq-card:hover {
+    scrollbar-color: rgba(168, 85, 247, 0.1) transparent;
+}
+
+.faq-card:hover::-webkit-scrollbar-thumb {
+    background: rgba(168, 85, 247, 0.1);
 }
 
 .faq-overlay.open .faq-card {
@@ -1931,4 +1955,416 @@ body::before {
 .cert-overlay-close:hover {
     background: rgba(255, 255, 255, 0.12);
     color: rgba(255, 255, 255, 1);
+}
+
+/* ── DOC UPLOAD BUTTON ───────────────────────────────────────── */
+
+.doc-upload-btn {
+    width: 220px;
+    height: 192px;
+    border-radius: 14px;
+    background: rgba(34, 197, 94, 0.05);
+    border: 1px dashed rgba(34, 197, 94, 0.35);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-shrink: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: rgba(34, 197, 94, 0.6);
+    transition: transform 0.2s ease, border-color 0.2s ease,
+                box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.doc-upload-btn:hover {
+    transform: translateY(-3px);
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+    color: rgba(168, 85, 247, 0.9);
+}
+
+.doc-upload-icon {
+    font-size: 28px;
+}
+
+.doc-upload-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+/* ── DOC CARD DELETE BUTTON ──────────────────────────────────── */
+
+.doc-card-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.15s ease, background 0.15s ease;
+    z-index: 10;
+}
+
+.home-docs-grid.edit-active .doc-card-delete {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.doc-card-delete:hover {
+    background: rgba(239, 68, 68, 1);
+    transform: scale(1.12);
+}
+
+/* ── DOC DELETE CONFIRM MODAL ────────────────────────────────── */
+
+.doc-delete-overlay .faq-card {
+    max-width: 380px;
+    text-align: center;
+}
+
+.doc-delete-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+}
+
+.doc-delete-icon {
+    font-size: 40px;
+    color: rgba(239, 68, 68, 0.85);
+    margin-bottom: 4px;
+}
+
+.doc-delete-heading {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #fff;
+}
+
+.doc-delete-sub {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.5;
+}
+
+.doc-delete-sub strong {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 700;
+}
+
+.doc-delete-note {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 500;
+    margin-bottom: -18px;
+}
+
+.doc-delete-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.doc-delete-cancel {
+    flex: 1;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.doc-delete-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+.doc-delete-confirm {
+    flex: 1;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(239, 68, 68, 0.85);
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: background 0.2s, opacity 0.2s, transform 0.15s;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.doc-delete-confirm:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(239, 68, 68, 0.45);
+}
+
+.doc-delete-confirm:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.doc-upload-overlay .faq-card {
+    max-width: 520px;
+    overflow-y: auto;
+    max-height: 90vh;
+}
+
+/* DRAG & DROP ZONE */
+.doc-drop-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 28px 20px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    margin-bottom: 14px;
+    user-select: none;
+}
+
+.doc-drop-zone:hover {
+    border-color: rgba(168, 85, 247, 0.4);
+    background: rgba(168, 85, 247, 0.04);
+}
+
+.doc-drop-zone.drag-over {
+    border-color: rgba(168, 85, 247, 0.7);
+    background: rgba(168, 85, 247, 0.08);
+}
+
+.doc-drop-zone.has-file {
+    border-color: rgba(34, 197, 94, 0.5);
+    background: rgba(34, 197, 94, 0.04);
+}
+
+.doc-drop-icon {
+    font-size: 32px;
+    color: rgba(168, 85, 247, 0.6);
+    margin-bottom: 2px;
+}
+
+.doc-drop-zone.has-file .doc-drop-icon {
+    color: rgba(34, 197, 94, 0.7);
+}
+
+.doc-drop-main {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.doc-drop-or {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 600;
+}
+
+.doc-drop-browse {
+    height: 28px;
+    padding: 0 16px;
+    border-radius: 7px;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    background: rgba(168, 85, 247, 0.1);
+    color: rgba(192, 132, 252, 1);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.doc-drop-browse:hover {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.7);
+    transform: translateY(-1px);
+}
+
+.doc-drop-hint {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.2);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+}
+
+/* SELECTED FILE ROW */
+.doc-drop-selected {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    margin-bottom: 16px;
+}
+
+.doc-drop-selected-icon {
+    font-size: 16px;
+    color: rgba(168, 85, 247, 0.7);
+    flex-shrink: 0;
+}
+
+#docDropFileName {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.45);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#docDropFileName.has-file {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* FORM FIELDS */
+.doc-upload-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.doc-upload-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.doc-upload-field label {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: rgba(200, 185, 240, 0.9);
+}
+
+.doc-upload-field input,
+.doc-upload-field select {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
+
+.doc-upload-field input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.doc-upload-field select:hover {
+    border-color: rgba(168, 85, 247, 0.35);
+    background-color: rgba(168, 85, 247, 0.04);
+}
+
+.doc-upload-field input:focus,
+.doc-upload-field select:focus {
+    border-color: rgba(168, 85, 247, 0.5);
+    background-color: rgba(168, 85, 247, 0.06);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+}
+
+.doc-upload-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(168,85,247,0.6)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    cursor: pointer;
+}
+
+.doc-upload-field select option {
+    background: #111827;
+    color: #fff;
+}
+
+/* UPLOAD SUBMIT BUTTON */
+.doc-upload-submit {
+    width: 100%;
+    height: 42px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--purple-dark), var(--purple-mid), var(--purple-light));
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(149, 0, 248, 0.35);
+    margin-bottom: 12px;
+}
+
+.doc-upload-submit:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 28px rgba(149, 0, 248, 0.5);
+}
+
+.doc-upload-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* STATUS LINE */
+.doc-upload-status {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    min-height: 18px;
+    color: rgba(255, 255, 255, 0.4);
+    transition: color 0.2s;
+}
+
+.doc-upload-status.success {
+    color: rgba(34, 197, 94, 0.9);
+}
+
+.doc-upload-status.error {
+    color: rgba(239, 68, 68, 0.9);
 }

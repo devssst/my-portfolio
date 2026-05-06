@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc }             from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc }     from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
 
 // ── FIREBASE INIT (dashboard) ─────────────────────────────────
 
@@ -42,11 +42,17 @@ let FETCHED_PROJECTS  = []; // INFO.json objects from repo entries in timestamp.
 let FETCHED_TIMELINE  = []; // Direct timeline entries from timestamp.json
 let FETCHED_CERTS     = []; // Entries from certs.json
 
-// ── EMAILJS CREDENTIALS
+// ── EMAILJS CREDENTIALS ───────────────────────────────────────
 
 let EMAILJS_SERVICE_ID  = null;
 let EMAILJS_TEMPLATE_ID = null;
 let EMAILJS_PUBLIC_KEY  = null;
+
+// ── GITHUB CREDENTIALS (admin only) ──────────────────────────
+
+let GH_TOKEN = null;
+let GH_OWNER = null;
+let GH_REPO  = null;
 
 // ── LOAD ALL DATA ─────────────────────────────────────────────
 
@@ -96,11 +102,31 @@ async function loadAllData() {
     } catch {}
 }
 
+// ── LOAD GITHUB CREDENTIALS (admin only) ─────────────────────
+// Called only after isEditor is confirmed true.
+// GH_TOKEN is never loaded for visitor sessions.
+
+async function loadGithubCredentials() {
+    try {
+        const snap = await getDoc(doc(_dDb, "portfolio", "credentials"));
+        if (!snap.exists()) return;
+        const json = snap.data().data || {};
+        GH_TOKEN = json.github?.token || null;
+        GH_OWNER = json.github?.owner || null;
+        GH_REPO  = json.github?.repo  || null;
+    } catch {
+        GH_TOKEN = null;
+        GH_OWNER = null;
+        GH_REPO  = null;
+    }
+}
+
 // ── INIT ─────────────────────────────────────────────────────
 
 const params         = new URLSearchParams(window.location.search);
 const _editRequested = params.get('ref') === 'edit';
 let   isEditor       = false; // set true only after Firebase auth verified
+let   isEditMode     = false; // toggled by EDIT button in badge dropdown
 
 const badge    = document.getElementById('modeBadge');
 const header   = document.getElementById('dashHeader');
@@ -285,6 +311,9 @@ document.addEventListener('wheel', (e) => {
     const target = e.target;
     if (target.tagName === 'TEXTAREA') return;
     if (target.closest('textarea')) return;
+
+    // Never hijack when an overlay modal is open and the scroll is inside it
+    if (target.closest('.faq-overlay.open, .levels-overlay.open')) return;
 
     const activeSection = document.getElementById('section-' + currentSection);
     if (!activeSection) return;
@@ -601,6 +630,11 @@ function renderDocCard(data) {
     const card = document.createElement('div');
     card.className = 'doc-card';
 
+    // Store identifiers for delete
+    if (data.id)   card.dataset.docId   = data.id;
+    if (data.file) card.dataset.docFile = data.file;
+    if (data.type) card.dataset.docType = data.type;
+
     const dateStr = data.uploaded
         ? new Date(data.uploaded).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
         : 'Date unknown';
@@ -608,6 +642,9 @@ function renderDocCard(data) {
     const filePath = data.file ? `../${data.file}` : null;
 
     card.innerHTML = `
+        <button class="doc-card-delete" title="Delete document" aria-label="Delete document">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
         <div class="doc-card-preview">
             <i class="fa-regular fa-file-pdf doc-card-placeholder-icon"></i>
         </div>
@@ -655,8 +692,18 @@ function renderDocCard(data) {
             .catch(() => {});
     }
 
+    // Delete button — stop card expand, open confirm modal
+    const deleteBtn = card.querySelector('.doc-card-delete');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openDocDeleteModal(data);
+        });
+    }
+
     card.addEventListener('click', (e) => {
         if (e.target.closest('.doc-card-actions')) return;
+        if (e.target.closest('.doc-card-delete')) return;
         const isExpanded = card.classList.contains('expanded');
         document.querySelectorAll('.doc-card.expanded').forEach(c => c.classList.remove('expanded'));
         if (!isExpanded) card.classList.add('expanded');
@@ -672,11 +719,6 @@ async function renderDocs() {
     if (!grid) return;
 
     let docData = null;
-
-    try {
-        const stored = localStorage.getItem('portfolio_docs');
-        if (stored) docData = JSON.parse(stored);
-    } catch {}
 
     if (!docData) {
         try {
@@ -702,15 +744,17 @@ async function renderDocs() {
 
     if (allDocs.length === 0) {
         grid.innerHTML = `
-            <div style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.2);width:100%;">
+            <div data-empty-state style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.2);width:100%;">
                 <i class="fa-regular fa-folder-open" style="font-size:32px;margin-bottom:10px;display:block;"></i>
                 No documents yet.
             </div>
         `;
-        return;
+    } else {
+        allDocs.forEach(d => grid.appendChild(renderDocCard(d)));
     }
 
-    allDocs.forEach(doc => grid.appendChild(renderDocCard(doc)));
+    // Re-inject upload button if edit mode is already on
+    if (isEditMode) injectDocUploadBtn();
 }
 
 // ── LOCAL STORAGE HELPER ──────────────────────────────────────
@@ -721,6 +765,359 @@ function loadFromStorage(key, fallback) {
         return stored ? JSON.parse(stored) : fallback;
     } catch {
         return fallback;
+    }
+}
+
+// ── EDIT MODE ─────────────────────────────────────────────────
+
+function setEditMode(active) {
+    isEditMode = active;
+
+    const grid = document.getElementById('homeDocsGrid');
+
+    if (active) {
+        if (grid) grid.classList.add('edit-active');
+        injectDocUploadBtn();
+    } else {
+        if (grid) grid.classList.remove('edit-active');
+        const btn = document.getElementById('docUploadBtn');
+        if (btn) {
+            btn.remove();
+            // Restore empty state if grid is now empty
+            if (grid && grid.children.length === 0) {
+                grid.innerHTML = `
+                    <div data-empty-state style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.2);width:100%;">
+                        <i class="fa-regular fa-folder-open" style="font-size:32px;margin-bottom:10px;display:block;"></i>
+                        No documents yet.
+                    </div>
+                `;
+            }
+        }
+    }
+}
+
+function injectDocUploadBtn() {
+    if (document.getElementById('docUploadBtn')) return; // already present
+
+    const grid = document.getElementById('homeDocsGrid');
+    if (!grid) return;
+
+    // Clear empty-state placeholder if present
+    const emptyState = grid.querySelector('[data-empty-state]');
+    if (emptyState) emptyState.remove();
+
+    const btn = document.createElement('button');
+    btn.id        = 'docUploadBtn';
+    btn.className = 'doc-upload-btn';
+    btn.type      = 'button';
+    btn.innerHTML = `
+        <i class="fa-solid fa-file-arrow-up doc-upload-icon"></i>
+        <span class="doc-upload-label">New Document</span>
+    `;
+    btn.addEventListener('click', openDocUploadModal);
+    grid.appendChild(btn);
+}
+
+// ── DOC UPLOAD MODAL ──────────────────────────────────────────
+
+let selectedDocFile = null;
+
+const docUploadOverlay = document.getElementById('docUploadOverlay');
+const docUploadClose   = document.getElementById('docUploadClose');
+const docDropZone      = document.getElementById('docDropZone');
+const docFileInput     = document.getElementById('docFileInput');
+const docDropBrowse    = document.getElementById('docDropBrowse');
+const docDropFileName  = document.getElementById('docDropFileName');
+const docTitleInput    = document.getElementById('docTitleInput');
+const docTypeSelect    = document.getElementById('docTypeSelect');
+const docUploadSubmit  = document.getElementById('docUploadSubmit');
+const docUploadStatus  = document.getElementById('docUploadStatus');
+
+function openDocUploadModal() {
+    resetDocUploadModal();
+    if (docUploadOverlay) docUploadOverlay.classList.add('open');
+}
+
+function closeDocUploadModal() {
+    if (docUploadOverlay) docUploadOverlay.classList.remove('open');
+}
+
+function resetDocUploadModal() {
+    selectedDocFile = null;
+
+    if (docDropZone)     { docDropZone.classList.remove('drag-over', 'has-file'); }
+    if (docDropFileName) { docDropFileName.textContent = 'No file selected'; docDropFileName.classList.remove('has-file'); }
+    if (docTitleInput)   { docTitleInput.value = ''; }
+    if (docTypeSelect)   { docTypeSelect.value = 'resume'; }
+    if (docFileInput)    { docFileInput.value = ''; }
+    if (docUploadStatus) { docUploadStatus.textContent = ''; docUploadStatus.className = 'doc-upload-status'; }
+    if (docUploadSubmit) { docUploadSubmit.disabled = false; docUploadSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload'; }
+}
+
+function handleFileSelected(file) {
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+        setUploadStatus('Only PDF files are accepted.', 'error');
+        return;
+    }
+
+    selectedDocFile = file;
+
+    // Update drop zone
+    if (docDropZone)     docDropZone.classList.add('has-file');
+    if (docDropFileName) { docDropFileName.textContent = file.name; docDropFileName.classList.add('has-file'); }
+
+    // Auto-fill title from filename (strip extension)
+    if (docTitleInput && !docTitleInput.value) {
+        docTitleInput.value = file.name.replace(/\.[^/.]+$/, '');
+    }
+
+    setUploadStatus('', '');
+}
+
+function setUploadStatus(msg, type) {
+    if (!docUploadStatus) return;
+    docUploadStatus.textContent = msg;
+    docUploadStatus.className   = 'doc-upload-status' + (type ? ` ${type}` : '');
+}
+
+// Close on overlay backdrop click
+if (docUploadOverlay) {
+    docUploadOverlay.addEventListener('click', (e) => {
+        if (e.target === docUploadOverlay) closeDocUploadModal();
+    });
+}
+
+if (docUploadClose) {
+    docUploadClose.addEventListener('click', closeDocUploadModal);
+}
+
+// Browse button triggers hidden file input
+if (docDropBrowse) {
+    docDropBrowse.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (docFileInput) docFileInput.click();
+    });
+}
+
+// Clicking anywhere in zone also opens file picker (except browse button)
+if (docDropZone) {
+    docDropZone.addEventListener('click', (e) => {
+        if (e.target === docDropBrowse || e.target.closest('.doc-drop-browse')) return;
+        if (docFileInput) docFileInput.click();
+    });
+}
+
+// File input change
+if (docFileInput) {
+    docFileInput.addEventListener('change', () => {
+        if (docFileInput.files && docFileInput.files[0]) {
+            handleFileSelected(docFileInput.files[0]);
+        }
+    });
+}
+
+// Drag & drop events
+if (docDropZone) {
+    docDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        docDropZone.classList.add('drag-over');
+    });
+
+    docDropZone.addEventListener('dragleave', (e) => {
+        if (!docDropZone.contains(e.relatedTarget)) {
+            docDropZone.classList.remove('drag-over');
+        }
+    });
+
+    docDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        docDropZone.classList.remove('drag-over');
+        const file = e.dataTransfer?.files?.[0] || null;
+        if (file) handleFileSelected(file);
+    });
+}
+
+// Upload handler
+if (docUploadSubmit) {
+    docUploadSubmit.addEventListener('click', handleDocUpload);
+}
+
+async function handleDocUpload() {
+    if (!selectedDocFile) {
+        setUploadStatus('Please select a PDF file first.', 'error');
+        return;
+    }
+
+    const title = docTitleInput?.value.trim() || '';
+    if (!title) {
+        setUploadStatus('Please enter a document title.', 'error');
+        if (docTitleInput) docTitleInput.focus();
+        return;
+    }
+
+    if (!GH_TOKEN || !GH_OWNER || !GH_REPO) {
+        setUploadStatus('GitHub credentials not loaded. Try again.', 'error');
+        return;
+    }
+
+    // Disable button and show loading
+    if (docUploadSubmit) {
+        docUploadSubmit.disabled = true;
+        docUploadSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+    }
+    setUploadStatus('', '');
+
+    try {
+        // Auto-generate fields
+        const id       = `doc-${Date.now()}`;
+        const fileName = selectedDocFile.name;
+        const filePath = `data/files/${fileName}`;
+        const uploaded = new Date().toISOString().split('T')[0];
+        const typeKey  = docTypeSelect?.value || 'resume'; // 'resume' | 'cv'
+        const typeLabel = typeKey === 'cv' ? 'CV' : 'Resume';
+
+        // Base64 encode
+        const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload  = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(selectedDocFile);
+        });
+
+        setUploadStatus('Pushing to GitHub...', '');
+
+        // Push file to GitHub
+        await ghPushFile(filePath, base64, `Add document: ${fileName}`);
+
+        setUploadStatus('Saving to Firestore...', '');
+
+        // Read current docs from Firestore
+        const snap = await getDoc(doc(_dDb, "portfolio", "docs"));
+        let docData = { cv: [], resume: [] };
+        if (snap.exists()) {
+            const json = snap.data().data || {};
+            docData = {
+                cv:     json.cv     || [],
+                resume: json.resume || []
+            };
+        }
+
+        // Build new entry
+        const entry = { id, title, type: typeLabel, uploaded, file: filePath };
+
+        // Append to the correct array
+        if (typeKey === 'cv') {
+            docData.cv.push(entry);
+        } else {
+            docData.resume.push(entry);
+        }
+
+        // Write back to Firestore
+        await setDoc(doc(_dDb, "portfolio", "docs"), { data: docData });
+
+        setUploadStatus('Uploaded successfully!', 'success');
+
+        // Re-render docs in place — no page reload
+        await renderDocs();
+        setTimeout(() => closeDocUploadModal(), 1200);
+
+    } catch (err) {
+        console.error('Doc upload error:', err);
+        setUploadStatus(`Upload failed: ${err.message || 'Unknown error'}`, 'error');
+        if (docUploadSubmit) {
+            docUploadSubmit.disabled = false;
+            docUploadSubmit.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload';
+        }
+    }
+}
+
+// ── DOC DELETE MODAL ──────────────────────────────────────────
+
+let pendingDeleteDoc = null; // { id, file, type, title }
+
+const docDeleteOverlay = document.getElementById('docDeleteOverlay');
+const docDeleteClose   = document.getElementById('docDeleteClose');
+const docDeleteCancel  = document.getElementById('docDeleteCancel');
+const docDeleteConfirm = document.getElementById('docDeleteConfirm');
+const docDeleteTitle   = document.getElementById('docDeleteTitle');
+
+function openDocDeleteModal(data) {
+    pendingDeleteDoc = data;
+    if (docDeleteTitle) {
+        docDeleteTitle.textContent = data.title || 'this document';
+    }
+    if (docDeleteConfirm) {
+        docDeleteConfirm.disabled = false;
+        docDeleteConfirm.innerHTML = '<i class="fa-solid fa-trash"></i> YES, DELETE';
+    }
+    if (docDeleteOverlay) docDeleteOverlay.classList.add('open');
+}
+
+function closeDocDeleteModal() {
+    if (docDeleteOverlay) docDeleteOverlay.classList.remove('open');
+    pendingDeleteDoc = null;
+}
+
+if (docDeleteClose)  docDeleteClose.addEventListener('click',  closeDocDeleteModal);
+if (docDeleteCancel) docDeleteCancel.addEventListener('click', closeDocDeleteModal);
+if (docDeleteOverlay) {
+    docDeleteOverlay.addEventListener('click', (e) => {
+        if (e.target === docDeleteOverlay) closeDocDeleteModal();
+    });
+}
+
+if (docDeleteConfirm) {
+    docDeleteConfirm.addEventListener('click', handleDocDelete);
+}
+
+async function handleDocDelete() {
+    if (!pendingDeleteDoc) return;
+
+    if (!GH_TOKEN || !GH_OWNER || !GH_REPO) {
+        alert('GitHub credentials not loaded. Cannot delete.');
+        return;
+    }
+
+    const { id, file, type, title } = pendingDeleteDoc;
+
+    docDeleteConfirm.disabled = true;
+    docDeleteConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+
+    try {
+        // 1. Remove file from GitHub (non-fatal if not found)
+        if (file) {
+            try {
+                await ghDeleteFile(file, `Remove document: ${file}`);
+            } catch (ghErr) {
+                console.warn('GitHub delete skipped (file may not exist):', ghErr.message);
+            }
+        }
+
+        // 2. Read Firestore docs
+        const snap = await getDoc(doc(_dDb, "portfolio", "docs"));
+        let docData = { cv: [], resume: [] };
+        if (snap.exists()) {
+            const json = snap.data().data || {};
+            docData = { cv: json.cv || [], resume: json.resume || [] };
+        }
+
+        // 3. Remove from the correct array by id
+        const typeKey = (type || '').toLowerCase() === 'cv' ? 'cv' : 'resume';
+        docData[typeKey] = docData[typeKey].filter(entry => entry.id !== id);
+
+        // 4. Write back to Firestore
+        await setDoc(doc(_dDb, "portfolio", "docs"), { data: docData });
+
+        // 5. Close modal and re-render
+        closeDocDeleteModal();
+        await renderDocs();
+
+    } catch (err) {
+        console.error('Doc delete error:', err);
+        docDeleteConfirm.disabled = false;
+        docDeleteConfirm.innerHTML = '<i class="fa-solid fa-trash"></i> YES, DELETE';
+        alert(`Delete failed: ${err.message || 'Unknown error'}`);
     }
 }
 
@@ -1123,6 +1520,56 @@ if (certOverlay) {
     });
 }
 
+// ── GITHUB API HELPERS ────────────────────────────────────────
+// These functions require GH_TOKEN, GH_OWNER, GH_REPO to be loaded.
+// Only call them when isEditor is true.
+
+async function ghGetSHA(path) {
+    const res = await fetch(
+        `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`,
+        { headers: { Authorization: `Bearer ${GH_TOKEN}` } }
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.sha || null;
+}
+
+async function ghPushFile(path, base64Content, commitMessage, sha = null) {
+    const body = { message: commitMessage, content: base64Content };
+    if (sha) body.sha = sha;
+    const res = await fetch(
+        `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`,
+        {
+            method:  'PUT',
+            headers: {
+                Authorization:  `Bearer ${GH_TOKEN}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        }
+    );
+    if (!res.ok) throw new Error(`GitHub push failed: ${res.status}`);
+    return await res.json();
+}
+
+async function ghDeleteFile(path, commitMessage) {
+    const sha = await ghGetSHA(path);
+    if (!sha) throw new Error(`File not found on GitHub: ${path}`);
+    const res = await fetch(
+        `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`,
+        {
+            method:  'DELETE',
+            headers: {
+                Authorization:  `Bearer ${GH_TOKEN}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: commitMessage, sha }),
+        }
+    );
+    if (!res.ok) throw new Error(`GitHub delete failed: ${res.status}`);
+    return await res.json();
+}
+
 // ── BOOT ──────────────────────────────────────────────────────
 
 async function boot() {
@@ -1142,6 +1589,8 @@ async function boot() {
     const verified = await verifyEditorAccess();
     if (verified) {
         isEditor = true;
+        await loadGithubCredentials();
+
         // Clean up the URL param if present — session is the real gate
         if (_editRequested) {
             window.history.replaceState({}, "", window.location.pathname);
@@ -1209,8 +1658,15 @@ if (faqOverlay) {
 if (menuEdit) {
     menuEdit.addEventListener('click', () => {
         badgeWrap.classList.remove('open');
-        // TODO: trigger edit mode — Feature 9
-        console.log('Edit mode triggered');
+        setEditMode(!isEditMode);
+        menuEdit.innerHTML = isEditMode
+            ? '<i class="fa-solid fa-pen-to-square"></i> EXIT EDIT'
+            : '<i class="fa-solid fa-pen-to-square"></i> EDIT';
+
+        // Reload when exiting edit mode
+        if (!isEditMode) {
+            setTimeout(() => location.reload(), 2000);
+        }
     });
 }
 
