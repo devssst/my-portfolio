@@ -8,9 +8,9 @@ A personal developer portfolio for **Vien Fritzgerald V. Calderon**, built entir
 
 ## 🎯 Overview
 
-This portfolio presents Vien's developer life, projects, and background in a clean, interactive format. Visitors browse in read-only mode. Content is managed directly by the developer.
+This portfolio presents Vien's developer life, projects, and background in a clean, interactive format. Visitors browse in read-only mode. Content is managed directly by the developer through an in-dashboard edit mode.
 
-All content (projects, certificates, CV/resume documents, timeline events) is driven by Firestore documents. No data is hardcoded in JavaScript. Projects are fetched automatically from their own GitHub repos via `INFO.json`.
+All content (projects, certificates, CV/resume documents, timeline events) is driven by Firestore documents. No data is hardcoded in JavaScript. Projects are fetched automatically from their own GitHub repos via `INFO.json`. Physical files (PDFs, certificate images) are stored in the GitHub repo under `data/files/` and served via `raw.githubusercontent.com`.
 
 ### 👨‍💻 Developer
 **Developer VIEN (Vien Fritzgerald V. Calderon)**
@@ -23,13 +23,13 @@ All content (projects, certificates, CV/resume documents, timeline events) is dr
 - Simple landing page — click "Visit Page" to enter the portfolio dashboard
 
 ### 📊 Dashboard
-- **Home**: Hero section with profile photo, name, and social icon links; CV/Resume doc cards with PDF.js thumbnails — data loaded from Firestore `portfolio/docs`
+- **Home**: Hero section with profile photo, name, and social icon links; CV/Resume doc cards with PDF.js thumbnails — data loaded from Firestore `portfolio/docs`; VIEW opens the GitHub PDF viewer, SAVE triggers a direct download
 - **WHO AM I?**: Live age counter (updates every minute from DOB Dec 15 2006), educational background, bio paragraph, stat cards (Projects, Certificates, Yrs Experience, Languages) — counts auto-derived from Firestore data; stat cards navigate to their section on click
 - **Languages & Tools**: Animated horizontal skill bars with language logo icons and brand colors; level labels per bar; legend card with 6 proficiency levels — click legend to open the full levels modal
 - **TIMESTAMPS**: Auto-generated from Firestore `portfolio/timestamp` (project + manual entries); grouped by year descending; date shown on click (accordion toggle); "Learn More" on project entries cross-links to the matching card
 - **Projects**: Year-grouped card grid auto-fetched via `timestamp` → `INFO.json` per repo; universal card spec with banner preview, accordion expand showing contribution text + Live and Source buttons
 - **Certificates**: Gallery layout (220px cards, PNG previews, title, details, date); clicking a card opens a full-screen image overlay — data from Firestore `portfolio/certs`
-- **SEND ME YOUR DM**: Contact form (name, email, subject, message) with full validation, animated error states, EmailJS integration with success/spinner states 
+- **SEND ME YOUR DM**: Contact form (name, email, subject, message) with full validation, animated error states, EmailJS integration with success/spinner states
 
 ---
 
@@ -37,11 +37,15 @@ All content (projects, certificates, CV/resume documents, timeline events) is dr
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+ modules)
 - **Styling**: Custom CSS — single global `body::before` blur overlay, CSS Grid, CSS Variables
+- **Auth**: Firebase Authentication — Email/Password + Google Sign-In (both active)
 - **Database**: Firebase Firestore — all portfolio data stored in `portfolio` collection
-- **Contact**: EmailJS (free tier, no backend) — Gmail service
+- **File hosting**: GitHub repo `data/files/` — served via `raw.githubusercontent.com`
+- **File management**: GitHub Contents API — push, update, and delete files programmatically; PAT stored in Firestore, loaded at runtime in edit mode only
+- **Contact**: EmailJS (free tier, no backend) — credentials stored in Firestore
 - **PDF Preview**: PDF.js (v3.11.174) — canvas-based first-page thumbnail rendering
 - **Font**: Plus Jakarta Sans
 - **Icons**: Font Awesome 6.5.1
+- **Hosting**: GitHub Pages
 
 🔗 ***Links***:
 - **Firebase Console**: [console.firebase.google.com](https://console.firebase.google.com)
@@ -76,8 +80,9 @@ my-portfolio/
 │       └── microsoft.png       # Social icon
 │
 ├── 📂 data/
-│   └── 📂 files/               # PDFs and certificate PNGs (served locally)
-│       └── resume.pdf
+│   └── 📂 files/               # Physical files only — PDFs and certificate PNGs
+│       ├── resume.pdf          # Example; actual filenames vary
+│       └── cert1.png
 │
 ├── 📂 pages/
 │   └── dashboard.html          # Main portfolio dashboard
@@ -88,7 +93,7 @@ my-portfolio/
 └── LICENSE.md                  # Proprietary license
 ```
 
-> **Note:** All JSON data files have been migrated to Firebase Firestore. The `data/` folder now only holds physical files (PDFs, images).
+> **Note:** All JSON data files have been migrated to Firebase Firestore. The `data/` folder now only holds physical files (PDFs, images). Do not add JSON files back to `data/`.
 
 ---
 
@@ -98,9 +103,9 @@ All dashboard content is stored in the `portfolio` collection in Firestore. No d
 
 ```
 portfolio/
-├── credentials     # EmailJS service configuration
+├── credentials     # EmailJS config, auth UIDs, GitHub PAT
 ├── certs           # Certificate metadata array
-├── docs            # CV/Resume metadata array
+├── docs            # CV/Resume metadata arrays (cv + resume)
 └── timestamp       # Timeline registry (repo slugs + milestone entries)
 ```
 
@@ -111,6 +116,24 @@ Each document stores its data under a `data` field. Example for `timestamp`:
         { "repo": "devssst/my-portfolio" },
         { "year": 2025, "title": "BSIT - DPLmB", "date": "2025-06", "desc": "..." }
     ]
+}
+```
+
+Example for `docs`:
+```json
+{
+    "data": {
+        "cv": [],
+        "resume": [
+            {
+                "id": "doc-1746432000000",
+                "title": "Resume",
+                "type": "Resume",
+                "uploaded": "2026-05-06",
+                "file": "data/files/Resume.pdf"
+            }
+        ]
+    }
 }
 ```
 
@@ -148,10 +171,21 @@ Access the live site: https://devssst.github.io/my-portfolio
 2. Add a repo entry to `portfolio/timestamp` in Firestore: `{ "repo": "devssst/your-repo" }`
 3. Push `INFO.json` — the portfolio auto-fetches and renders the card
 
+### Uploading a document (CV / Resume) — Edit Mode
+1. Log in and activate edit mode from the badge dropdown
+2. Click the **+ New Document** button that appears in the HOME section
+3. Drag and drop or browse for a PDF file
+4. Fill in the title and select the document type (Resume or CV)
+5. Click Upload — the file is pushed to `data/files/` via the GitHub Contents API and the metadata is saved to Firestore `portfolio/docs` automatically
+6. The card renders immediately after upload, no page reload needed
+
+### Deleting a document — Edit Mode
+1. Activate edit mode — red X buttons appear on each document card
+2. Click the X on the card you want to remove
+3. Confirm in the delete dialog — the file is removed from GitHub and the metadata entry is removed from Firestore
+
 ### Adding a certificate
-1. Place the PNG in `data/files/`
-2. Add an entry to `portfolio/certs` in Firestore under `data.certificates`
-3. Push — the cert card renders automatically
+Certificates upload/delete via edit mode is planned for Phase 4. For now, add the PNG to `data/files/` manually and add an entry to `portfolio/certs` in Firestore under `data.certificates`.
 
 ---
 
@@ -174,7 +208,7 @@ Access the live site: https://devssst.github.io/my-portfolio
 
 ### UI Highlights
 - 6-section tab navigation: `home`, `about`, `timeline`, `projects`, `certificates`, `reach`
-- Mouse wheel and touch swipe section hijacking (300ms cooldown, 5px threshold) — textarea scroll is excluded
+- Mouse wheel and touch swipe section hijacking (300ms cooldown, 5px threshold) — textarea and open modal scroll excluded
 - Profile card smooth slide-out; state synced across all 4 content sections
 - Purple scrollbar auto-appears on scroll, fades after 1.5s
 - Animated skill bars triggered once on first ABOUT entry
@@ -189,7 +223,7 @@ Access the live site: https://devssst.github.io/my-portfolio
 - [x] Visitor Mode welcome screen with Visit Page button
 - [x] Animated welcome page with mode transitions
 - [x] Form validation with animated error states
-- [x] Firebase Authentication integration
+- [x] Firebase Authentication integration — Email/Password + Google Sign-In
 - [x] Redirect to dashboard on successful authentication
 
 ### Phase 2 — Dashboard Shell
@@ -209,12 +243,13 @@ Access the live site: https://devssst.github.io/my-portfolio
 - [x] **Firestore migration** — all JSON data moved to Firestore `portfolio` collection; `data/` folder reduced to physical files only
 
 ### Phase 4 — Edit Mode *(In Progress)*
-- [ ] EDIT in badge dropdown triggers edit mode globally
-- [ ] WHO AM I?: inline text editing → Firestore
-- [ ] TIMESTAMPS: add/remove entries via modal form → Firestore
-- [ ] Projects: FETCH by GitHub URL → auto-creates card + timeline entry → Firestore
-- [ ] Certificates: UPLOAD PNG + config form → Firebase Storage + Firestore
-- [ ] CV/Resume: UPLOAD PDF + config form → Firebase Storage + Firestore
+- [x] Edit mode toggle in badge dropdown — global `isEditMode` state; exits with 2s delayed reload
+- [x] **Home — Documents**: ADD button injected into card grid; drag-and-drop upload modal (title + type fields); file pushed to GitHub via Contents API; metadata saved to Firestore; card re-renders in place without reload
+- [x] **Home — Documents**: per-card delete button (red X, edit mode only); confirm modal; file removed from GitHub + entry removed from Firestore
+- [ ] **WHO AM I?**: inline text editing → Firestore
+- [ ] **TIMESTAMPS**: add/remove entries via modal (repo URL or manual milestone) → Firestore
+- [ ] **Projects**: remove entry from timestamp → Firestore
+- [ ] **Certificates**: upload PNG + config form (title, company, details, date) → GitHub + Firestore; per-card delete
 
 ### Phase 5 — Polish & Deploy
 - [ ] Mobile responsiveness — 375px breakpoints
@@ -225,8 +260,16 @@ Access the live site: https://devssst.github.io/my-portfolio
 
 ## 📋 Update Logs
 
+### Phase 4 — Documents Edit Mode + PDF Fixes (May 6 2026)
+- Documents upload complete: drag-and-drop modal, title + type fields, GitHub Contents API push, Firestore metadata write, in-place re-render after upload
+- Documents delete complete: red X per card (edit mode only), confirm modal, GitHub file deletion + Firestore metadata removal
+- PDF.js thumbnail now fetches from `raw.githubusercontent.com` — fixes 404 on newly uploaded files before GitHub Pages redeploys
+- VIEW button opens the GitHub blob viewer (`github.com/.../blob/main/...`) — renders PDF inline in browser without downloading
+- SAVE button fetches the raw URL and triggers a named download via blob — works cross-origin without relying on the `download` attribute
+- `cursor: pointer` added to `.doc-card-btn` — was implicit on `<a>` tags, now explicit for button elements
+
 ### Phase 3 — Firebase & Firestore Integration (May 5 2026)
-- Firebase Authentication integrated
+- Firebase Authentication integrated — Email/Password + Google Sign-In, dual UID verification
 - All JSON data migrated to Firestore `portfolio` collection — `timestamp`, `certs`, `docs`, `credentials` documents
 - `data/` folder reduced to `files/` only (PDFs and certificate images)
 - `loadAllData()` fully rewritten to use Firestore SDK
@@ -234,10 +277,10 @@ Access the live site: https://devssst.github.io/my-portfolio
 
 ### Phase 3 — Data Architecture Refinements (May 4 2026)
 - `data/projects.json` renamed to `data/timestamp.json` — now accepts both repo slugs and direct timeline entries in the same array
-- `TIMELINE_DATA` constant removed from `dashboard.js` entirely — all timeline data now lives in JSON files
+- `TIMELINE_DATA` constant removed from `dashboard.js` entirely — all timeline data now lives in Firestore
 - `FETCHED_TIMELINE[]` added as a third data store alongside `FETCHED_PROJECTS[]` and `FETCHED_CERTS[]`
 - `renderDocs()` now properly `await`-ed in `boot()` — previously called without await
-- EmailJS credentials moved from hardcoded JS constants to a config file — fetched at runtime, guarded before send
+- EmailJS credentials moved from hardcoded JS constants to Firestore — fetched at runtime, guarded before send
 - `certs-sort-btn` filter pills removed from certificates section — company group labels serve as visual separators
 - Textarea scroll guard added to wheel hijack handler
 
@@ -254,7 +297,7 @@ Access the live site: https://devssst.github.io/my-portfolio
 ### Phase 2 — Dashboard Shell (April 28 2026)
 - Dashboard HTML skeleton with 6 section anchors
 - Sticky header with ADMIN/VISITOR badge and dropdown
-- `switchSection()`, `loadFromStorage()`, session-based access control
+- `switchSection()`, session-based access control
 
 ### Phase 1 — Welcome Page (April 19 2026)
 - Welcome page with glassmorphism card design

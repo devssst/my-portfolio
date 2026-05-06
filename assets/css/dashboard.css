@@ -523,6 +523,7 @@ body::before {
     text-decoration: none;
     transition: opacity 0.15s ease, transform 0.15s ease;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .doc-card-btn:hover {

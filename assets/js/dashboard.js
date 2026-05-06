@@ -639,7 +639,12 @@ function renderDocCard(data) {
         ? new Date(data.uploaded).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
         : 'Date unknown';
 
-    const filePath = data.file ? `../${data.file}` : null;
+    const rawUrl     = data.file
+        ? `https://raw.githubusercontent.com/devssst/my-portfolio/main/${data.file}`
+        : null;
+    const viewerUrl  = data.file
+        ? `https://github.com/devssst/my-portfolio/blob/main/${data.file}`
+        : null;
 
     card.innerHTML = `
         <button class="doc-card-delete" title="Delete document" aria-label="Delete document">
@@ -655,27 +660,39 @@ function renderDocCard(data) {
         </div>
         <div class="doc-card-expand">
             <div class="doc-card-actions">
-                <a href="${filePath || '#'}" target="_blank" class="doc-card-btn view">
+                <a href="${viewerUrl || '#'}" target="_blank" class="doc-card-btn view">
                     <i class="fa-solid fa-eye"></i> VIEW
                 </a>
-                <a href="${filePath || '#'}" download class="doc-card-btn download">
+                <button type="button" class="doc-card-btn download">
                     <i class="fa-solid fa-download"></i> SAVE
-                </a>
+                </button>
             </div>
         </div>
     `;
 
-    if (filePath && window.pdfjsLib) {
+    // SAVE — fetch raw URL, trigger download with the document title as filename
+    const saveBtn = card.querySelector('.doc-card-btn.download');
+    if (saveBtn && rawUrl) {
+        saveBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            try {
+                const res     = await fetch(rawUrl);
+                const blob    = await res.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a       = document.createElement('a');
+                a.href        = blobUrl;
+                a.download    = (data.title || 'document') + '.pdf';
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+            } catch {}
+        });
+    }
+
+    if (rawUrl && window.pdfjsLib) {
         const previewEl   = card.querySelector('.doc-card-preview');
         const placeholder = previewEl.querySelector('.doc-card-placeholder-icon');
 
-        // Use raw.githubusercontent.com for PDF.js — available immediately after a GitHub push.
-        // The GitHub Pages URL (filePath) requires a Pages redeploy which can take several minutes.
-        const pdfRawUrl = data.file
-            ? `https://raw.githubusercontent.com/devssst/my-portfolio/main/${data.file}`
-            : filePath;
-
-        pdfjsLib.getDocument(pdfRawUrl).promise
+        pdfjsLib.getDocument(rawUrl).promise
             .then(pdf => pdf.getPage(1))
             .then(page => {
                 const viewport = page.getViewport({ scale: 1 });
