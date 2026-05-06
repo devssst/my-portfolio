@@ -669,7 +669,13 @@ function renderDocCard(data) {
         const previewEl   = card.querySelector('.doc-card-preview');
         const placeholder = previewEl.querySelector('.doc-card-placeholder-icon');
 
-        pdfjsLib.getDocument(filePath).promise
+        // Use raw.githubusercontent.com for PDF.js — available immediately after a GitHub push.
+        // The GitHub Pages URL (filePath) requires a Pages redeploy which can take several minutes.
+        const pdfRawUrl = data.file
+            ? `https://raw.githubusercontent.com/devssst/my-portfolio/main/${data.file}`
+            : filePath;
+
+        pdfjsLib.getDocument(pdfRawUrl).promise
             .then(pdf => pdf.getPage(1))
             .then(page => {
                 const viewport = page.getViewport({ scale: 1 });
