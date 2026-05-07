@@ -36,7 +36,7 @@ let FETCHED_PROJECTS  = []; // INFO.json objects from repo entries in timestamp.
 let FETCHED_TIMELINE  = []; // Direct timeline entries from timestamp.json
 let FETCHED_CERTS     = []; // Entries from certs.json
 let FETCHED_LANGS     = []; // Language metadata from portfolio/lang
-let FETCHED_ABOUT     = { bio: {}, education: {}, proficiency: [] }; // from portfolio/about
+let FETCHED_ABOUT     = { bio: {}, education: [], proficiency: [] }; // from portfolio/about
 
 // ── EMAILJS CREDENTIALS ───────────────────────────────────────
 
@@ -658,11 +658,15 @@ function renderDocCard(data) {
         ? new Date(data.uploaded).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
         : 'Date unknown';
 
-    const rawUrl     = data.file
-        ? `https://raw.githubusercontent.com/devssst/my-portfolio/main/${data.file}`
+    const encodedPath = data.file
+        ? data.file.split('/').map(encodeURIComponent).join('/')
         : null;
-    const viewerUrl  = data.file
-        ? `https://github.com/devssst/my-portfolio/blob/main/${data.file}`
+
+    const rawUrl    = encodedPath
+        ? `https://raw.githubusercontent.com/devssst/my-portfolio/main/${encodedPath}`
+        : null;
+    const viewerUrl = encodedPath
+        ? `https://github.com/devssst/my-portfolio/blob/main/${encodedPath}`
         : null;
 
     card.innerHTML = `
@@ -824,14 +828,35 @@ function setEditMode(active) {
         }
     }
 
-    // ABOUT section — edu card delete btn
-    const eduCard = document.querySelector('.about-edu-card');
-    if (eduCard) {
-        if (active) eduCard.classList.add('edit-active');
-        else        eduCard.classList.remove('edit-active');
-    }
+    // ABOUT section — edu list delete buttons
+    _injectEduDeleteBtns();
 
     updateAboutEditBtnVisibility();
+}
+
+function _injectEduDeleteBtns() {
+    const eduList = document.getElementById('aboutEduList');
+    if (!eduList) return;
+
+    // Remove any existing delete buttons first
+    eduList.querySelectorAll('.edu-card-delete').forEach(b => b.remove());
+
+    if (!isEditMode) return;
+
+    eduList.querySelectorAll('.about-edu-card').forEach(card => {
+        const idx = parseInt(card.dataset.eduIdx, 10);
+        const btn = document.createElement('button');
+        btn.className   = 'edu-card-delete';
+        btn.title       = 'Remove education';
+        btn.ariaLabel   = 'Remove education';
+        btn.innerHTML   = '<i class="fa-solid fa-xmark"></i>';
+        btn.addEventListener('click', () => {
+            eduDeleteTargetIdx = idx;
+            openEduDeleteModal();
+        });
+        card.classList.add('edit-active');
+        card.insertBefore(btn, card.firstChild);
+    });
 }
 
 function injectDocUploadBtn() {
@@ -1463,60 +1488,63 @@ function renderAbout() {
         }
     }
 
-    // EDUCATION
-    const edu    = FETCHED_ABOUT.education;
-    const eduCard  = document.querySelector('.about-edu-card');
-    const eduBlock = eduCard?.closest('.about-block');
-    let   eduEmpty = eduBlock?.querySelector('[data-edu-empty]');
+    // EDUCATION — render array into #aboutEduList
+    const eduList = document.getElementById('aboutEduList');
+    if (eduList) {
+        const eduArr = Array.isArray(FETCHED_ABOUT.education)
+            ? FETCHED_ABOUT.education
+            : (FETCHED_ABOUT.education?.course ? [FETCHED_ABOUT.education] : []);
 
-    const hasEdu = edu && edu.course;
+        eduList.innerHTML = '';
 
-    if (hasEdu) {
-        // Show card, remove empty state
-        if (eduCard)  eduCard.style.display  = '';
-        if (eduEmpty) eduEmpty.remove();
+        if (eduArr.length === 0) {
+            eduList.innerHTML = `
+                <div style="text-align:center;padding:32px 0;color:rgba(255,255,255,0.2);">
+                    <i class="fa-solid fa-graduation-cap" style="font-size:28px;margin-bottom:10px;display:block;"></i>
+                    No listed education
+                </div>`;
+        } else {
+            eduArr.forEach((edu, idx) => {
+                const card = document.createElement('div');
+                card.className = 'about-edu-card';
+                card.style.marginBottom = idx < eduArr.length - 1 ? '10px' : '';
 
-        const degreeEl = eduCard.querySelector('.about-edu-degree');
-        const schoolEl = eduCard.querySelector('.about-edu-school');
-        const detailEl = eduCard.querySelector('.about-edu-detail');
+                // Parse MM-DD-YYYY
+                function parseStoredDate(val) {
+                    if (!val) return null;
+                    const [mm, dd, yyyy] = val.split('-');
+                    if (!mm || !dd || !yyyy) return null;
+                    return new Date(`${yyyy}-${mm}-${dd}`);
+                }
 
-        if (degreeEl) degreeEl.textContent = edu.course;
-        if (schoolEl && edu.school) schoolEl.textContent = edu.school;
+                const now       = new Date();
+                const endDate   = parseStoredDate(edu.schoolEnd);
+                const startDate = parseStoredDate(edu.schoolStart);
+                const fmt       = d => d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                const isOngoing = !endDate || endDate > now;
+                const dateStr   = isOngoing
+                    ? `${startDate ? fmt(startDate) : ''} — present`
+                    : `Graduated: ${endDate.getFullYear()}`;
+                const yearStr   = edu.year || '';
+                const detailStr = yearStr ? `${yearStr} · ${dateStr}` : dateStr;
 
-        if (detailEl) {
-            const now       = new Date();
-            const endDate   = edu.schoolEnd   ? new Date(edu.schoolEnd   + '-01') : null;
-            const startDate = edu.schoolStart ? new Date(edu.schoolStart + '-01') : null;
+                card.innerHTML = `
+                    <div class="about-edu-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <div class="about-edu-text">
+                        <div class="about-edu-degree">${edu.course || ''}</div>
+                        <div class="about-edu-school">${edu.school || ''}</div>
+                        <div class="about-edu-detail">${detailStr}</div>
+                    </div>
+                `;
 
-            const endStr   = endDate && endDate > now
-                ? 'present'
-                : endDate
-                    ? endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
-                    : '';
-            const startStr = startDate
-                ? startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
-                : '';
-            const yearStr  = edu.year || '';
-
-            if (yearStr && startStr) {
-                detailEl.textContent = `${yearStr} · ${startStr} — ${endStr}`;
-            } else if (startStr) {
-                detailEl.textContent = `${startStr} — ${endStr}`;
-            }
+                // Wire delete button (only in editor mode, injected by setEditMode)
+                card.dataset.eduIdx = idx;
+                eduList.appendChild(card);
+            });
         }
-    } else {
-        // Hide card, show empty state
-        if (eduCard) eduCard.style.display = 'none';
-        if (!eduEmpty && eduBlock) {
-            eduEmpty = document.createElement('div');
-            eduEmpty.dataset.eduEmpty = '';
-            eduEmpty.style.cssText = 'text-align:center;padding:32px 0;color:rgba(255,255,255,0.2);';
-            eduEmpty.innerHTML = `
-                <i class="fa-solid fa-graduation-cap" style="font-size:28px;margin-bottom:10px;display:block;"></i>
-                No listed education
-            `;
-            eduBlock.appendChild(eduEmpty);
-        }
+
+        // Re-inject edit-mode delete buttons if currently in edit mode
+        if (isEditMode) _injectEduDeleteBtns();
     }
 
     // SKILLS — rebuild bars from Firestore data
@@ -1563,7 +1591,7 @@ function renderCertCard(data) {
     if (data.id) card.dataset.certId = data.id;
 
     const rawUrl = data.file
-        ? `https://raw.githubusercontent.com/devssst/my-portfolio/main/${data.file}`
+        ? `https://raw.githubusercontent.com/devssst/my-portfolio/main/${data.file.split('/').map(encodeURIComponent).join('/')}`
         : null;
 
     let dateStr = '';
@@ -1688,11 +1716,6 @@ const aboutEditCancel     = document.getElementById('aboutEditCancel');
 const aboutEditSave       = document.getElementById('aboutEditSave');
 const aboutEditStatus     = document.getElementById('aboutEditStatus');
 const aboutBioInput       = document.getElementById('aboutBioInput');
-const aboutEduCourse      = document.getElementById('aboutEduCourse');
-const aboutEduSchool      = document.getElementById('aboutEduSchool');
-const aboutEduStart       = document.getElementById('aboutEduStart');
-const aboutEduEnd         = document.getElementById('aboutEduEnd');
-const aboutEduYear        = document.getElementById('aboutEduYear');
 const aboutLangSearch     = document.getElementById('aboutLangSearch');
 const aboutLangDropdown   = document.getElementById('aboutLangDropdown');
 const aboutLangAddBtn     = document.getElementById('aboutLangAddBtn');
@@ -1700,8 +1723,10 @@ const aboutLangStaged     = document.getElementById('aboutLangStaged');
 const aboutEditBtn        = document.getElementById('aboutEditBtn');
 const aboutLevelSelect    = document.getElementById('aboutLevelSelect');
 
-// Edu card delete elements
-const eduCardDeleteBtn        = document.getElementById('eduCardDelete');
+const aboutEduAddBtn      = document.getElementById('aboutEduAddBtn');
+const eduEntriesList      = document.getElementById('eduEntriesList');
+// Edu card delete elements (now stores index of entry being deleted)
+let   eduDeleteTargetIdx      = -1;
 const aboutEduDeleteOverlay   = document.getElementById('aboutEduDeleteOverlay');
 const aboutEduDeleteClose     = document.getElementById('aboutEduDeleteClose');
 const aboutEduDeleteCancel    = document.getElementById('aboutEduDeleteCancel');
@@ -1709,6 +1734,8 @@ const aboutEduDeleteConfirm   = document.getElementById('aboutEduDeleteConfirm')
 
 // Staged languages for the modal (mirrors current proficiency during edit)
 let stagedLangs = [];
+// Staged education entries for the modal (mirrors current education array during edit)
+let stagedEdu   = [];
 
 // ── ABOUT EDIT — OPEN / CLOSE ─────────────────────────────────
 
@@ -1718,13 +1745,17 @@ function openAboutEditModal() {
         aboutBioInput.value = FETCHED_ABOUT.bio?.text || '';
     }
 
-    // Pre-populate EDUCATION — read from FETCHED_ABOUT only, never from DOM
-    const edu = FETCHED_ABOUT.education || {};
-    if (aboutEduCourse) aboutEduCourse.value = edu.course      || '';
-    if (aboutEduSchool) aboutEduSchool.value = edu.school      || '';
-    if (aboutEduStart)  aboutEduStart.value  = edu.schoolStart || '';
-    if (aboutEduEnd)    aboutEduEnd.value    = edu.schoolEnd   || '';
-    if (aboutEduYear)   aboutEduYear.value   = edu.year        || '';
+    // Pre-populate EDUCATION — build stagedEdu from array (or migrate old map)
+    const rawEdu = FETCHED_ABOUT.education;
+    if (Array.isArray(rawEdu)) {
+        stagedEdu = rawEdu.map(e => ({ ...e }));
+    } else if (rawEdu?.course) {
+        // Migrate old single-map format on the fly
+        stagedEdu = [{ ...rawEdu }];
+    } else {
+        stagedEdu = [];
+    }
+    renderStagedEdu();
 
     // Pre-populate PROFICIENCY from current FETCHED_ABOUT
     stagedLangs = (FETCHED_ABOUT.proficiency || []).map(e => ({ ...e }));
@@ -1748,7 +1779,15 @@ if (aboutEditClose)   aboutEditClose.addEventListener('click', closeAboutEditMod
 if (aboutEditCancel)  aboutEditCancel.addEventListener('click', closeAboutEditModal);
 if (aboutEditOverlay) {
     aboutEditOverlay.addEventListener('click', (e) => {
-        if (e.target === aboutEditOverlay) closeAboutEditModal();
+        if (e.target !== aboutEditOverlay) return;
+        const focused = document.activeElement;
+        const isFieldFocused = focused && (
+            focused.tagName === 'INPUT' ||
+            focused.tagName === 'TEXTAREA' ||
+            focused.tagName === 'SELECT'
+        );
+        if (isFieldFocused) return;
+        closeAboutEditModal();
     });
 }
 
@@ -1825,6 +1864,106 @@ function renderStagedLangs() {
     });
 }
 
+// ── ABOUT EDIT — EDUCATION ENTRIES ───────────────────────────
+
+function toInputDate(stored) {
+    if (!stored) return '';
+    const [mm, dd, yyyy] = stored.split('-');
+    if (!mm || !dd || !yyyy) return '';
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function fromInputDate(val) {
+    if (!val) return '';
+    const [yyyy, mm, dd] = val.split('-');
+    if (!yyyy || !mm || !dd) return '';
+    return `${mm}-${dd}-${yyyy}`;
+}
+
+function renderStagedEdu() {
+    if (!eduEntriesList) return;
+    eduEntriesList.innerHTML = '';
+
+    if (stagedEdu.length === 0) {
+        eduEntriesList.innerHTML = `
+            <div style="text-align:center;padding:16px 0 4px;color:rgba(255,255,255,0.2);font-size:12px;">
+                No education entries yet.
+            </div>`;
+        return;
+    }
+
+    stagedEdu.forEach((edu, idx) => {
+        const block = document.createElement('div');
+        block.className = 'edu-entry-block';
+        block.innerHTML = `
+            <div class="edu-entry-block-header">
+                <span class="edu-entry-block-num">ENTRY ${idx + 1}</span>
+                <button type="button" class="edu-entry-remove-btn" title="Remove entry">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="about-edit-field">
+                <label>COURSE</label>
+                <input type="text" class="edu-f-course" value="${edu.course || ''}"
+                    placeholder="e.g. Bachelor of Science in Information Technology" autocomplete="off">
+            </div>
+            <div class="about-edit-field">
+                <label>SCHOOL</label>
+                <input type="text" class="edu-f-school" value="${edu.school || ''}"
+                    placeholder="e.g. Dalubhasaang Politekniko ng Lungsod ng Baliwag" autocomplete="off">
+            </div>
+            <div class="about-edit-field-row">
+                <div class="about-edit-field">
+                    <label>START</label>
+                    <input type="date" class="edu-f-start" value="${toInputDate(edu.schoolStart)}">
+                </div>
+                <div class="about-edit-field">
+                    <label>END</label>
+                    <input type="date" class="edu-f-end" value="${toInputDate(edu.schoolEnd)}">
+                </div>
+            </div>
+            <div class="about-edit-field">
+                <label>CURRENT YEAR</label>
+                <input type="text" class="edu-f-year" value="${edu.year || ''}"
+                    placeholder="e.g. 1st Year, 2nd Year, ..." autocomplete="off">
+            </div>
+        `;
+
+        block.querySelector('.edu-entry-remove-btn').addEventListener('click', () => {
+            stagedEdu.splice(idx, 1);
+            renderStagedEdu();
+        });
+
+        // Live-sync inputs back into stagedEdu so values survive re-renders
+        ['course','school','year'].forEach(field => {
+            block.querySelector(`.edu-f-${field}`).addEventListener('input', e => {
+                stagedEdu[idx][field === 'course' ? 'course'
+                    : field === 'school' ? 'school' : 'year'] = e.target.value;
+            });
+        });
+        block.querySelector('.edu-f-start').addEventListener('change', e => {
+            stagedEdu[idx].schoolStart = fromInputDate(e.target.value);
+        });
+        block.querySelector('.edu-f-end').addEventListener('change', e => {
+            stagedEdu[idx].schoolEnd = fromInputDate(e.target.value);
+        });
+
+        eduEntriesList.appendChild(block);
+    });
+}
+
+if (aboutEduAddBtn) {
+    aboutEduAddBtn.addEventListener('click', () => {
+        stagedEdu.push({ course: '', school: '', schoolStart: '', schoolEnd: '', year: '' });
+        renderStagedEdu();
+        // Scroll the new block into view
+        if (eduEntriesList) {
+            const last = eduEntriesList.lastElementChild;
+            if (last) last.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    });
+}
+
 // ── ABOUT EDIT — ADD LANGUAGE ─────────────────────────────────
 
 if (aboutLangAddBtn) {
@@ -1866,12 +2005,7 @@ if (aboutEditSave) {
 }
 
 async function handleAboutSave() {
-    const bioText  = aboutBioInput?.value.trim()  || '';
-    const course   = aboutEduCourse?.value.trim() || '';
-    const school   = aboutEduSchool?.value.trim() || '';
-    const start    = aboutEduStart?.value         || '';
-    const end      = aboutEduEnd?.value           || '';
-    const year     = aboutEduYear?.value.trim()   || '';
+    const bioText = aboutBioInput?.value.trim() || '';
 
     if (!bioText) { setAboutEditStatus('Bio cannot be empty.', 'error'); if (aboutBioInput) aboutBioInput.focus(); return; }
 
@@ -1880,52 +2014,56 @@ async function handleAboutSave() {
     setAboutEditStatus('', '');
 
     try {
+        // Filter out blank entries (no course at minimum)
+        const cleanEdu = stagedEdu
+            .map(e => ({
+                course:      e.course?.trim()      || '',
+                school:      e.school?.trim()      || '',
+                schoolStart: e.schoolStart         || '',
+                schoolEnd:   e.schoolEnd           || '',
+                year:        e.year?.trim()        || '',
+            }))
+            .filter(e => e.course);
+
         const aboutDoc = {
-            bio: { text: bioText },
-            education: { course, school, schoolStart: start, schoolEnd: end, year },
+            bio:        { text: bioText },
+            education:  cleanEdu,
             proficiency: stagedLangs,
         };
 
         await setDoc(doc(_dDb, "portfolio", "about"), aboutDoc);
 
-        // Upsert education entry in portfolio/timestamp (filter by type='education', replace or append)
-        if (course && start) {
-            try {
-                const tsSnap = await getDoc(doc(_dDb, "portfolio", "timestamp"));
-                let tsData = tsSnap.exists() ? (tsSnap.data().data || []) : [];
+        // Sync all education entries into portfolio/timestamp
+        try {
+            const tsSnap  = await getDoc(doc(_dDb, "portfolio", "timestamp"));
+            let tsData    = tsSnap.exists() ? (tsSnap.data().data || []) : [];
 
-                const eduEntry = {
+            // Strip all old education entries
+            tsData = tsData.filter(e => e.type !== 'education');
+
+            // Re-add one timeline entry per education
+            cleanEdu.forEach(edu => {
+                if (!edu.course || !edu.schoolStart) return;
+                const [smm, , syyyy] = edu.schoolStart.split('-');
+                const timelineDate = (syyyy && smm) ? `${syyyy}-${smm}` : edu.schoolStart;
+                tsData.push({
                     type:  'education',
-                    title: course,
-                    date:  start,
-                    desc:  `Enrolled at Dalubhasaang Politekniko ng Lungsod ng Baliwag`,
-                };
+                    title: edu.course,
+                    date:  timelineDate,
+                    desc:  edu.school || '',
+                });
+            });
 
-                const existing = tsData.findIndex(e => e.type === 'education');
-                if (existing >= 0) {
-                    tsData[existing] = eduEntry;
-                } else {
-                    tsData.push(eduEntry);
-                }
-
-                await setDoc(doc(_dDb, "portfolio", "timestamp"), { data: tsData });
-                FETCHED_TIMELINE = tsData.filter(e => !e.repo);
-            } catch (tsErr) {
-                console.warn('Timeline upsert failed (non-fatal):', tsErr);
-            }
+            await setDoc(doc(_dDb, "portfolio", "timestamp"), { data: tsData });
+            FETCHED_TIMELINE = tsData.filter(e => !e.repo);
+        } catch (tsErr) {
+            console.warn('Timeline upsert failed (non-fatal):', tsErr);
         }
 
-        // Update local state — portfolio/lang is NOT touched here,
-        // it is the master catalog managed independently in Firestore.
         FETCHED_ABOUT = aboutDoc;
 
-        // Re-render about section in place
         renderAbout();
         renderTimeline();
-
-        // Update DOM bio directly
-        const bioEl = document.getElementById('aboutBio');
-        if (bioEl) bioEl.textContent = bioText;
 
         setAboutEditStatus('Saved successfully!', 'success');
         setTimeout(() => closeAboutEditModal(), 1200);
@@ -1983,7 +2121,6 @@ function closeEduDeleteModal() {
     if (aboutEduDeleteOverlay) aboutEduDeleteOverlay.classList.remove('open');
 }
 
-if (eduCardDeleteBtn)     eduCardDeleteBtn.addEventListener('click', openEduDeleteModal);
 if (aboutEduDeleteClose)  aboutEduDeleteClose.addEventListener('click', closeEduDeleteModal);
 if (aboutEduDeleteCancel) aboutEduDeleteCancel.addEventListener('click', closeEduDeleteModal);
 if (aboutEduDeleteOverlay) {
@@ -1998,25 +2135,40 @@ if (aboutEduDeleteConfirm) {
         aboutEduDeleteConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
 
         try {
-        const aboutDoc = { ...FETCHED_ABOUT, education: {} };
-        await setDoc(doc(_dDb, "portfolio", "about"), aboutDoc);
-        FETCHED_ABOUT.education = {};
+            const eduArr = Array.isArray(FETCHED_ABOUT.education)
+                ? [...FETCHED_ABOUT.education]
+                : (FETCHED_ABOUT.education?.course ? [FETCHED_ABOUT.education] : []);
 
-        // Remove the education entry from portfolio/timestamp
-        try {
-            const tsSnap = await getDoc(doc(_dDb, "portfolio", "timestamp"));
-            if (tsSnap.exists()) {
-                const tsData = (tsSnap.data().data || []).filter(e => e.type !== 'education');
-                await setDoc(doc(_dDb, "portfolio", "timestamp"), { data: tsData });
-                FETCHED_TIMELINE = tsData.filter(e => !e.repo);
+            if (eduDeleteTargetIdx >= 0 && eduDeleteTargetIdx < eduArr.length) {
+                eduArr.splice(eduDeleteTargetIdx, 1);
             }
-        } catch (tsErr) {
-            console.warn('Timeline edu remove failed (non-fatal):', tsErr);
-        }
 
-        closeEduDeleteModal();
-        renderAbout();
-        renderTimeline();
+            const aboutDoc = { ...FETCHED_ABOUT, education: eduArr };
+            await setDoc(doc(_dDb, "portfolio", "about"), aboutDoc);
+            FETCHED_ABOUT.education = eduArr;
+
+            // Rebuild timeline education entries
+            try {
+                const tsSnap = await getDoc(doc(_dDb, "portfolio", "timestamp"));
+                if (tsSnap.exists()) {
+                    let tsData = (tsSnap.data().data || []).filter(e => e.type !== 'education');
+                    eduArr.forEach(edu => {
+                        if (!edu.course || !edu.schoolStart) return;
+                        const [smm, , syyyy] = edu.schoolStart.split('-');
+                        const timelineDate = (syyyy && smm) ? `${syyyy}-${smm}` : edu.schoolStart;
+                        tsData.push({ type: 'education', title: edu.course, date: timelineDate, desc: edu.school || '' });
+                    });
+                    await setDoc(doc(_dDb, "portfolio", "timestamp"), { data: tsData });
+                    FETCHED_TIMELINE = tsData.filter(e => !e.repo);
+                }
+            } catch (tsErr) {
+                console.warn('Timeline edu remove failed (non-fatal):', tsErr);
+            }
+
+            eduDeleteTargetIdx = -1;
+            closeEduDeleteModal();
+            renderAbout();
+            renderTimeline();
         } catch (err) {
             console.error('Edu delete error:', err);
             aboutEduDeleteConfirm.disabled = false;

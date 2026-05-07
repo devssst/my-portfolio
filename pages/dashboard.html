@@ -150,17 +150,7 @@
                     <!-- EDUCATION -->
                     <div class="about-block">
                         <div class="about-block-label">EDUCATION</div>
-                        <div class="about-edu-card">
-                            <button class="edu-card-delete" id="eduCardDelete" title="Remove education" aria-label="Remove education">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                            <div class="about-edu-icon"><i class="fa-solid fa-graduation-cap"></i></div>
-                            <div class="about-edu-text">
-                                <div class="about-edu-degree"></div>
-                                <div class="about-edu-school"></div>
-                                <div class="about-edu-detail"></div>
-                            </div>
-                        </div>
+                        <div id="aboutEduList"></div>
                     </div>
 
                     <!-- STAT CARDS -->
@@ -454,28 +444,10 @@
             </div>
 
             <div class="about-edit-section-label">EDUCATION</div>
-            <div class="about-edit-field">
-                <label for="aboutEduCourse">COURSE</label>
-                <input type="text" id="aboutEduCourse" placeholder="e.g. Bachelor of Science in Information Technology" autocomplete="off">
-            </div>
-            <div class="about-edit-field">
-                <label for="aboutEduSchool">SCHOOL</label>
-                <input type="text" id="aboutEduSchool" placeholder="e.g. Dalubhasaang Politekniko ng Lungsod ng Baliwag" autocomplete="off">
-            </div>
-            <div class="about-edit-field-row">
-                <div class="about-edit-field">
-                    <label for="aboutEduStart">START</label>
-                    <input type="month" id="aboutEduStart">
-                </div>
-                <div class="about-edit-field">
-                    <label for="aboutEduEnd">END</label>
-                    <input type="month" id="aboutEduEnd">
-                </div>
-            </div>
-            <div class="about-edit-field">
-                <label for="aboutEduYear">CURRENT YEAR</label>
-                <input type="text" id="aboutEduYear" placeholder="e.g. 1st Year, 2nd Year, ..." autocomplete="off">
-            </div>
+            <div id="eduEntriesList"></div>
+            <button class="about-edu-add-btn" id="aboutEduAddBtn" type="button">
+                <i class="fa-solid fa-plus"></i> Add Education
+            </button>
 
             <div class="about-edit-section-label">PROFICIENCY</div>
             <div class="about-edit-field-row">

@@ -1,5 +1,5 @@
 # 🧑‍💻 Developer VIEN — Portfolio
-### 🔰 Phase 3 — Complete | Phase 4 — In Progress
+### 🔰 Phase 3 — Complete | Phase 4 — In Progress (WHO AM I? edit complete)
 ![Portfolio Background](assets/images/banner.png)
 
 A personal developer portfolio for **Vien Fritzgerald V. Calderon**, built entirely with vanilla HTML, CSS, and JavaScript — no frameworks, no backend. Features a dark aesthetic, dual-mode welcome page (Visitor & Developer), and a fully data-driven dashboard powered by Firebase Firestore and GitHub-hosted project metadata.
@@ -24,7 +24,7 @@ All content (projects, certificates, CV/resume documents, timeline events) is dr
 
 ### 📊 Dashboard
 - **Home**: Hero section with profile photo, name, and social icon links; CV/Resume doc cards with PDF.js thumbnails — data loaded from Firestore `portfolio/docs`; VIEW opens the GitHub PDF viewer, SAVE triggers a direct download
-- **WHO AM I?**: Live age counter (updates every minute from DOB Dec 15 2006), educational background, bio paragraph, stat cards (Projects, Certificates, Yrs Experience, Languages) — counts auto-derived from Firestore data; stat cards navigate to their section on click
+- **WHO AM I?**: Live age counter (updates every minute from DOB Dec 15 2006), stackable education cards (array — multiple degrees supported), bio paragraph, stat cards (Projects, Certificates, Yrs Experience, Languages) — counts auto-derived from Firestore data; stat cards navigate to their section on click; consistent empty states for bio, education, and languages
 - **Languages & Tools**: Animated horizontal skill bars with language logo icons and brand colors; level labels per bar; legend card with 6 proficiency levels — click legend to open the full levels modal
 - **TIMESTAMPS**: Auto-generated from Firestore `portfolio/timestamp` (project + manual entries); grouped by year descending; date shown on click (accordion toggle); "Learn More" on project entries cross-links to the matching card
 - **Projects**: Year-grouped card grid auto-fetched via `timestamp` → `INFO.json` per repo; universal card spec with banner preview, accordion expand showing contribution text + Live and Source buttons
@@ -104,6 +104,7 @@ All dashboard content is stored in the `portfolio` collection in Firestore. No d
 ```
 portfolio/
 ├── credentials     # EmailJS config, auth UIDs, GitHub PAT
+├── about           # Bio text, education array, proficiency array
 ├── certs           # Certificate metadata array
 ├── docs            # CV/Resume metadata arrays (cv + resume)
 └── timestamp       # Timeline registry (repo slugs + milestone entries)
@@ -118,6 +119,28 @@ Each document stores its data under a `data` field. Example for `timestamp`:
     ]
 }
 ```
+
+Example for `about`:
+```json
+{
+    "bio": { "text": "Your bio paragraph here." },
+    "education": [
+        {
+            "course": "Bachelor of Science in Information Technology",
+            "school": "Dalubhasaang Politekniko ng Lungsod ng Baliwag",
+            "schoolStart": "08-12-2024",
+            "schoolEnd": "05-30-2028",
+            "year": "1st Year"
+        }
+    ],
+    "proficiency": [
+        { "language": "CSS", "level": 0 },
+        { "language": "JavaScript", "level": 2 }
+    ]
+}
+```
+> **education** is an array — multiple degrees can be stacked. Dates stored as `MM-DD-YYYY`. If `schoolEnd` is in the future, the card shows `— present`; if past, shows `Graduated: YYYY`. Old single-map format is auto-migrated to array on first save.
+
 
 Example for `docs`:
 ```json
@@ -246,7 +269,7 @@ Certificates upload/delete via edit mode is planned for Phase 4. For now, add th
 - [x] Edit mode toggle in badge dropdown — global `isEditMode` state; exits with 2s delayed reload
 - [x] **Home — Documents**: ADD button injected into card grid; drag-and-drop upload modal (title + type fields); file pushed to GitHub via Contents API; metadata saved to Firestore; card re-renders in place without reload
 - [x] **Home — Documents**: per-card delete button (red X, edit mode only); confirm modal; file removed from GitHub + entry removed from Firestore
-- [ ] **WHO AM I?**: inline text editing → Firestore
+- [x] **WHO AM I? — About**: edit modal with Bio, stackable Education entries (add/remove per entry), Proficiency language picker; saves to Firestore `portfolio/about`; education changes sync to `portfolio/timestamp`; all sections show proper empty states
 - [ ] **TIMESTAMPS**: add/remove entries via modal (repo URL or manual milestone) → Firestore
 - [ ] **Projects**: remove entry from timestamp → Firestore
 - [ ] **Certificates**: upload PNG + config form (title, company, details, date) → GitHub + Firestore; per-card delete
@@ -259,6 +282,21 @@ Certificates upload/delete via edit mode is planned for Phase 4. For now, add th
 ---
 
 ## 📋 Update Logs
+
+### Phase 4 — WHO AM I? Edit Mode + Bug Fixes (May 7 2026)
+- **About edit modal complete**: Bio textarea, stackable Education entries (add/remove dynamically), Proficiency language picker — all write to Firestore `portfolio/about`
+- **Education refactored to array**: `education` field in Firestore changed from a single map to an array — multiple degrees can be stacked (BSIT + Masters, etc.); old single-map format auto-migrated on first save
+- **Education delete**: per-card delete button (edit mode only) removes the specific entry by index from the array; remaining entries and timeline stay intact
+- **Education dates**: stored as `MM-DD-YYYY`; displayed as `Month DD, YYYY — present` (ongoing) or `Graduated: YYYY` (completed)
+- **Timeline sync**: all education entries sync to `portfolio/timestamp` on save/delete — strip-and-rewrite strategy ensures no stale entries
+- **Empty states**: Bio shows `fa-file-lines` + "No Bio"; Education shows `fa-graduation-cap` + "No listed education"; Languages shows `fa-code` + "No listed language" with legend hidden
+- **Modal UX**: overlay click-to-close blocked while any input/textarea/select is focused; section dividers (border-top) added between BIO / EDUCATION / PROFICIENCY sections
+- **Bio modal leak fixed**: `openAboutEditModal` no longer reads bio from DOM — reads from `FETCHED_ABOUT` only, preventing "No Bio" placeholder from leaking into the textarea
+- **Cert/doc URL encoding**: `data.file` path segments now run through `encodeURIComponent` before building `raw.githubusercontent.com` and blob viewer URLs — fixes 404 on filenames with `[`, `]`, spaces, or other reserved characters
+- **Lang delete X removed** from skill bars — delete is handled in the About edit modal only; `edit-active` toggle on `#skillsBars` also removed
+- **Label accessibility fix**: `<label>LANGUAGE</label>` in the About modal now has `for="aboutLangSearch"` — resolves browser console accessibility warning
+- **Text alignment**: Bio textarea and Reach Me message textarea now `text-align: justify`
+- **CSS cleanup**: removed dead `.certs-sort-bar`, `.certs-sort-btn`, `.certs-empty` blocks; removed no-op `text-shadow: 0 1px 10px rgba(0,0,0,0)` from `.about-bio`; merged split `.about-edu-card` declaration; removed empty commented `.level-item-body {}` block
 
 ### Phase 4 — Documents Edit Mode + PDF Fixes (May 6 2026)
 - Documents upload complete: drag-and-drop modal, title + type fields, GitHub Contents API push, Firestore metadata write, in-place re-render after upload

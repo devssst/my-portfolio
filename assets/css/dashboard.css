@@ -1479,6 +1479,10 @@ body::before {
     resize: none;
 }
 
+.reach-field textarea {
+    text-align: justify;
+}
+
 .reach-field input::placeholder,
 .reach-field textarea::placeholder {
     color: rgba(255, 255, 255, 0.2);
@@ -2429,6 +2433,17 @@ body::before {
     margin-top: 4px;
 }
 
+.about-edit-section-label + .about-edit-section-label,
+.about-edit-section-label ~ .about-edit-section-label,
+.about-edit-field ~ .about-edit-section-label,
+.about-edit-field-row ~ .about-edit-section-label,
+.about-edit-field-lang ~ .about-edit-section-label,
+.about-edit-staged ~ .about-edit-section-label {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    padding-top: 18px;
+    margin-top: 14px;
+}
+
 .about-edit-field {
     display: flex;
     flex-direction: column;
@@ -2456,6 +2471,7 @@ body::before {
     transition: border-color 0.2s, box-shadow 0.2s;
     width: 100%;
     resize: none;
+    text-align: justify;
 }
 
 .about-edit-field textarea {
@@ -2463,9 +2479,20 @@ body::before {
     resize: vertical;
 }
 
-.about-edit-field input[type="month"] {
+.about-edit-field input[type="date"] {
     color-scheme: dark;
     cursor: pointer;
+}
+
+.about-edit-field input[type="date"]:hover {
+    border-color: rgba(168, 85, 247, 0.35);
+    background-color: rgba(168, 85, 247, 0.04);
+}
+
+.about-edit-field input[type="date"]:focus {
+    border-color: rgba(168, 85, 247, 0.5);
+    background-color: rgba(168, 85, 247, 0.06);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
 }
 
 .about-edit-field input::placeholder,
@@ -2525,6 +2552,69 @@ body::before {
 .about-edit-field-row .about-edit-field {
     flex: 1;
     margin-bottom: 12px;
+}
+
+/* ── EDUCATION ENTRY BLOCK (modal) ───────────────────────────── */
+
+.edu-entry-block {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 16px 8px;
+    margin-bottom: 12px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.edu-entry-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.edu-entry-block-num {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: rgba(168, 85, 247, 0.7);
+}
+
+.edu-entry-remove-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 13px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.edu-entry-remove-btn:hover {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+}
+
+.about-edu-add-btn {
+    width: 100%;
+    padding: 9px 0;
+    border: 1px dashed rgba(168, 85, 247, 0.4);
+    border-radius: 10px;
+    background: rgba(168, 85, 247, 0.05);
+    color: rgba(168, 85, 247, 0.8);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.about-edu-add-btn:hover {
+    background: rgba(168, 85, 247, 0.12);
+    border-color: rgba(168, 85, 247, 0.7);
+    color: #c084fc;
 }
 
 .about-edit-field-lang {
