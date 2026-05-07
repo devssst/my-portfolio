@@ -325,13 +325,6 @@ body::before {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-.about-bio-q {  
-    color: rgb(255, 255, 255);
-    font-weight: 400;
-    font-size: 16px;
-    text-shadow: 0 0 14px rgba(168,85,247,0.55), 0 1px 8px rgba(0,0,0,0.5);
-    font-family: Arial, Helvetica, sans-serif;
-}
 
 .hero-socials {
     display: flex;
@@ -748,16 +741,8 @@ body::before {
     max-width: 100vw;
     text-align: justify;
     margin-top: -16px;
-    text-shadow: 0 1px 10px rgba(0,0,0, 0);
 }
 
-.about-bio-grayout {
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 800;
-    font-size: 11px;
-    text-shadow: 0 0 10px rgba(168,85,247,0.55), 0 1px 8px rgba(0,0,0,0.5);
-    font-family: Arial, Helvetica, sans-serif;
-}
 
 .about-age {
     font-size: 14px;
@@ -782,6 +767,7 @@ body::before {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
     padding: 20px 22px;
+    position: relative;
     transition: background 0.2s, border-color 0.2s, transform 0.2s;
 
     /*
@@ -1048,10 +1034,6 @@ body::before {
     margin-top: 3px;
 }
 
-/*
-.level-item-body {}
-*/
-
 .level-item-name {
     font-size: 13px;
     font-weight: 700;
@@ -1276,25 +1258,6 @@ body::before {
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(168, 85, 247, 0.12);
 }
 
-.certs-sort-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 20px;
-}
-
-.certs-sort-btn {
-    padding: 5px 14px;
-    border-radius: 20px;
-    border: 1px solid rgba(168, 85, 247, 0.7);
-    background: rgba(168, 85, 247, 0.15);
-    color: #a855f7;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    cursor: default;
-    user-select: none;
-}
 
 .certs-company-group {
     margin-bottom: 32px;
@@ -1811,32 +1774,6 @@ body::before {
     color: rgba(255, 255, 255, 0.5);
     line-height: 1.6;
 }
-/* CERTIFICATES GALLERY */
-
-.certs-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    padding: 80px 0;
-    color: rgba(255, 255, 255, 0.9);
-    user-select: none;
-    width: 100%;
-}
-
-.certs-empty-icon {
-    font-size: 48px;
-    opacity: 0.5;
-}
-
-.certs-empty p {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-}
-
 .cert-card {
     position: relative;
     width: 220px;
@@ -2368,4 +2305,548 @@ body::before {
 
 .doc-upload-status.error {
     color: rgba(239, 68, 68, 0.9);
+}
+
+/* ── EDU CARD DELETE BUTTON ──────────────────────────────────── */
+
+.edu-card-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.15s ease, background 0.15s ease;
+    z-index: 10;
+}
+
+.about-edu-card.edit-active .edu-card-delete {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.edu-card-delete:hover {
+    background: rgba(239, 68, 68, 1);
+    transform: scale(1.12);
+}
+
+/* ── SKILLS BAR RIGHT — level + delete btn wrapper ───────────── */
+
+.skills-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── LANG DELETE BUTTON ──────────────────────────────────────── */
+
+.lang-delete {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.15s ease, background 0.15s ease;
+    flex-shrink: 0;
+}
+
+#skillsBars.edit-active .lang-delete {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.lang-delete:hover {
+    background: rgba(239, 68, 68, 1);
+    transform: scale(1.12);
+}
+
+/* ── ABOUT EDIT PENCIL BUTTON ────────────────────────────────── */
+
+.about-edit-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--purple-dark), var(--purple-mid));
+    color: #fff;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(149, 0, 248, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 50;
+}
+
+.about-edit-btn.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.about-edit-btn:hover {
+    opacity: 0.85;
+    transform: translateY(-2px);
+}
+
+/* ── ABOUT EDIT MODAL ────────────────────────────────────────── */
+
+.about-edit-overlay .faq-card {
+    max-width: 560px;
+    overflow-y: auto;
+    max-height: 90vh;
+}
+
+.about-edit-section-label {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    color: rgba(168, 85, 247, 0.9);
+    margin-bottom: 10px;
+    margin-top: 4px;
+}
+
+.about-edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.about-edit-field label {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: rgba(200, 185, 240, 0.9);
+}
+
+.about-edit-field input,
+.about-edit-field textarea {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    resize: none;
+}
+
+.about-edit-field textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.about-edit-field input[type="month"] {
+    color-scheme: dark;
+    cursor: pointer;
+}
+
+.about-edit-field input::placeholder,
+.about-edit-field textarea::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.about-edit-field input:focus,
+.about-edit-field textarea:focus {
+    border-color: rgba(168, 85, 247, 0.5);
+    background-color: rgba(168, 85, 247, 0.06);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+}
+
+/* SELECT in about-edit-field — uses background-color not background shorthand */
+.about-edit-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(168,85,247,0.6)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-color: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    cursor: pointer;
+}
+
+.about-edit-field select:hover {
+    border-color: rgba(168, 85, 247, 0.35);
+    background-color: rgba(168, 85, 247, 0.04);
+}
+
+.about-edit-field select:focus {
+    border-color: rgba(168, 85, 247, 0.5);
+    background-color: rgba(168, 85, 247, 0.06);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+}
+
+.about-edit-field select option {
+    background: #111827;
+    color: #fff;
+}
+
+.about-edit-field-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 0;
+}
+
+.about-edit-field-row .about-edit-field {
+    flex: 1;
+    margin-bottom: 12px;
+}
+
+.about-edit-field-lang {
+    flex: 1.5 !important;
+}
+
+.about-edit-field-level {
+    flex: 1 !important;
+}
+
+/* LANGUAGE PICKER */
+
+.about-lang-picker {
+    position: relative;
+}
+
+.about-lang-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: rgba(17, 25, 40, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    max-height: 160px;
+    overflow-y: auto;
+    z-index: 60;
+    display: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 85, 247, 0.1) transparent;
+}
+
+.about-lang-dropdown.open {
+    display: block;
+}
+
+.about-lang-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    transition: background 0.15s, color 0.15s;
+}
+
+.about-lang-item:hover:not(.disabled) {
+    background: rgba(168, 85, 247, 0.1);
+    color: #fff;
+}
+
+.about-lang-item.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.about-lang-no-results {
+    padding: 12px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+}
+
+/* ADD LANGUAGE BUTTON */
+
+.about-lang-add-btn {
+    width: 100%;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px dashed rgba(168, 85, 247, 0.35);
+    background: rgba(168, 85, 247, 0.05);
+    color: rgba(168, 85, 247, 0.8);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    margin-bottom: 12px;
+    margin-top: 2px;
+}
+
+.about-lang-add-btn:hover {
+    background: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.6);
+    color: rgba(168, 85, 247, 1);
+}
+
+/* STAGED LANGUAGE ROWS */
+
+.about-lang-staged {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.about-lang-staged-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(168, 85, 247, 0.06);
+    border: 1px solid rgba(168, 85, 247, 0.15);
+}
+
+.about-lang-staged-name {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.about-lang-staged-level {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+}
+
+.about-lang-staged-remove {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.6);
+    border: none;
+    color: #fff;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.about-lang-staged-remove:hover {
+    background: rgba(239, 68, 68, 0.9);
+}
+
+/* ABOUT EDIT ACTIONS */
+
+.about-edit-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.about-edit-cancel {
+    flex: 1;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.about-edit-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+.about-edit-save {
+    flex: 2;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--purple-dark), var(--purple-mid), var(--purple-light));
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 20px rgba(149, 0, 248, 0.35);
+}
+
+.about-edit-save:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 28px rgba(149, 0, 248, 0.5);
+}
+
+.about-edit-save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.about-edit-status {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    min-height: 18px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 10px;
+    transition: color 0.2s;
+}
+
+.about-edit-status.success {
+    color: rgba(34, 197, 94, 0.9);
+}
+
+.about-edit-status.error {
+    color: rgba(239, 68, 68, 0.9);
+}
+
+/* ── ABOUT EDUCATION DELETE CONFIRM MODAL ────────────────────── */
+
+.about-edu-delete-overlay .faq-card {
+    max-width: 380px;
+    text-align: center;
+}
+
+.about-edu-delete-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 28px;
+}
+
+.about-edu-delete-icon {
+    font-size: 40px;
+    color: rgba(239, 68, 68, 0.85);
+    margin-bottom: 4px;
+}
+
+.about-edu-delete-heading {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #fff;
+}
+
+.about-edu-delete-sub {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.5;
+}
+
+.about-edu-delete-note {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 500;
+    margin-bottom: -18px;
+}
+
+.about-edu-delete-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.about-edu-delete-cancel {
+    flex: 1;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.about-edu-delete-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+.about-edu-delete-confirm {
+    flex: 1;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(239, 68, 68, 0.85);
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: background 0.2s, opacity 0.2s, transform 0.15s ease;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.about-edu-delete-confirm:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(239, 68, 68, 0.45);
+}
+
+.about-edu-delete-confirm:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
 }

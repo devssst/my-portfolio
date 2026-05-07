@@ -132,16 +132,13 @@
             <div class="section-with-profile" id="aboutContent">
                 <div class="section-inner">
                     <div class="section-heading">
-                        <span class="section-tag">02 / ABOUT
-                        </span>
+                        <span class="section-tag">02 / ABOUT</span>
                         <h2>WHO AM I?</h2>
                     </div>
 
                     <!-- BIO PARAGRAPH -->
                     <div class="about-block">
-                        <p class="about-bio" id="aboutBio">
-                            I'm a BSIT student who spends most of his free time messing with the system to see how they work <span class="about-bio-grayout">(well actually just to cure my boredom)</span>. Web builds, Android ROM porting, kernel modules, Windows desktop setups — if it has a process, I want to understand it. I always tell myself: <span class="about-bio-q">"If I know the process, then I also know how to play with it"</span>. Outside tech, I also go way too deep into sci-fi lore analysis. That part is not technology related. I just can't help it.
-                        </p>
+                        <p class="about-bio" id="aboutBio"></p>
                     </div>
 
                     <!-- REAL-TIME AGE -->
@@ -154,11 +151,14 @@
                     <div class="about-block">
                         <div class="about-block-label">EDUCATION</div>
                         <div class="about-edu-card">
+                            <button class="edu-card-delete" id="eduCardDelete" title="Remove education" aria-label="Remove education">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
                             <div class="about-edu-icon"><i class="fa-solid fa-graduation-cap"></i></div>
                             <div class="about-edu-text">
-                                <div class="about-edu-degree">Bachelor of Science in Information Technology</div>
-                                <div class="about-edu-school">Dalubhasaang Politekniko ng Lungsod ng Baliwag</div>
-                                <div class="about-edu-detail">1st Year · 2025 — present</div>
+                                <div class="about-edu-degree"></div>
+                                <div class="about-edu-school"></div>
+                                <div class="about-edu-detail"></div>
                             </div>
                         </div>
                     </div>
@@ -434,6 +434,102 @@
             </button>
 
             <div class="doc-upload-status" id="docUploadStatus"></div>
+        </div>
+    </div>
+
+    <!-- ABOUT EDIT PENCIL BUTTON (fixed, bottom-right) -->
+    <button class="about-edit-btn" id="aboutEditBtn" title="Edit About">
+        <i class="fa-solid fa-pencil"></i>
+    </button>
+
+    <!-- ABOUT EDIT MODAL -->
+    <div class="faq-overlay about-edit-overlay" id="aboutEditOverlay">
+        <div class="faq-card about-edit-card" id="aboutEditCard">
+            <button class="faq-close" id="aboutEditClose"><i class="fa-solid fa-xmark"></i></button>
+            <h3>Edit About</h3>
+
+            <div class="about-edit-section-label">BIO</div>
+            <div class="about-edit-field">
+                <textarea id="aboutBioInput" rows="5" placeholder="Write your bio here..."></textarea>
+            </div>
+
+            <div class="about-edit-section-label">EDUCATION</div>
+            <div class="about-edit-field">
+                <label for="aboutEduCourse">COURSE</label>
+                <input type="text" id="aboutEduCourse" placeholder="e.g. Bachelor of Science in Information Technology" autocomplete="off">
+            </div>
+            <div class="about-edit-field">
+                <label for="aboutEduSchool">SCHOOL</label>
+                <input type="text" id="aboutEduSchool" placeholder="e.g. Dalubhasaang Politekniko ng Lungsod ng Baliwag" autocomplete="off">
+            </div>
+            <div class="about-edit-field-row">
+                <div class="about-edit-field">
+                    <label for="aboutEduStart">START</label>
+                    <input type="month" id="aboutEduStart">
+                </div>
+                <div class="about-edit-field">
+                    <label for="aboutEduEnd">END</label>
+                    <input type="month" id="aboutEduEnd">
+                </div>
+            </div>
+            <div class="about-edit-field">
+                <label for="aboutEduYear">CURRENT YEAR</label>
+                <input type="text" id="aboutEduYear" placeholder="e.g. 1st Year, 2nd Year, ..." autocomplete="off">
+            </div>
+
+            <div class="about-edit-section-label">PROFICIENCY</div>
+            <div class="about-edit-field-row">
+                <div class="about-edit-field about-edit-field-lang">
+                    <label for="aboutLangSearch">LANGUAGE</label>
+                    <div class="about-lang-picker" id="aboutLangPickerWrap">
+                        <input type="text" id="aboutLangSearch" placeholder="Search language..." autocomplete="off">
+                        <div class="about-lang-dropdown" id="aboutLangDropdown"></div>
+                    </div>
+                </div>
+                <div class="about-edit-field about-edit-field-level">
+                    <label for="aboutLevelSelect">LEVEL</label>
+                    <select id="aboutLevelSelect">
+                        <option value="0">0 - Exposure</option>
+                        <option value="1">1 - Familiar</option>
+                        <option value="2">2 - Comfortable</option>
+                        <option value="3">3 - Proficient</option>
+                        <option value="4">4 - Advanced</option>
+                        <option value="5">5 - Expert</option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" class="about-lang-add-btn" id="aboutLangAddBtn">
+                <i class="fa-solid fa-plus"></i> Add Language
+            </button>
+            <div class="about-lang-staged" id="aboutLangStaged"></div>
+
+            <div class="about-edit-actions">
+                <button type="button" class="about-edit-cancel" id="aboutEditCancel">CANCEL</button>
+                <button type="button" class="about-edit-save" id="aboutEditSave">
+                    <i class="fa-solid fa-floppy-disk"></i> SAVE
+                </button>
+            </div>
+
+            <div class="about-edit-status" id="aboutEditStatus"></div>
+        </div>
+    </div>
+
+    <!-- ABOUT EDUCATION DELETE CONFIRM MODAL -->
+    <div class="faq-overlay about-edu-delete-overlay" id="aboutEduDeleteOverlay">
+        <div class="faq-card about-edu-delete-card" id="aboutEduDeleteCard">
+            <button class="faq-close" id="aboutEduDeleteClose"><i class="fa-solid fa-xmark"></i></button>
+            <div class="about-edu-delete-body">
+                <i class="fa-solid fa-triangle-exclamation about-edu-delete-icon"></i>
+                <div class="about-edu-delete-heading">ARE YOU SURE?</div>
+                <div class="about-edu-delete-sub">This will remove your education entry.</div>
+                <div class="about-edu-delete-note">This cannot be undone.</div>
+            </div>
+            <div class="about-edu-delete-actions">
+                <button type="button" class="about-edu-delete-cancel" id="aboutEduDeleteCancel">CANCEL</button>
+                <button type="button" class="about-edu-delete-confirm" id="aboutEduDeleteConfirm">
+                    <i class="fa-solid fa-trash"></i> YES, DELETE
+                </button>
+            </div>
         </div>
     </div>
 

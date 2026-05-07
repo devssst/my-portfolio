@@ -19,13 +19,7 @@ const _dDb   = getFirestore(_dApp);
 
 // ── DATA ─────────────────────────────────────────────────────
 
-const LANG_DATA = [
-    { name: 'HTML',       icon: 'fa-brands fa-html5',   color: '#E34F26', level: 'Familiar',    pct: 30 },
-    { name: 'CSS',        icon: 'fa-brands fa-css3-alt', color: '#663399', level: 'Comfortable', pct: 55 },
-    { name: 'JavaScript', icon: 'fa-brands fa-js',       color: '#F7DF1E', level: 'Comfortable', pct: 55 },
-    { name: 'Python',     icon: 'fa-brands fa-python',   color: '#013763', level: 'Comfortable', pct: 55 },
-    { name: 'Java',       icon: 'fa-brands fa-java',     color: '#E32C2E', level: 'Familiar',    pct: 30 },
-];
+// LANG_DATA removed — language metadata now fetched from Firestore portfolio/lang
 
 const LEVEL_DATA = [
     { level: 'Exposure',    color: '#6b7280', desc: "Seen it, read about it, maybe ran someone else's code. Haven't written anything independently." },
@@ -41,6 +35,8 @@ const LEVEL_DATA = [
 let FETCHED_PROJECTS  = []; // INFO.json objects from repo entries in timestamp.json
 let FETCHED_TIMELINE  = []; // Direct timeline entries from timestamp.json
 let FETCHED_CERTS     = []; // Entries from certs.json
+let FETCHED_LANGS     = []; // Language metadata from portfolio/lang
+let FETCHED_ABOUT     = { bio: {}, education: {}, proficiency: [] }; // from portfolio/about
 
 // ── EMAILJS CREDENTIALS ───────────────────────────────────────
 
@@ -98,6 +94,27 @@ async function loadAllData() {
             EMAILJS_SERVICE_ID  = json.emailjs?.serviceId  || null;
             EMAILJS_TEMPLATE_ID = json.emailjs?.templateId || null;
             EMAILJS_PUBLIC_KEY  = json.emailjs?.publicKey  || null;
+        }
+    } catch {}
+
+    // 4. Language metadata — from Firestore portfolio/lang
+    try {
+        const snap = await getDoc(doc(_dDb, "portfolio", "lang"));
+        if (snap.exists()) {
+            FETCHED_LANGS = snap.data().data || [];
+        }
+    } catch {}
+
+    // 5. About data — from Firestore portfolio/about
+    try {
+        const snap = await getDoc(doc(_dDb, "portfolio", "about"));
+        if (snap.exists()) {
+            const d = snap.data();
+            FETCHED_ABOUT = {
+                bio:         d.bio         || {},
+                education:   d.education   || {},
+                proficiency: d.proficiency || [],
+            };
         }
     } catch {}
 }
@@ -224,6 +241,8 @@ function switchSection(id) {
             skillsAnimated = true;
         }, 350);
     }
+
+    updateAboutEditBtnVisibility();
 }
 
 navLinks.forEach(link => {
@@ -743,18 +762,16 @@ async function renderDocs() {
 
     let docData = null;
 
-    if (!docData) {
-        try {
-            const snap = await getDoc(doc(_dDb, "portfolio", "docs"));
-            if (snap.exists()) {
-                const json = snap.data().data || {};
-                docData = {
-                    cv:     json.cv     || [],
-                    resume: json.resume || []
-                };
-            }
-        } catch {}
-    }
+    try {
+        const snap = await getDoc(doc(_dDb, "portfolio", "docs"));
+        if (snap.exists()) {
+            const json = snap.data().data || {};
+            docData = {
+                cv:     json.cv     || [],
+                resume: json.resume || []
+            };
+        }
+    } catch {}
 
     if (!docData) docData = { cv: [], resume: [] };
 
@@ -778,17 +795,6 @@ async function renderDocs() {
 
     // Re-inject upload button if edit mode is already on
     if (isEditMode) injectDocUploadBtn();
-}
-
-// ── LOCAL STORAGE HELPER ──────────────────────────────────────
-
-function loadFromStorage(key, fallback) {
-    try {
-        const stored = localStorage.getItem(key);
-        return stored ? JSON.parse(stored) : fallback;
-    } catch {
-        return fallback;
-    }
 }
 
 // ── EDIT MODE ─────────────────────────────────────────────────
@@ -817,6 +823,15 @@ function setEditMode(active) {
             }
         }
     }
+
+    // ABOUT section — edu card delete btn
+    const eduCard = document.querySelector('.about-edu-card');
+    if (eduCard) {
+        if (active) eduCard.classList.add('edit-active');
+        else        eduCard.classList.remove('edit-active');
+    }
+
+    updateAboutEditBtnVisibility();
 }
 
 function injectDocUploadBtn() {
@@ -1337,7 +1352,7 @@ function populateStats() {
     const certCount    = FETCHED_CERTS.length;
     const startYear    = 2025;
     const yearsExp     = new Date().getFullYear() - startYear;
-    const langCount    = LANG_DATA.length;
+    const langCount    = (FETCHED_ABOUT.proficiency || []).length;
 
     const setValue = (id, val) => {
         const el = document.getElementById(id);
@@ -1365,22 +1380,43 @@ function renderSkills() {
     if (!barsEl || !legendEl) return;
 
     barsEl.innerHTML = '';
-    LANG_DATA.forEach((lang, i) => {
+
+    const proficiency = FETCHED_ABOUT.proficiency || [];
+
+    if (proficiency.length === 0) {
+        barsEl.innerHTML = `
+            <div style="text-align:center;padding:32px 0;color:rgba(255,255,255,0.2);">
+                <i class="fa-solid fa-code" style="font-size:28px;margin-bottom:10px;display:block;"></i>
+                No listed language
+            </div>
+        `;
+        if (legendEl) legendEl.style.display = 'none';
+        return;
+    }
+
+    if (legendEl) legendEl.style.display = '';
+
+    proficiency.forEach((entry, i) => {
+        const langMeta  = FETCHED_LANGS.find(l => l.name === entry.language) || {};
+        const levelMeta = LEVEL_DATA[entry.level] || LEVEL_DATA[0];
+        const pct       = (entry.level / 5) * 100;
+
         const row = document.createElement('div');
         row.className = 'skills-bar-row';
         row.innerHTML = `
             <div class="skills-bar-meta">
                 <div class="skills-bar-left">
-                    <i class="${lang.icon} skills-bar-icon" style="color:${lang.color};"></i>
-                    <span class="skills-bar-name">${lang.name}</span>
+                    <i class="${langMeta.icon || 'fa-solid fa-code'} skills-bar-icon" style="color:${langMeta.color || '#fff'};"></i>
+                    <span class="skills-bar-name">${entry.language}</span>
                 </div>
-                <span class="skills-bar-level">${lang.level}</span>
+                <span class="skills-bar-level">${levelMeta.level}</span>
             </div>
             <div class="skills-bar-track">
                 <div class="skills-bar-fill"
-                     style="--bar-w:${lang.pct}%; background:${lang.color}; transition-delay:${i * 0.1}s;"></div>
+                     style="--bar-w:${pct}%; background:${langMeta.color || levelMeta.color}; transition-delay:${i * 0.1}s;"></div>
             </div>
         `;
+
         barsEl.appendChild(row);
     });
 
@@ -1414,7 +1450,90 @@ function renderSkills() {
     }
 }
 
-// ── LEVELS MODAL ──────────────────────────────────────────────
+// ── RENDER ABOUT ──────────────────────────────────────────────
+
+function renderAbout() {
+    // BIO
+    const bioEl = document.getElementById('aboutBio');
+    if (bioEl) {
+        if (FETCHED_ABOUT.bio?.text) {
+            bioEl.textContent = FETCHED_ABOUT.bio.text;
+        } else {
+            bioEl.innerHTML = `<i class="fa-regular fa-file-lines" style="margin-right:8px;color:rgba(255,255,255,0.2);"></i><span style="color:rgba(255,255,255,0.2);font-style:italic;">No Bio</span>`;
+        }
+    }
+
+    // EDUCATION
+    const edu    = FETCHED_ABOUT.education;
+    const eduCard  = document.querySelector('.about-edu-card');
+    const eduBlock = eduCard?.closest('.about-block');
+    let   eduEmpty = eduBlock?.querySelector('[data-edu-empty]');
+
+    const hasEdu = edu && edu.course;
+
+    if (hasEdu) {
+        // Show card, remove empty state
+        if (eduCard)  eduCard.style.display  = '';
+        if (eduEmpty) eduEmpty.remove();
+
+        const degreeEl = eduCard.querySelector('.about-edu-degree');
+        const schoolEl = eduCard.querySelector('.about-edu-school');
+        const detailEl = eduCard.querySelector('.about-edu-detail');
+
+        if (degreeEl) degreeEl.textContent = edu.course;
+        if (schoolEl && edu.school) schoolEl.textContent = edu.school;
+
+        if (detailEl) {
+            const now       = new Date();
+            const endDate   = edu.schoolEnd   ? new Date(edu.schoolEnd   + '-01') : null;
+            const startDate = edu.schoolStart ? new Date(edu.schoolStart + '-01') : null;
+
+            const endStr   = endDate && endDate > now
+                ? 'present'
+                : endDate
+                    ? endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+                    : '';
+            const startStr = startDate
+                ? startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+                : '';
+            const yearStr  = edu.year || '';
+
+            if (yearStr && startStr) {
+                detailEl.textContent = `${yearStr} · ${startStr} — ${endStr}`;
+            } else if (startStr) {
+                detailEl.textContent = `${startStr} — ${endStr}`;
+            }
+        }
+    } else {
+        // Hide card, show empty state
+        if (eduCard) eduCard.style.display = 'none';
+        if (!eduEmpty && eduBlock) {
+            eduEmpty = document.createElement('div');
+            eduEmpty.dataset.eduEmpty = '';
+            eduEmpty.style.cssText = 'text-align:center;padding:32px 0;color:rgba(255,255,255,0.2);';
+            eduEmpty.innerHTML = `
+                <i class="fa-solid fa-graduation-cap" style="font-size:28px;margin-bottom:10px;display:block;"></i>
+                No listed education
+            `;
+            eduBlock.appendChild(eduEmpty);
+        }
+    }
+
+    // SKILLS — rebuild bars from Firestore data
+    skillsAnimated = false;
+    renderSkills();
+
+    // Trigger animation if already on about section
+    if (currentSection === 'about') {
+        setTimeout(() => {
+            const barsEl = document.getElementById('skillsBars');
+            if (barsEl) barsEl.classList.add('animated');
+            skillsAnimated = true;
+        }, 100);
+    }
+}
+
+
 
 const levelsOverlay = document.getElementById('levelsOverlay');
 const levelsClose   = document.getElementById('levelsClose');
@@ -1443,7 +1562,9 @@ function renderCertCard(data) {
     card.className = 'cert-card';
     if (data.id) card.dataset.certId = data.id;
 
-    const filePath = data.file ? `../${data.file}` : null;
+    const rawUrl = data.file
+        ? `https://raw.githubusercontent.com/devssst/my-portfolio/main/${data.file}`
+        : null;
 
     let dateStr = '';
     if (data.date) {
@@ -1451,8 +1572,8 @@ function renderCertCard(data) {
         dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
     }
 
-    const previewHTML = filePath
-        ? `<img src="${filePath}" alt="${data.title}" loading="lazy">`
+    const previewHTML = rawUrl
+        ? `<img src="${rawUrl}" alt="${data.title}" loading="lazy">`
         : `<i class="fa-solid fa-certificate cert-card-placeholder-icon"></i>`;
 
     card.innerHTML = `
@@ -1477,8 +1598,8 @@ function renderCertCard(data) {
     card.addEventListener('click', () => {
         const overlay    = document.getElementById('certOverlay');
         const overlayImg = document.getElementById('certOverlayImg');
-        if (!overlay || !overlayImg || !filePath) return;
-        overlayImg.src = filePath;
+        if (!overlay || !overlayImg || !rawUrl) return;
+        overlayImg.src = rawUrl;
         overlayImg.alt = data.title;
         overlay.classList.add('open');
     });
@@ -1543,6 +1664,368 @@ if (certOverlay) {
     });
 }
 
+// ── ABOUT EDIT BTN VISIBILITY ─────────────────────────────────
+
+function updateAboutEditBtnVisibility() {
+    const btn = document.getElementById('aboutEditBtn');
+    if (!btn) return;
+    if (isEditMode && currentSection === 'about') {
+        btn.classList.add('visible');
+    } else {
+        btn.classList.remove('visible');
+    }
+}
+
+// ── ABOUT EDIT MODAL ──────────────────────────────────────────
+
+// Supported languages catalog — icon + color metadata
+// Language catalog lives entirely in Firestore portfolio/lang (FETCHED_LANGS).
+// No hardcoded catalog in JS — the site fetches it.
+
+const aboutEditOverlay    = document.getElementById('aboutEditOverlay');
+const aboutEditClose      = document.getElementById('aboutEditClose');
+const aboutEditCancel     = document.getElementById('aboutEditCancel');
+const aboutEditSave       = document.getElementById('aboutEditSave');
+const aboutEditStatus     = document.getElementById('aboutEditStatus');
+const aboutBioInput       = document.getElementById('aboutBioInput');
+const aboutEduCourse      = document.getElementById('aboutEduCourse');
+const aboutEduSchool      = document.getElementById('aboutEduSchool');
+const aboutEduStart       = document.getElementById('aboutEduStart');
+const aboutEduEnd         = document.getElementById('aboutEduEnd');
+const aboutEduYear        = document.getElementById('aboutEduYear');
+const aboutLangSearch     = document.getElementById('aboutLangSearch');
+const aboutLangDropdown   = document.getElementById('aboutLangDropdown');
+const aboutLangAddBtn     = document.getElementById('aboutLangAddBtn');
+const aboutLangStaged     = document.getElementById('aboutLangStaged');
+const aboutEditBtn        = document.getElementById('aboutEditBtn');
+const aboutLevelSelect    = document.getElementById('aboutLevelSelect');
+
+// Edu card delete elements
+const eduCardDeleteBtn        = document.getElementById('eduCardDelete');
+const aboutEduDeleteOverlay   = document.getElementById('aboutEduDeleteOverlay');
+const aboutEduDeleteClose     = document.getElementById('aboutEduDeleteClose');
+const aboutEduDeleteCancel    = document.getElementById('aboutEduDeleteCancel');
+const aboutEduDeleteConfirm   = document.getElementById('aboutEduDeleteConfirm');
+
+// Staged languages for the modal (mirrors current proficiency during edit)
+let stagedLangs = [];
+
+// ── ABOUT EDIT — OPEN / CLOSE ─────────────────────────────────
+
+function openAboutEditModal() {
+    // Pre-populate BIO — read from FETCHED_ABOUT only, never from DOM
+    if (aboutBioInput) {
+        aboutBioInput.value = FETCHED_ABOUT.bio?.text || '';
+    }
+
+    // Pre-populate EDUCATION — read from FETCHED_ABOUT only, never from DOM
+    const edu = FETCHED_ABOUT.education || {};
+    if (aboutEduCourse) aboutEduCourse.value = edu.course      || '';
+    if (aboutEduSchool) aboutEduSchool.value = edu.school      || '';
+    if (aboutEduStart)  aboutEduStart.value  = edu.schoolStart || '';
+    if (aboutEduEnd)    aboutEduEnd.value    = edu.schoolEnd   || '';
+    if (aboutEduYear)   aboutEduYear.value   = edu.year        || '';
+
+    // Pre-populate PROFICIENCY from current FETCHED_ABOUT
+    stagedLangs = (FETCHED_ABOUT.proficiency || []).map(e => ({ ...e }));
+    renderStagedLangs();
+
+    // Reset search and status
+    if (aboutLangSearch)   aboutLangSearch.value = '';
+    if (aboutLangDropdown) aboutLangDropdown.classList.remove('open');
+    if (aboutEditStatus)   { aboutEditStatus.textContent = ''; aboutEditStatus.className = 'about-edit-status'; }
+    if (aboutEditSave)     { aboutEditSave.disabled = false; aboutEditSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> SAVE'; }
+
+    if (aboutEditOverlay) aboutEditOverlay.classList.add('open');
+}
+
+function closeAboutEditModal() {
+    if (aboutEditOverlay) aboutEditOverlay.classList.remove('open');
+}
+
+if (aboutEditBtn)     aboutEditBtn.addEventListener('click', openAboutEditModal);
+if (aboutEditClose)   aboutEditClose.addEventListener('click', closeAboutEditModal);
+if (aboutEditCancel)  aboutEditCancel.addEventListener('click', closeAboutEditModal);
+if (aboutEditOverlay) {
+    aboutEditOverlay.addEventListener('click', (e) => {
+        if (e.target === aboutEditOverlay) closeAboutEditModal();
+    });
+}
+
+// ── ABOUT EDIT — LANGUAGE PICKER ─────────────────────────────
+
+function renderLangDropdown(query) {
+    if (!aboutLangDropdown) return;
+    const q        = (query || '').toLowerCase().trim();
+    const filtered = FETCHED_LANGS.filter(l => l.name.toLowerCase().includes(q));
+
+    if (filtered.length === 0) {
+        aboutLangDropdown.innerHTML = `<div class="about-lang-no-results">No results</div>`;
+        aboutLangDropdown.classList.add('open');
+        return;
+    }
+
+    aboutLangDropdown.innerHTML = '';
+    filtered.forEach(lang => {
+        const alreadyStaged = stagedLangs.some(s => s.language === lang.name);
+        const item = document.createElement('div');
+        item.className = 'about-lang-item' + (alreadyStaged ? ' disabled' : '');
+        item.innerHTML = `
+            <i class="${lang.icon}" style="color:${lang.color}; font-size:14px; width:16px; text-align:center;"></i>
+            ${lang.name}
+        `;
+        if (!alreadyStaged) {
+            item.addEventListener('click', () => {
+                if (aboutLangSearch)  aboutLangSearch.value = lang.name;
+                aboutLangDropdown.classList.remove('open');
+            });
+        }
+        aboutLangDropdown.appendChild(item);
+    });
+
+    aboutLangDropdown.classList.add('open');
+}
+
+if (aboutLangSearch) {
+    aboutLangSearch.addEventListener('input', () => {
+        renderLangDropdown(aboutLangSearch.value);
+    });
+    aboutLangSearch.addEventListener('focus', () => {
+        renderLangDropdown(aboutLangSearch.value);
+    });
+}
+
+document.addEventListener('click', (e) => {
+    if (aboutLangDropdown && aboutLangSearch && !aboutLangSearch.contains(e.target) && !aboutLangDropdown.contains(e.target)) {
+        aboutLangDropdown.classList.remove('open');
+    }
+});
+
+// ── ABOUT EDIT — STAGED LANGS RENDER ─────────────────────────
+
+function renderStagedLangs() {
+    if (!aboutLangStaged) return;
+    aboutLangStaged.innerHTML = '';
+    stagedLangs.forEach((entry, idx) => {
+        const levelMeta = LEVEL_DATA[entry.level] || LEVEL_DATA[0];
+        const row       = document.createElement('div');
+        row.className   = 'about-lang-staged-row';
+        row.innerHTML   = `
+            <span class="about-lang-staged-name">${entry.language}</span>
+            <span class="about-lang-staged-level" style="color:${levelMeta.color};">${levelMeta.level}</span>
+            <button type="button" class="about-lang-staged-remove" title="Remove">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        `;
+        row.querySelector('.about-lang-staged-remove').addEventListener('click', () => {
+            stagedLangs.splice(idx, 1);
+            renderStagedLangs();
+        });
+        aboutLangStaged.appendChild(row);
+    });
+}
+
+// ── ABOUT EDIT — ADD LANGUAGE ─────────────────────────────────
+
+if (aboutLangAddBtn) {
+    aboutLangAddBtn.addEventListener('click', () => {
+        const name = (aboutLangSearch?.value || '').trim();
+        if (!name) return;
+
+        const levelIdx = parseInt(aboutLevelSelect?.value || '0', 10);
+        const catalog  = FETCHED_LANGS.find(l => l.name.toLowerCase() === name.toLowerCase());
+        const resolved = catalog ? catalog.name : name;
+
+        if (stagedLangs.some(s => s.language === resolved)) {
+            if (aboutEditStatus) {
+                aboutEditStatus.textContent = `${resolved} is already in the list.`;
+                aboutEditStatus.className   = 'about-edit-status error';
+            }
+            return;
+        }
+
+        stagedLangs.push({ language: resolved, level: levelIdx });
+        renderStagedLangs();
+
+        if (aboutLangSearch)   aboutLangSearch.value = '';
+        if (aboutLangDropdown) aboutLangDropdown.classList.remove('open');
+        if (aboutEditStatus)   { aboutEditStatus.textContent = ''; aboutEditStatus.className = 'about-edit-status'; }
+    });
+}
+
+// ── ABOUT EDIT — SAVE ─────────────────────────────────────────
+
+function setAboutEditStatus(msg, type) {
+    if (!aboutEditStatus) return;
+    aboutEditStatus.textContent = msg;
+    aboutEditStatus.className   = 'about-edit-status' + (type ? ` ${type}` : '');
+}
+
+if (aboutEditSave) {
+    aboutEditSave.addEventListener('click', handleAboutSave);
+}
+
+async function handleAboutSave() {
+    const bioText  = aboutBioInput?.value.trim()  || '';
+    const course   = aboutEduCourse?.value.trim() || '';
+    const school   = aboutEduSchool?.value.trim() || '';
+    const start    = aboutEduStart?.value         || '';
+    const end      = aboutEduEnd?.value           || '';
+    const year     = aboutEduYear?.value.trim()   || '';
+
+    if (!bioText) { setAboutEditStatus('Bio cannot be empty.', 'error'); if (aboutBioInput) aboutBioInput.focus(); return; }
+
+    aboutEditSave.disabled = true;
+    aboutEditSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+    setAboutEditStatus('', '');
+
+    try {
+        const aboutDoc = {
+            bio: { text: bioText },
+            education: { course, school, schoolStart: start, schoolEnd: end, year },
+            proficiency: stagedLangs,
+        };
+
+        await setDoc(doc(_dDb, "portfolio", "about"), aboutDoc);
+
+        // Upsert education entry in portfolio/timestamp (filter by type='education', replace or append)
+        if (course && start) {
+            try {
+                const tsSnap = await getDoc(doc(_dDb, "portfolio", "timestamp"));
+                let tsData = tsSnap.exists() ? (tsSnap.data().data || []) : [];
+
+                const eduEntry = {
+                    type:  'education',
+                    title: course,
+                    date:  start,
+                    desc:  `Enrolled at Dalubhasaang Politekniko ng Lungsod ng Baliwag`,
+                };
+
+                const existing = tsData.findIndex(e => e.type === 'education');
+                if (existing >= 0) {
+                    tsData[existing] = eduEntry;
+                } else {
+                    tsData.push(eduEntry);
+                }
+
+                await setDoc(doc(_dDb, "portfolio", "timestamp"), { data: tsData });
+                FETCHED_TIMELINE = tsData.filter(e => !e.repo);
+            } catch (tsErr) {
+                console.warn('Timeline upsert failed (non-fatal):', tsErr);
+            }
+        }
+
+        // Update local state — portfolio/lang is NOT touched here,
+        // it is the master catalog managed independently in Firestore.
+        FETCHED_ABOUT = aboutDoc;
+
+        // Re-render about section in place
+        renderAbout();
+        renderTimeline();
+
+        // Update DOM bio directly
+        const bioEl = document.getElementById('aboutBio');
+        if (bioEl) bioEl.textContent = bioText;
+
+        setAboutEditStatus('Saved successfully!', 'success');
+        setTimeout(() => closeAboutEditModal(), 1200);
+
+    } catch (err) {
+        console.error('About save error:', err);
+        setAboutEditStatus(`Save failed: ${err.message || 'Unknown error'}`, 'error');
+        aboutEditSave.disabled = false;
+        aboutEditSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> SAVE';
+    }
+}
+
+// ── LANG DELETE (from skills bars directly) ───────────────────
+
+async function handleLangDelete(langName) {
+    if (!isEditor) return;
+
+    try {
+        const updated = (FETCHED_ABOUT.proficiency || []).filter(e => e.language !== langName);
+        const aboutDoc = { ...FETCHED_ABOUT, proficiency: updated };
+
+        await setDoc(doc(_dDb, "portfolio", "about"), aboutDoc);
+
+        FETCHED_ABOUT.proficiency = updated;
+
+        skillsAnimated = false;
+        renderSkills();
+        populateStats();
+
+        if (currentSection === 'about') {
+            setTimeout(() => {
+                const barsEl = document.getElementById('skillsBars');
+                if (barsEl) barsEl.classList.add('animated');
+                skillsAnimated = true;
+            }, 100);
+        }
+
+    } catch (err) {
+        console.error('Lang delete error:', err);
+        alert(`Delete failed: ${err.message || 'Unknown error'}`);
+    }
+}
+
+// ── EDU CARD DELETE ───────────────────────────────────────────
+
+function openEduDeleteModal() {
+    if (aboutEduDeleteConfirm) {
+        aboutEduDeleteConfirm.disabled = false;
+        aboutEduDeleteConfirm.innerHTML = '<i class="fa-solid fa-trash"></i> YES, DELETE';
+    }
+    if (aboutEduDeleteOverlay) aboutEduDeleteOverlay.classList.add('open');
+}
+
+function closeEduDeleteModal() {
+    if (aboutEduDeleteOverlay) aboutEduDeleteOverlay.classList.remove('open');
+}
+
+if (eduCardDeleteBtn)     eduCardDeleteBtn.addEventListener('click', openEduDeleteModal);
+if (aboutEduDeleteClose)  aboutEduDeleteClose.addEventListener('click', closeEduDeleteModal);
+if (aboutEduDeleteCancel) aboutEduDeleteCancel.addEventListener('click', closeEduDeleteModal);
+if (aboutEduDeleteOverlay) {
+    aboutEduDeleteOverlay.addEventListener('click', (e) => {
+        if (e.target === aboutEduDeleteOverlay) closeEduDeleteModal();
+    });
+}
+
+if (aboutEduDeleteConfirm) {
+    aboutEduDeleteConfirm.addEventListener('click', async () => {
+        aboutEduDeleteConfirm.disabled = true;
+        aboutEduDeleteConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+
+        try {
+        const aboutDoc = { ...FETCHED_ABOUT, education: {} };
+        await setDoc(doc(_dDb, "portfolio", "about"), aboutDoc);
+        FETCHED_ABOUT.education = {};
+
+        // Remove the education entry from portfolio/timestamp
+        try {
+            const tsSnap = await getDoc(doc(_dDb, "portfolio", "timestamp"));
+            if (tsSnap.exists()) {
+                const tsData = (tsSnap.data().data || []).filter(e => e.type !== 'education');
+                await setDoc(doc(_dDb, "portfolio", "timestamp"), { data: tsData });
+                FETCHED_TIMELINE = tsData.filter(e => !e.repo);
+            }
+        } catch (tsErr) {
+            console.warn('Timeline edu remove failed (non-fatal):', tsErr);
+        }
+
+        closeEduDeleteModal();
+        renderAbout();
+        renderTimeline();
+        } catch (err) {
+            console.error('Edu delete error:', err);
+            aboutEduDeleteConfirm.disabled = false;
+            aboutEduDeleteConfirm.innerHTML = '<i class="fa-solid fa-trash"></i> YES, DELETE';
+            alert(`Delete failed: ${err.message || 'Unknown error'}`);
+        }
+    });
+}
+
 // ── GITHUB API HELPERS ────────────────────────────────────────
 // These functions require GH_TOKEN, GH_OWNER, GH_REPO to be loaded.
 // Only call them when isEditor is true.
@@ -1600,7 +2083,7 @@ async function boot() {
     try { renderTimeline(); }     catch(e) { console.warn('renderTimeline failed:', e); }
     try { renderProjects(); }     catch(e) { console.warn('renderProjects failed:', e); }
     try { await renderDocs(); }   catch(e) { console.warn('renderDocs failed:', e); }
-    try { renderSkills(); }       catch(e) { console.warn('renderSkills failed:', e); }
+    try { renderAbout(); }        catch(e) { console.warn('renderAbout failed:', e); }
     try { renderCerts(); }        catch(e) { console.warn('renderCerts failed:', e); }
     try { populateStats(); }      catch(e) { console.warn('populateStats failed:', e); }
 }
