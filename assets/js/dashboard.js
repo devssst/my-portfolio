@@ -37,7 +37,7 @@ let FETCHED_TIMELINE   = []; // Direct timeline entries from timestamp.json
 let FETCHED_CERTS      = []; // Entries from certs.json
 let FETCHED_LANGS      = []; // Language metadata from portfolio/lang
 let FETCHED_ABOUT      = { bio: {}, education: [], proficiency: [] }; // from portfolio/about
-let FETCHED_MILESTONES = []; // Entries from portfolio/milestones
+let FETCHED_MILESTONES = []; // type:'milestone' entries from portfolio/timestamp
 
 // ── EMAILJS CREDENTIALS ───────────────────────────────────────
 
@@ -64,8 +64,10 @@ async function loadAllData() {
             const repoEntries    = entries.filter(e => e.repo);
             const directEntries  = entries.filter(e => !e.repo);
 
-            // Direct timeline entries
-            FETCHED_TIMELINE = directEntries;
+            // Direct timeline entries (non-milestone)
+            FETCHED_TIMELINE   = directEntries.filter(e => e.type !== 'milestone');
+            // Milestone entries live in the same doc under type:'milestone'
+            FETCHED_MILESTONES = directEntries.filter(e => e.type === 'milestone');
 
             // Repo entries — fetch each INFO.json from GitHub
             const results = await Promise.all(
@@ -119,13 +121,7 @@ async function loadAllData() {
         }
     } catch {}
 
-    // 6. Milestones — from Firestore portfolio/milestones
-    try {
-        const snap = await getDoc(doc(_dDb, "portfolio", "milestones"));
-        if (snap.exists()) {
-            FETCHED_MILESTONES = snap.data().data || [];
-        }
-    } catch {}
+    // 6. (Milestones are derived from portfolio/timestamp — see step 1 above)
 }
 
 // ── LOAD GITHUB CREDENTIALS (admin only) ─────────────────────
@@ -451,7 +447,7 @@ function renderTimeline() {
         });
     });
 
-    // 4. Milestone entries from portfolio/milestones
+    // 4. Milestone entries — type:'milestone' entries from portfolio/timestamp
     // Date stored as MM-DD-YYYY; rendered as Month YYYY
     FETCHED_MILESTONES.forEach(m => {
         const raw = m.date || null;
@@ -1055,21 +1051,22 @@ async function handleMilestoneAdd() {
 
     try {
         const id    = `milestone-${Date.now()}`;
-        const entry = { id, title, desc, date: dateStored };
+        const entry = { id, type: 'milestone', title, desc, date: dateStored };
 
-        // Read current milestones from Firestore
-        const snap = await getDoc(doc(_dDb, "portfolio", "milestones"));
-        let milestones = [];
+        // Read current timestamp doc from Firestore
+        const snap = await getDoc(doc(_dDb, "portfolio", "timestamp"));
+        let tsData = [];
         if (snap.exists()) {
-            milestones = snap.data().data || [];
+            tsData = snap.data().data || [];
         }
 
-        milestones.push(entry);
+        tsData.push(entry);
 
-        await setDoc(doc(_dDb, "portfolio", "milestones"), { data: milestones });
+        await setDoc(doc(_dDb, "portfolio", "timestamp"), { data: tsData });
 
-        // Update local cache and re-render timeline in place
-        FETCHED_MILESTONES = milestones;
+        // Update local caches and re-render
+        FETCHED_MILESTONES = tsData.filter(e => e.type === 'milestone');
+        FETCHED_TIMELINE   = tsData.filter(e => !e.repo && e.type !== 'milestone');
         renderTimeline();
 
         // Re-inject the button since renderTimeline() clears timelineRoot
@@ -1134,13 +1131,14 @@ async function handleMilestoneDelete() {
     milestoneDeleteConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
 
     try {
-        const snap      = await getDoc(doc(_dDb, "portfolio", "milestones"));
-        let milestones  = snap.exists() ? (snap.data().data || []) : [];
-        milestones      = milestones.filter(m => m.id !== id);
+        const snap   = await getDoc(doc(_dDb, "portfolio", "timestamp"));
+        let tsData   = snap.exists() ? (snap.data().data || []) : [];
+        tsData       = tsData.filter(e => e.id !== id);
 
-        await setDoc(doc(_dDb, "portfolio", "milestones"), { data: milestones });
+        await setDoc(doc(_dDb, "portfolio", "timestamp"), { data: tsData });
 
-        FETCHED_MILESTONES = milestones;
+        FETCHED_MILESTONES = tsData.filter(e => e.type === 'milestone');
+        FETCHED_TIMELINE   = tsData.filter(e => !e.repo && e.type !== 'milestone');
 
         closeMilestoneDeleteModal();
         renderTimeline();
