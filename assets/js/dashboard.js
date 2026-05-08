@@ -32,11 +32,12 @@ const LEVEL_DATA = [
 
 // ── FETCHED DATA STORES ───────────────────────────────────────
 
-let FETCHED_PROJECTS  = []; // INFO.json objects from repo entries in timestamp.json
-let FETCHED_TIMELINE  = []; // Direct timeline entries from timestamp.json
-let FETCHED_CERTS     = []; // Entries from certs.json
-let FETCHED_LANGS     = []; // Language metadata from portfolio/lang
-let FETCHED_ABOUT     = { bio: {}, education: [], proficiency: [] }; // from portfolio/about
+let FETCHED_PROJECTS   = []; // INFO.json objects from repo entries in timestamp.json
+let FETCHED_TIMELINE   = []; // Direct timeline entries from timestamp.json
+let FETCHED_CERTS      = []; // Entries from certs.json
+let FETCHED_LANGS      = []; // Language metadata from portfolio/lang
+let FETCHED_ABOUT      = { bio: {}, education: [], proficiency: [] }; // from portfolio/about
+let FETCHED_MILESTONES = []; // Entries from portfolio/milestones
 
 // ── EMAILJS CREDENTIALS ───────────────────────────────────────
 
@@ -115,6 +116,14 @@ async function loadAllData() {
                 education:   d.education   || {},
                 proficiency: d.proficiency || [],
             };
+        }
+    } catch {}
+
+    // 6. Milestones — from Firestore portfolio/milestones
+    try {
+        const snap = await getDoc(doc(_dDb, "portfolio", "milestones"));
+        if (snap.exists()) {
+            FETCHED_MILESTONES = snap.data().data || [];
         }
     } catch {}
 }
@@ -436,6 +445,31 @@ function renderTimeline() {
         });
     });
 
+    // 4. Milestone entries from portfolio/milestones
+    // Date stored as MM-DD-YYYY; rendered as Month YYYY
+    FETCHED_MILESTONES.forEach(m => {
+        const raw = m.date || null;
+        let year    = new Date().getFullYear();
+        let dateStr = '';
+        if (raw) {
+            const parts = raw.split('-'); // ['MM', 'DD', 'YYYY']
+            if (parts.length === 3) {
+                year        = parseInt(parts[2]);
+                const month = parseInt(parts[0]) - 1;
+                const d     = new Date(year, month, 1);
+                dateStr     = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+            }
+        }
+        allEntries.push({
+            year,
+            title: m.title,
+            date:  dateStr,
+            desc:  m.desc || '',
+            type:  'milestone',
+            id:    m.id   || null,
+        });
+    });
+
     // Group by year, sort descending
     const byYear = {};
     allEntries.forEach(e => {
@@ -480,7 +514,7 @@ function renderTimeline() {
             const el = document.createElement('div');
             el.className = 'timeline-entry';
 
-            const learnMoreHTML = (entry.type === 'project' || entry.type === 'cert')
+            const learnMoreHTML = (entry.type === 'project' || entry.type === 'cert' || entry.type === 'education')
                 ? `<button class="timeline-learn-more">Learn More <i class="fa-solid fa-arrow-right"></i></button>`
                 : '';
 
@@ -529,6 +563,18 @@ function renderTimeline() {
                                 const matchById   = entry.id && card.dataset.certId === entry.id;
                                 const matchByName = !entry.id && card.querySelector('.cert-card-title')?.textContent.trim() === entry.title;
                                 if (matchById || matchByName) {
+                                    card.classList.add('highlight');
+                                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setTimeout(() => card.classList.remove('highlight'), 1500);
+                                }
+                            });
+                        }, 350);
+                    } else if (entry.type === 'education') {
+                        switchSection('about');
+                        setTimeout(() => {
+                            document.querySelectorAll('.about-edu-card').forEach(card => {
+                                const matchByDegree = card.querySelector('.about-edu-degree')?.textContent.trim() === entry.title;
+                                if (matchByDegree) {
                                     card.classList.add('highlight');
                                     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                     setTimeout(() => card.classList.remove('highlight'), 1500);
@@ -811,6 +857,7 @@ function setEditMode(active) {
     if (active) {
         if (grid) grid.classList.add('edit-active');
         injectDocUploadBtn();
+        injectMilestoneAddBtn();
     } else {
         if (grid) grid.classList.remove('edit-active');
         const btn = document.getElementById('docUploadBtn');
@@ -826,6 +873,8 @@ function setEditMode(active) {
                 `;
             }
         }
+        const mBtn = document.getElementById('milestoneAddBtn');
+        if (mBtn) mBtn.remove();
     }
 
     // ABOUT section — edu list delete buttons
@@ -879,6 +928,134 @@ function injectDocUploadBtn() {
     `;
     btn.addEventListener('click', openDocUploadModal);
     grid.appendChild(btn);
+}
+
+function injectMilestoneAddBtn() {
+    if (document.getElementById('milestoneAddBtn')) return; // guard: already present
+    const heading = document.querySelector('#timelineContent .section-heading');
+    if (!heading) return;
+    const btn = document.createElement('button');
+    btn.id        = 'milestoneAddBtn';
+    btn.className = 'milestone-add-btn';
+    btn.type      = 'button';
+    btn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Milestone';
+    btn.addEventListener('click', openMilestoneAddModal);
+    heading.appendChild(btn);
+}
+
+// ── MILESTONE ADD MODAL ───────────────────────────────────────
+
+const milestoneAddOverlay  = document.getElementById('milestoneAddOverlay');
+const milestoneAddClose    = document.getElementById('milestoneAddClose');
+const milestoneTitleInput  = document.getElementById('milestoneTitle');
+const milestoneDescInput   = document.getElementById('milestoneDesc');
+const milestoneDateInput   = document.getElementById('milestoneDate');
+const milestoneAddSubmit   = document.getElementById('milestoneAddSubmit');
+const milestoneAddStatus   = document.getElementById('milestoneAddStatus');
+
+function openMilestoneAddModal() {
+    resetMilestoneAddModal();
+    if (milestoneAddOverlay) milestoneAddOverlay.classList.add('open');
+}
+
+function closeMilestoneAddModal() {
+    if (milestoneAddOverlay) milestoneAddOverlay.classList.remove('open');
+}
+
+function resetMilestoneAddModal() {
+    if (milestoneTitleInput) milestoneTitleInput.value = '';
+    if (milestoneDescInput)  milestoneDescInput.value  = '';
+    if (milestoneDateInput)  milestoneDateInput.value  = '';
+    if (milestoneAddStatus) {
+        milestoneAddStatus.textContent = '';
+        milestoneAddStatus.className   = 'doc-upload-status';
+    }
+    if (milestoneAddSubmit) {
+        milestoneAddSubmit.disabled = false;
+        milestoneAddSubmit.innerHTML = '<i class="fa-solid fa-flag-checkered"></i> Save Milestone';
+    }
+}
+
+function setMilestoneStatus(msg, type) {
+    if (!milestoneAddStatus) return;
+    milestoneAddStatus.textContent = msg;
+    milestoneAddStatus.className   = 'doc-upload-status' + (type ? ` ${type}` : '');
+}
+
+if (milestoneAddClose) {
+    milestoneAddClose.addEventListener('click', closeMilestoneAddModal);
+}
+
+if (milestoneAddOverlay) {
+    milestoneAddOverlay.addEventListener('click', (e) => {
+        if (e.target === milestoneAddOverlay) closeMilestoneAddModal();
+    });
+}
+
+if (milestoneAddSubmit) {
+    milestoneAddSubmit.addEventListener('click', handleMilestoneAdd);
+}
+
+async function handleMilestoneAdd() {
+    const title   = milestoneTitleInput?.value.trim() || '';
+    const desc    = milestoneDescInput?.value.trim()  || '';
+    const dateVal = milestoneDateInput?.value          || ''; // YYYY-MM-DD from native date input
+
+    if (!title) {
+        setMilestoneStatus('Please enter a title.', 'error');
+        if (milestoneTitleInput) milestoneTitleInput.focus();
+        return;
+    }
+    if (!dateVal) {
+        setMilestoneStatus('Please select a date.', 'error');
+        if (milestoneDateInput) milestoneDateInput.focus();
+        return;
+    }
+
+    // Convert YYYY-MM-DD → MM-DD-YYYY for storage
+    const parts      = dateVal.split('-'); // ['YYYY', 'MM', 'DD']
+    const dateStored = `${parts[1]}-${parts[2]}-${parts[0]}`;
+
+    if (milestoneAddSubmit) {
+        milestoneAddSubmit.disabled = true;
+        milestoneAddSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+    }
+    setMilestoneStatus('', '');
+
+    try {
+        const id    = `milestone-${Date.now()}`;
+        const entry = { id, title, desc, date: dateStored };
+
+        // Read current milestones from Firestore
+        const snap = await getDoc(doc(_dDb, "portfolio", "milestones"));
+        let milestones = [];
+        if (snap.exists()) {
+            milestones = snap.data().data || [];
+        }
+
+        milestones.push(entry);
+
+        await setDoc(doc(_dDb, "portfolio", "milestones"), { data: milestones });
+
+        // Update local cache and re-render timeline in place
+        FETCHED_MILESTONES = milestones;
+        renderTimeline();
+
+        // Re-inject the button since renderTimeline() clears timelineRoot
+        // (button is before timelineRoot so it survives — but guard anyway)
+        if (isEditMode) injectMilestoneAddBtn();
+
+        setMilestoneStatus('Milestone saved!', 'success');
+        setTimeout(() => closeMilestoneAddModal(), 1200);
+
+    } catch (err) {
+        console.error('Milestone save error:', err);
+        setMilestoneStatus(`Failed: ${err.message || 'Unknown error'}`, 'error');
+        if (milestoneAddSubmit) {
+            milestoneAddSubmit.disabled = false;
+            milestoneAddSubmit.innerHTML = '<i class="fa-solid fa-flag-checkered"></i> Save Milestone';
+        }
+    }
 }
 
 // ── DOC UPLOAD MODAL ──────────────────────────────────────────

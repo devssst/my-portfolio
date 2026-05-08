@@ -505,6 +505,35 @@
         </div>
     </div>
 
+    <!-- MILESTONE ADD MODAL -->
+    <div class="faq-overlay milestone-add-overlay" id="milestoneAddOverlay">
+        <div class="faq-card" id="milestoneAddCard">
+            <button class="faq-close" id="milestoneAddClose"><i class="fa-solid fa-xmark"></i></button>
+            <h3>Add Milestone</h3>
+
+            <div class="doc-upload-fields">
+                <div class="doc-upload-field">
+                    <label for="milestoneTitle">TITLE</label>
+                    <input type="text" id="milestoneTitle" placeholder="Milestone title" autocomplete="off">
+                </div>
+                <div class="doc-upload-field">
+                    <label for="milestoneDesc">DESCRIPTION</label>
+                    <input type="text" id="milestoneDesc" placeholder="Short description" autocomplete="off">
+                </div>
+                <div class="doc-upload-field">
+                    <label for="milestoneDate">DATE</label>
+                    <input type="date" id="milestoneDate">
+                </div>
+            </div>
+
+            <button type="button" class="doc-upload-submit" id="milestoneAddSubmit">
+                <i class="fa-solid fa-flag-checkered"></i> Save Milestone
+            </button>
+
+            <div class="doc-upload-status" id="milestoneAddStatus"></div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script type="module" src="../assets/js/dashboard.js"></script>
