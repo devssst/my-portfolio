@@ -19,8 +19,6 @@ const _dDb   = getFirestore(_dApp);
 
 // ── DATA ─────────────────────────────────────────────────────
 
-// LANG_DATA removed — language metadata now fetched from Firestore portfolio/lang
-
 const LEVEL_DATA = [
     { level: 'Exposure',    color: '#6b7280', desc: "Seen it, read about it, maybe ran someone else's code. Haven't written anything independently." },
     { level: 'Familiar',    color: '#f59e0b', desc: 'Can write basic things independently. Understands the fundamentals but has clear gaps. Needs reference for anything beyond basics.' },
@@ -45,7 +43,7 @@ let EMAILJS_SERVICE_ID  = null;
 let EMAILJS_TEMPLATE_ID = null;
 let EMAILJS_PUBLIC_KEY  = null;
 
-// ── GITHUB CREDENTIALS (admin only) ──────────────────────────
+// ── GITHUB CREDENTIALS ────────────────────────────────────────
 
 let GH_TOKEN = null;
 let GH_OWNER = null;
@@ -55,7 +53,7 @@ let GH_REPO  = null;
 
 async function loadAllData() {
 
-    // 1. timestamp — from Firestore portfolio/timestamp
+    // 1. timestamp
     try {
         const snap    = await getDoc(doc(_dDb, "portfolio", "timestamp"));
         if (snap.exists()) {
@@ -69,8 +67,7 @@ async function loadAllData() {
             // Milestone entries live in the same doc under type:'milestone'
             FETCHED_MILESTONES = directEntries.filter(e => e.type === 'milestone');
 
-            // Repo entries — fetch each INFO.json from GitHub
-            // Date comes from the Firestore entry (e.date), not INFO.json
+            // Repo entries
             const results = await Promise.all(
                 repoEntries.map(e =>
                     fetch(`https://raw.githubusercontent.com/${e.repo}/main/INFO.json?t=${Date.now()}`)
@@ -83,8 +80,7 @@ async function loadAllData() {
         }
     } catch {}
 
-    // 2. Certs — from Firestore portfolio/certs
-    // Handles both old format { data: { certificates: [] } } and new flat { data: [] }
+    // 2. Certs
     try {
         const snap = await getDoc(doc(_dDb, "portfolio", "certs"));
         if (snap.exists()) {
@@ -93,7 +89,7 @@ async function loadAllData() {
         }
     } catch {}
 
-    // 3. EmailJS credentials — from Firestore portfolio/credentials
+    // 3. EmailJS credentials
     try {
         const snap = await getDoc(doc(_dDb, "portfolio", "credentials"));
         if (snap.exists()) {
@@ -104,7 +100,7 @@ async function loadAllData() {
         }
     } catch {}
 
-    // 4. Language metadata — from Firestore portfolio/lang
+    // 4. Language metadata
     try {
         const snap = await getDoc(doc(_dDb, "portfolio", "lang"));
         if (snap.exists()) {
@@ -112,7 +108,7 @@ async function loadAllData() {
         }
     } catch {}
 
-    // 5. About data — from Firestore portfolio/about
+    // 5. About data
     try {
         const snap = await getDoc(doc(_dDb, "portfolio", "about"));
         if (snap.exists()) {
@@ -124,13 +120,9 @@ async function loadAllData() {
             };
         }
     } catch {}
-
-    // 6. (Milestones are derived from portfolio/timestamp — see step 1 above)
 }
 
-// ── LOAD GITHUB CREDENTIALS (admin only) ─────────────────────
-// Called only after isEditor is confirmed true.
-// GH_TOKEN is never loaded for visitor sessions.
+// ── LOAD GITHUB CREDENTIALS ──────────────────────────────────
 
 async function loadGithubCredentials() {
     try {
@@ -151,8 +143,8 @@ async function loadGithubCredentials() {
 
 const params         = new URLSearchParams(window.location.search);
 const _editRequested = params.get('ref') === 'edit';
-let   isEditor       = false; // set true only after Firebase auth verified
-let   isEditMode     = false; // toggled by EDIT button in badge dropdown
+let   isEditor       = false;
+let   isEditMode     = false;
 
 const badge    = document.getElementById('modeBadge');
 const header   = document.getElementById('dashHeader');
@@ -170,7 +162,6 @@ function initBadge() {
 // ── AUTH GATE ─────────────────────────────────────────────────
 
 async function verifyEditorAccess() {
-    // Load allowed credentials from Firestore — fail closed if unavailable
     let _allowed = null, _allowedUidEmail = null, _allowedUidGoogle = null;
     try {
         const snap = await getDoc(doc(_dDb, "portfolio", "credentials"));
@@ -200,8 +191,6 @@ async function verifyEditorAccess() {
     });
 }
 
-// Boot is deferred until auth check completes — see bottom of file
-
 // ── PDF.js WORKER CONFIG ──────────────────────────────────────
 
 if (window.pdfjsLib) {
@@ -211,9 +200,6 @@ if (window.pdfjsLib) {
 
 const SECTION_ORDER = ['home', 'about', 'timeline', 'projects', 'certificates', 'reach'];
 let currentSection = 'home';
-
-// ── SKILLS ANIMATION ──────────────────────────────────────────
-
 let skillsAnimated = false;
 
 // ── SECTION SWITCHING ─────────────────────────────────────────
@@ -296,6 +282,8 @@ function attachScrollListener(el) {
         }, 1500));
 
         // Header hide/show — uncomment to re-enable
+        // Note: I have this kind of personal preferences that I easily get bored on what I see so sometimes
+        // I keep some block of codes commented instead of erasing so I can turn it on or off.
         /*
         if (!ticking) {
             window.requestAnimationFrame(() => {
@@ -335,17 +323,13 @@ function tryHijack(dir) {
 }
 
 document.addEventListener('wheel', (e) => {
-    // Never hijack when scrolling inside a textarea or any independently scrollable element
     const target = e.target;
     if (target.tagName === 'TEXTAREA') return;
     if (target.closest('textarea')) return;
-
-    // Never hijack when an overlay modal is open and the scroll is inside it
     if (target.closest('.faq-overlay.open, .levels-overlay.open')) return;
 
     const activeSection = document.getElementById('section-' + currentSection);
     if (!activeSection) return;
-
     const scrollEl = activeSection.querySelector('.section-with-profile') || activeSection;
     const atBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight <= 5;
     const atTop    = scrollEl.scrollTop <= 0;
@@ -432,18 +416,15 @@ function renderTimeline() {
     });
 
     // 3. Cert entries auto-generated from FETCHED_CERTS
-    // date stored as MM-DD-YYYY; legacy entries may be YYYY-MM
     FETCHED_CERTS.forEach(cert => {
         let year = new Date().getFullYear(), month = 0, d = null;
         if (cert.date) {
             const parts = cert.date.split('-');
             if (parts.length === 3 && parts[2].length === 4) {
-                // MM-DD-YYYY
                 month = parseInt(parts[0]) || 0;
                 year  = parseInt(parts[2]);
                 d     = new Date(year, month - 1, 1);
             } else if (parts.length === 2) {
-                // Legacy YYYY-MM
                 year  = parseInt(parts[0]);
                 month = parseInt(parts[1]) || 0;
                 d     = new Date(cert.date + '-01');
@@ -465,14 +446,13 @@ function renderTimeline() {
     });
 
     // 4. Milestone entries — type:'milestone' entries from portfolio/timestamp
-    // Date stored as MM-DD-YYYY; rendered as Month YYYY
     FETCHED_MILESTONES.forEach(m => {
         const raw = m.date || null;
         let year    = new Date().getFullYear();
         let month   = 0;
         let dateStr = '';
         if (raw) {
-            const parts = raw.split('-'); // ['MM', 'DD', 'YYYY']
+            const parts = raw.split('-');
             if (parts.length === 3) {
                 year        = parseInt(parts[2]);
                 month       = parseInt(parts[0]) || 0;
@@ -500,7 +480,6 @@ function renderTimeline() {
 
     const sortedYears = Object.keys(byYear).map(Number).sort((a, b) => b - a);
 
-    // Within each year, sort entries by month descending (newest first)
     sortedYears.forEach(y => {
         byYear[y].sort((a, b) => (b.month || 0) - (a.month || 0));
     });
@@ -793,7 +772,7 @@ function renderDocCard(data) {
         </div>
     `;
 
-    // SAVE — fetch raw URL, trigger download with the document title as filename
+    // SAVE 
     const saveBtn = card.querySelector('.doc-card-btn.download');
     if (saveBtn && rawUrl) {
         saveBtn.addEventListener('click', async (e) => {
@@ -838,7 +817,7 @@ function renderDocCard(data) {
             .catch(() => {});
     }
 
-    // Delete button — stop card expand, open confirm modal
+    // Delete button 
     const deleteBtn = card.querySelector('.doc-card-delete');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', (e) => {
@@ -896,8 +875,6 @@ async function renderDocs() {
     } else {
         allDocs.forEach(d => grid.appendChild(renderDocCard(d)));
     }
-
-    // Re-inject upload button if edit mode is already on
     if (isEditMode) injectDocUploadBtn();
 }
 
@@ -953,7 +930,6 @@ function _injectEduDeleteBtns() {
     const eduList = document.getElementById('aboutEduList');
     if (!eduList) return;
 
-    // Remove any existing delete buttons first
     eduList.querySelectorAll('.edu-card-delete').forEach(b => b.remove());
 
     if (!isEditMode) return;
@@ -980,7 +956,6 @@ function injectDocUploadBtn() {
     const grid = document.getElementById('homeDocsGrid');
     if (!grid) return;
 
-    // Clear empty-state placeholder if present
     const emptyState = grid.querySelector('[data-empty-state]');
     if (emptyState) emptyState.remove();
 
@@ -1119,7 +1094,7 @@ async function handleProjectAdd() {
         tsData.push({ repo, date });
         await setDoc(doc(_dDb, "portfolio", "timestamp"), { data: tsData });
 
-        // Update local cache — date comes from Firestore entry, not INFO.json
+        // Update local cache
         FETCHED_PROJECTS.push({ ...infoData, _repo: repo, date });
 
         renderProjects();
@@ -1188,8 +1163,6 @@ async function handleProjectDelete() {
 
         // Update local caches
         FETCHED_PROJECTS = FETCHED_PROJECTS.filter(p => p._repo !== repo);
-        // Strip any timeline entries derived from this repo's INFO.json
-        // (those are repo-fetched, not stored as direct entries — just re-render)
 
         closeProjectDeleteModal();
         renderProjects();
@@ -1272,7 +1245,7 @@ async function handleMilestoneAdd() {
     }
 
     // Convert YYYY-MM-DD → MM-DD-YYYY for storage
-    const parts      = dateVal.split('-'); // ['YYYY', 'MM', 'DD']
+    const parts      = dateVal.split('-');
     const dateStored = `${parts[1]}-${parts[2]}-${parts[0]}`;
 
     if (milestoneAddSubmit) {
@@ -1301,8 +1274,6 @@ async function handleMilestoneAdd() {
         FETCHED_TIMELINE   = tsData.filter(e => !e.repo && e.type !== 'milestone');
         renderTimeline();
 
-        // Re-inject the button since renderTimeline() clears timelineRoot
-        // (button is before timelineRoot so it survives — but guard anyway)
         if (isEditMode) injectMilestoneAddBtn();
 
         setMilestoneStatus('Milestone saved!', 'success');
@@ -1583,7 +1554,7 @@ async function handleDocUpload() {
 
         setUploadStatus('Uploaded successfully!', 'success');
 
-        // Re-render docs in place — no page reload
+        // Re-render docs in place
         await renderDocs();
         setTimeout(() => closeDocUploadModal(), 1200);
 
@@ -1599,7 +1570,7 @@ async function handleDocUpload() {
 
 // ── DOC DELETE MODAL ──────────────────────────────────────────
 
-let pendingDeleteDoc = null; // { id, file, type, title }
+let pendingDeleteDoc = null;
 
 const docDeleteOverlay = document.getElementById('docDeleteOverlay');
 const docDeleteClose   = document.getElementById('docDeleteClose');
@@ -1645,7 +1616,7 @@ async function handleDocDelete() {
     docDeleteConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
 
     try {
-        // 1. Remove file from GitHub (non-fatal if not found)
+        // 1. Remove file from GitHub
         if (file) {
             try {
                 await ghDeleteFile(file, `Remove document: ${file}`);
@@ -1985,7 +1956,7 @@ function renderAbout() {
         }
     }
 
-    // EDUCATION — render array into #aboutEduList
+    // EDUCATION 
     const eduList = document.getElementById('aboutEduList');
     if (eduList) {
         const eduArr = Array.isArray(FETCHED_ABOUT.education)
@@ -2013,8 +1984,6 @@ function renderAbout() {
                 card.className = 'about-edu-card';
                 card.style.marginBottom = idx < eduArr.length - 1 ? '10px' : '';
 
-                // Parse MM-DD-YYYY
-
                 const now       = new Date();
                 const endDate   = parseStoredDate(edu.schoolEnd);
                 const startDate = parseStoredDate(edu.schoolStart);
@@ -2035,21 +2004,18 @@ function renderAbout() {
                     </div>
                 `;
 
-                // Wire delete button (only in editor mode, injected by setEditMode)
                 card.dataset.eduIdx = idx;
                 eduList.appendChild(card);
             });
         }
 
-        // Re-inject edit-mode delete buttons if currently in edit mode
         if (isEditMode) _injectEduDeleteBtns();
     }
 
-    // SKILLS — rebuild bars from Firestore data
+    // SKILLS
     skillsAnimated = false;
     renderSkills();
 
-    // Trigger animation if already on about section
     if (currentSection === 'about') {
         setTimeout(() => {
             const barsEl = document.getElementById('skillsBars');
@@ -2092,7 +2058,6 @@ function renderCertCard(data, companyLabel = null) {
         ? `https://raw.githubusercontent.com/devssst/my-portfolio/main/${data.file.split('/').map(encodeURIComponent).join('/')}`
         : null;
 
-    // Date stored as MM-DD-YYYY
     let dateStr = '';
     if (data.date) {
         const parts = data.date.split('-');
@@ -2174,7 +2139,6 @@ function renderCerts() {
         return;
     }
 
-    // Build unique company list sorted alphabetically, Unknown last
     const companies = [];
     FETCHED_CERTS.forEach(cert => {
         const c = (cert.company || '').trim() || 'Unknown';
@@ -2192,9 +2156,7 @@ function renderCerts() {
 
     root.innerHTML = '';
 
-    // ── SOLO SECTION ──
-    // All solo-company certs share one unlabeled row (up to 4 per row via grid).
-    // Company name is shown as an overlay on the banner bottom-left of each card.
+    // ── SOLO SECTION ─────────────────────────
     if (soloCompanies.length > 0) {
         const soloSection = document.createElement('div');
         soloSection.className = 'certs-solo-section';
@@ -2211,9 +2173,7 @@ function renderCerts() {
         root.appendChild(soloSection);
     }
 
-    // ── MULTI SECTION ──
-    // Each multi-cert company gets its own labeled group.
-    // Company name shown as a label above the grid.
+    // ── MULTI SECTION ─────────────────────────
     multiCompanies.forEach(company => {
         const group = FETCHED_CERTS.filter(c =>
             ((c.company || '').trim() || 'Unknown') === company
@@ -2226,7 +2186,6 @@ function renderCerts() {
 
         const grid = document.createElement('div');
         grid.className = 'certs-grid';
-        // Multi cards don't need the overlay — company is shown in the heading label above
         group.forEach(cert => grid.appendChild(renderCertCard(cert, null)));
         groupEl.appendChild(grid);
         root.appendChild(groupEl);
@@ -2359,9 +2318,8 @@ async function handleCertUpload() {
     const title   = certTitleInput?.value.trim()   || '';
     const details = certDetailsInput?.value.trim() || '';
     const company = certCompanyInput?.value.trim() || '';
-    const dateRaw = certDateInput?.value || ''; // YYYY-MM-DD from type="date"
+    const dateRaw = certDateInput?.value || '';
 
-    // Convert YYYY-MM-DD → MM-DD-YYYY for storage
     let date = '';
     if (dateRaw) {
         const [yyyy, mm, dd] = dateRaw.split('-');
@@ -2384,7 +2342,7 @@ async function handleCertUpload() {
 
     try {
         const id       = `cert-${Date.now()}`;
-        const fileName = selectedCertFile.name;          // preserve original filename
+        const fileName = selectedCertFile.name;
         const filePath = `data/files/${fileName}`;
 
         const base64 = await new Promise((resolve, reject) => {
@@ -2470,7 +2428,6 @@ async function handleCertDelete() {
     certDeleteConfirm.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
 
     try {
-        // Remove file from GitHub (non-fatal)
         if (file) {
             try {
                 await ghDeleteFile(file, `Remove certificate: ${file}`);
@@ -2518,10 +2475,6 @@ function updateAboutEditBtnVisibility() {
 
 // ── ABOUT EDIT MODAL ──────────────────────────────────────────
 
-// Supported languages catalog — icon + color metadata
-// Language catalog lives entirely in Firestore portfolio/lang (FETCHED_LANGS).
-// No hardcoded catalog in JS — the site fetches it.
-
 const aboutEditOverlay    = document.getElementById('aboutEditOverlay');
 const aboutEditClose      = document.getElementById('aboutEditClose');
 const aboutEditCancel     = document.getElementById('aboutEditCancel');
@@ -2534,35 +2487,31 @@ const aboutLangAddBtn     = document.getElementById('aboutLangAddBtn');
 const aboutLangStaged     = document.getElementById('aboutLangStaged');
 const aboutEditBtn        = document.getElementById('aboutEditBtn');
 const aboutLevelSelect    = document.getElementById('aboutLevelSelect');
-
 const aboutEduAddBtn      = document.getElementById('aboutEduAddBtn');
 const eduEntriesList      = document.getElementById('eduEntriesList');
-// Edu card delete elements (now stores index of entry being deleted)
+
 let   eduDeleteTargetIdx      = -1;
 const aboutEduDeleteOverlay   = document.getElementById('aboutEduDeleteOverlay');
 const aboutEduDeleteClose     = document.getElementById('aboutEduDeleteClose');
 const aboutEduDeleteCancel    = document.getElementById('aboutEduDeleteCancel');
 const aboutEduDeleteConfirm   = document.getElementById('aboutEduDeleteConfirm');
 
-// Staged languages for the modal (mirrors current proficiency during edit)
 let stagedLangs = [];
-// Staged education entries for the modal (mirrors current education array during edit)
 let stagedEdu   = [];
 
 // ── ABOUT EDIT — OPEN / CLOSE ─────────────────────────────────
 
 function openAboutEditModal() {
-    // Pre-populate BIO — read from FETCHED_ABOUT only, never from DOM
+    // Pre-populate BIO
     if (aboutBioInput) {
         aboutBioInput.value = FETCHED_ABOUT.bio?.text || '';
     }
 
-    // Pre-populate EDUCATION — build stagedEdu from array (or migrate old map)
+    // Pre-populate EDUCATION
     const rawEdu = FETCHED_ABOUT.education;
     if (Array.isArray(rawEdu)) {
         stagedEdu = rawEdu.map(e => ({ ...e }));
     } else if (rawEdu?.course) {
-        // Migrate old single-map format on the fly
         stagedEdu = [{ ...rawEdu }];
     } else {
         stagedEdu = [];
@@ -2573,7 +2522,6 @@ function openAboutEditModal() {
     stagedLangs = (FETCHED_ABOUT.proficiency || []).map(e => ({ ...e }));
     renderStagedLangs();
 
-    // Reset search and status
     if (aboutLangSearch)   aboutLangSearch.value = '';
     if (aboutLangDropdown) aboutLangDropdown.classList.remove('open');
     if (aboutEditStatus)   { aboutEditStatus.textContent = ''; aboutEditStatus.className = 'about-edit-status'; }
@@ -2768,7 +2716,6 @@ if (aboutEduAddBtn) {
     aboutEduAddBtn.addEventListener('click', () => {
         stagedEdu.push({ course: '', school: '', schoolStart: '', schoolEnd: '', year: '' });
         renderStagedEdu();
-        // Scroll the new block into view
         if (eduEntriesList) {
             const last = eduEntriesList.lastElementChild;
             if (last) last.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2826,7 +2773,6 @@ async function handleAboutSave() {
     setAboutEditStatus('', '');
 
     try {
-        // Filter out blank entries (no course at minimum)
         const cleanEdu = stagedEdu
             .map(e => ({
                 course:      e.course?.trim()      || '',
@@ -2888,7 +2834,7 @@ async function handleAboutSave() {
     }
 }
 
-// ── LANG DELETE (from skills bars directly) ───────────────────
+// ── LANG DELETE ───────────────────
 
 async function handleLangDelete(langName) {
     if (!isEditor) return;
@@ -2991,8 +2937,6 @@ if (aboutEduDeleteConfirm) {
 }
 
 // ── GITHUB API HELPERS ────────────────────────────────────────
-// These functions require GH_TOKEN, GH_OWNER, GH_REPO to be loaded.
-// Only call them when isEditor is true.
 
 async function ghGetSHA(path) {
     const res = await fetch(

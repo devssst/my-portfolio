@@ -1279,12 +1279,10 @@ body::before {
     align-items: flex-start;
 }
 
-/* Solo-company section — no heading label, cards flow 4-per-row */
 .certs-solo-section {
     margin-bottom: 32px;
 }
 
-/* Company name overlaid on the banner bottom-left of solo cards */
 .cert-card-company-overlay {
     position: absolute;
     bottom: 0;
