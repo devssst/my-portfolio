@@ -103,7 +103,8 @@ All dashboard content is stored in the `portfolio` collection in Firestore. No d
 
 ```
 portfolio/
-├── credentials     # EmailJS config, auth UIDs, GitHub PAT
+├── config          # EmailJS config (publicly readable — no auth required)
+├── credentials     # Auth UIDs, GitHub PAT (auth-gated read — Vien's UIDs only)
 ├── about           # Bio text, education array, proficiency array
 ├── certs           # Certificate metadata array
 ├── docs            # CV/Resume metadata arrays (cv + resume)
@@ -337,6 +338,7 @@ Certificates can also be added manually by uploading the image to `data/files/` 
 - [x] **Loading state** — `.loading` CSS class applied to all section roots during `boot()` data fetch; removed after `loadAllData()` resolves so sections never appear empty without context
 - [x] **`<noscript>` fallback** — added to both `index.html` and `dashboard.html`; users with JavaScript disabled see an informative message instead of a blank page
 - [x] **Mobile welcome heading** — `.welcome h1` changed from fixed `100px` to `clamp(2rem, 10vw, 100px)` as an interim fix ahead of full breakpoints
+- [x] **EmailJS bug fix** — `EMAILJS_*` credentials were never populated for any session; `_credentialsCache` was nulled in all three IIFE branches before `boot()` called `loadAllData()`; fixed by extracting EmailJS fields from cache in the IIFE `verified` branch (editor path) and reading `portfolio/config` in `loadAllData()` when not already set (visitor path); `portfolio/config` is covered by the existing wildcard `allow read: if true` Firestore rule
 - [ ] Mobile responsiveness — full 375px breakpoints across all dashboard sections
 - [ ] Scroll-triggered entrance animations via `IntersectionObserver`
 - [ ] GitHub Pages live deploy confirmation
@@ -344,6 +346,12 @@ Certificates can also be added manually by uploading the image to `data/files/` 
 ---
 
 ## 📋 Update Logs
+
+### Phase 5 — EmailJS Bug Fix (May 11 2026)
+- **Root cause**: `_credentialsCache` was nulled in all three branches of the auth-gated IIFE (`verified`, `_editRequested`, visitor) before `boot()` ran — so `loadAllData()` always read `_credentialsCache || {}` as an empty object; `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, and `EMAILJS_PUBLIC_KEY` were always `null`; the Reach Me form immediately threw `EMAIL NOT CONFIGURED` for every user
+- **Editor path fix**: EmailJS fields are now extracted from `_credentialsCache` in the IIFE `verified` branch (same pattern as `GH_TOKEN` / `GH_OWNER` / `GH_REPO`) before the cache is cleared
+- **Visitor path fix**: `loadAllData()` step 3 replaced — instead of reading the dead cache, it reads `portfolio/config` directly when `EMAILJS_PUBLIC_KEY` is not already set; the `!EMAILJS_PUBLIC_KEY` guard doubles as a no-op for editor sessions (already populated from cache) to avoid a redundant Firestore round-trip
+- **Firestore**: `portfolio/config` document created with `emailjs.publicKey`, `emailjs.serviceId`, `emailjs.templateId`; EmailJS credentials removed from `portfolio/credentials`; covered by the existing wildcard `allow read: if true` rule — no Firestore rule change needed
 
 ### Phase 5 — Code Quality, UX & Polish Pass (May 10 2026)
 - **`@keyframes shake` unified**: `style.css` definition updated to match `dashboard.css`'s keyframe stops — both files now use the same easing curve and stop points; eliminates inconsistent shake behavior between the login page and the reach form
