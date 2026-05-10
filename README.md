@@ -1,5 +1,5 @@
 # 🧑‍💻 Developer VIEN — Portfolio
-### 🔰 Phase 3 — Complete | Phase 4 — Complete ✓ | Phase 5 — Planned
+### 🔰 Phase 3 — Complete | Phase 4 — Complete ✓ | Phase 5 — In Progress
 ![Portfolio Background](assets/images/banner.png)
 
 A personal developer portfolio for **Vien Fritzgerald V. Calderon**, built entirely with vanilla HTML, CSS, and JavaScript — no frameworks, no backend. Features a dark aesthetic, dual-mode welcome page (Visitor & Developer), and a fully data-driven dashboard powered by Firebase Firestore and GitHub-hosted project metadata.
@@ -271,7 +271,7 @@ Certificates can also be added manually by uploading the image to `data/files/` 
 - **Background**: Python code-art image (`background.png`), `background-attachment: fixed`
 - **Overlay**: Single `body::before` — `rgba(0, 0, 0, 0.75)` + `backdrop-filter: blur(6px)` applied once globally
 - **Header**: `rgba(17, 25, 40, 0.80)` with its own `backdrop-filter: blur(8px) saturate(180%)`
-- **Cards**: `rgba(255, 255, 255, 0.001–0.01)` — defined primarily by borders, not fill
+- **Cards**: `transparent` to `rgba(255, 255, 255, 0.01)` — defined primarily by borders, not fill
 - **Accent Purple**: `#a855f7` / `#7c22e8` / `#c026d3`
 - **Logo**: Red `#FF2200` V on black
 - **Text Primary**: `#ffffff`
@@ -284,7 +284,7 @@ Certificates can also be added manually by uploading the image to `data/files/` 
 
 ### UI Highlights
 - 6-section tab navigation: `home`, `about`, `timeline`, `projects`, `certificates`, `reach`
-- Mouse wheel and touch swipe section hijacking (300ms cooldown, 5px threshold) — textarea and open modal scroll excluded
+- Mouse wheel and touch swipe section hijacking (300ms cooldown, two consecutive boundary events required) — textarea and open modal scroll excluded
 - Profile card smooth slide-out; state synced across all 4 content sections
 - Purple scrollbar auto-appears on scroll, fades after 1.5s
 - Animated skill bars triggered once on first ABOUT entry
@@ -330,14 +330,35 @@ Certificates can also be added manually by uploading the image to `data/files/` 
 - [x] **Certificates**: Add Certificate button in heading (edit mode); drag-and-drop modal (PNG/JPG/WEBP); fields for title, details, company, date (native date picker → stored `MM-DD-YYYY`); image pushed to GitHub using original filename; metadata saved to `portfolio/certs` flat array; cards, timeline, and stats update immediately
 - [x] **Certificates**: per-card delete X (edit mode only); confirm modal; image removed from GitHub (non-fatal); entry removed from `portfolio/certs`; cards, timeline, and stats update immediately
 
-### Phase 5 — Polish & Deploy
-- [ ] Mobile responsiveness — 375px breakpoints
+### Phase 5 — Polish & Deploy *(In Progress)*
+- [x] **Code quality pass** — `@keyframes shake` unified across `style.css` and `dashboard.css`; `rgba(255,255,255,0.001)` replaced with `transparent` throughout `dashboard.css`; `--font-display` CSS variable added to `:root` — replaces ~12 hardcoded `font-family: Arial, Helvetica, sans-serif` declarations; `legendEl.innerHTML +=` anti-pattern replaced with `createElement` / `appendChild`; `startYear` in `populateStats()` derived from the earliest entry in `FETCHED_TIMELINE` / `FETCHED_MILESTONES` instead of hardcoded `2025`; dead `max-width: 100vw` removed from `.about-bio`
+- [x] **UX fixes** — `text-align: justify` removed from `.about-bio`, `.about-edit-field textarea`, and `.reach-field textarea`; `.cert-overlay` z-index raised from `200` to `500` (consistent with `.faq-overlay` and `.levels-overlay`); section scroll hijack now requires two consecutive at-boundary wheel events before switching — prevents accidental jumps during slow or careful scrolling
+- [x] **Escape key support** — single `keydown` listener closes whichever modal or overlay is currently open; priority order mirrors modal depth (delete confirms → upload modals → content overlays → FAQ)
+- [x] **Loading state** — `.loading` CSS class applied to all section roots during `boot()` data fetch; removed after `loadAllData()` resolves so sections never appear empty without context
+- [x] **`<noscript>` fallback** — added to both `index.html` and `dashboard.html`; users with JavaScript disabled see an informative message instead of a blank page
+- [x] **Mobile welcome heading** — `.welcome h1` changed from fixed `100px` to `clamp(2rem, 10vw, 100px)` as an interim fix ahead of full breakpoints
+- [ ] Mobile responsiveness — full 375px breakpoints across all dashboard sections
 - [ ] Scroll-triggered entrance animations via `IntersectionObserver`
 - [ ] GitHub Pages live deploy confirmation
 
 ---
 
 ## 📋 Update Logs
+
+### Phase 5 — Code Quality, UX & Polish Pass (May 10 2026)
+- **`@keyframes shake` unified**: `style.css` definition updated to match `dashboard.css`'s keyframe stops — both files now use the same easing curve and stop points; eliminates inconsistent shake behavior between the login page and the reach form
+- **`rgba(255,255,255,0.001)` → `transparent`**: all 5 instances replaced in `dashboard.css`; semantically correct and avoids legacy compositing edge cases
+- **`--font-display` CSS variable**: `Arial, Helvetica, sans-serif` extracted to a `:root` variable in `dashboard.css`; all ~12 hardcoded `font-family` declarations replaced with `var(--font-display)` — single point of change if the display font ever changes
+- **`legendEl.innerHTML +=` fixed**: replaced with `createElement` / `appendChild` — avoids re-parsing and re-serializing the entire legend subtree on every render
+- **`startYear` derived from data**: `populateStats()` no longer hardcodes `2025` — derives the start year from the earliest entry in `FETCHED_TIMELINE` / `FETCHED_MILESTONES`; falls back to the current year when no data exists; stat will now drift correctly each year without a code change
+- **`max-width: 100vw` removed**: dead rule removed from `.about-bio` in `dashboard.css`; the parent layout already constrains width and `100vw` causes overflow on mobile
+- **`text-align: justify` removed**: removed from `.about-bio`, `.about-edit-field textarea`, and `.reach-field textarea` — changed to `text-align: left`; justified alignment creates uneven word spacing ("rivers") on screen, particularly with long Filipino and technical words
+- **`.cert-overlay` z-index raised**: corrected from `200` to `500` — now consistent with `.faq-overlay` and `.levels-overlay`; previously the cert image overlay could render behind the badge dropdown if both were triggered in the same DOM stacking context
+- **Escape key handler**: single `document.addEventListener('keydown')` listener added to `dashboard.js`; closes whichever modal or overlay is currently open; priority order: delete confirms → upload modals → content overlays → FAQ; no modal previously supported keyboard dismissal
+- **Boot loading state**: `_setLoadingState(true/false)` wraps `loadAllData()` in `boot()`; applies a `.loading` CSS class (40% opacity, `pointer-events: none`) to all four section roots while data fetches; removed as soon as data resolves so sections no longer flash empty content on load
+- **`<noscript>` fallback**: added to both `index.html` and `dashboard.html`; displays a centred message with inline style on a dark background — users with JavaScript disabled now see an informative message instead of a blank screen
+- **Welcome heading mobile fix**: `.welcome h1` font-size changed from `100px` to `clamp(2rem, 10vw, 100px)` in `style.css`; heading now scales down on narrow viewports as an interim measure until full Phase 5 breakpoints are implemented
+- **Section scroll hijack threshold raised**: `tryHijack()` now requires two consecutive at-boundary wheel events in the same direction before switching sections; a `_hijackPrimed` / `_hijackPrimedDir` state pair tracks the intent; primed state resets when the scroll is not at a boundary or direction reverses; accidental section jumps during slow or deliberate scrolling are eliminated
 
 ### Phase 4 — Certificates Edit Mode + Final Fixes (May 9 2026)
 - **Certificates add complete**: "+ Add Certificate" button injected into CERTIFICATES heading in edit mode; drag-and-drop modal accepts PNG, JPG, WEBP; fields for title, details, company, and date (native date picker, stored as `MM-DD-YYYY`); image pushed to GitHub under original filename (not id); metadata written to `portfolio/certs` flat array; cards, timeline entry, and stats update immediately in place
